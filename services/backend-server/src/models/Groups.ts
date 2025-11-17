@@ -1,0 +1,28 @@
+import { Schema, model, type InferSchemaType } from "mongoose";
+
+const GroupMemberSchema = new Schema({
+  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  role: {
+    type: String,
+    enum: ["ownder", "admin", "member", "guest"],
+    default: "member",
+  },
+});
+
+const GroupSchema = new Schema({
+  name: { type: String, required: true },
+  description: { type: String, required: false },
+  type: {
+    type: String,
+    enum: ["family", "friends", "work", "other"],
+    default: "other",
+  },
+  owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  members: [{ type: GroupMemberSchema, required: true }],
+  createdAt: { type: Date, default: Date.now },
+});
+
+GroupSchema.index({ owner: 1 });
+
+export type GroupDoc = InferSchemaType<typeof GroupSchema>;
+export default model<GroupDoc>("Group", GroupSchema);
