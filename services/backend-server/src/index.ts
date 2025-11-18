@@ -1,6 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/auth.js";
 import groupsRoutes from "./routes/groups.js";
+import eventsRoutes from "./routes/events.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -28,6 +29,7 @@ app.use(express.json());
 
 app.use("/auth", authRoutes);
 app.use("/groups", groupsRoutes);
+app.use("/events", eventsRoutes);
 
 // start server
 const startServer = async () => {

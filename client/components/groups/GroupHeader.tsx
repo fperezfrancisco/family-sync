@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Group, GroupMember } from "@/types/groups";
 import Modal from "@/components/ui/Modal";
 import { GroupsAPI } from "@/lib/api";
+import { useGroups } from "@/context/GroupsContext";
 
 interface GroupHeaderProps {
   group: Group;
@@ -55,6 +56,8 @@ export default function GroupHeader({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { deleteGroup } = useGroups();
+
   const userRole = getUserRole(group, currentUserId);
   const canEdit = canEditGroup(userRole);
   const canDelete = canDeleteGroup(userRole);
@@ -101,9 +104,10 @@ export default function GroupHeader({
     try {
       setIsLoading(true);
       // TODO: Uncomment when API is ready
-      // await GroupsAPI.deleteGroup(group.id);
-      console.log("Delete group:", group.id);
 
+      console.log("Delete group:", group.id);
+      const response = await deleteGroup(group.id);
+      console.log("Delete group response:", response);
       // Navigate back to groups page after deletion
       router.push("/dashboard/groups");
     } catch (error) {
@@ -237,7 +241,7 @@ export default function GroupHeader({
         title="Delete Group"
         size="md"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 p-4">
           <p className="text-muted-foreground">
             Are you sure you want to delete &quot;{group.name}&quot;? This
             action cannot be undone. All group data, messages, and files will be

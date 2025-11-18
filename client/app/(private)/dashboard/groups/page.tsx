@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import CreateGroupForm, {
@@ -20,11 +20,12 @@ export default function GroupsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { createNewGroup, groups, loading } = useGroups();
   const { user } = useAuth();
+  const [displayGroups, setDisplayGroups] = useState<Group[]>([]);
 
   // Dummy groups for demonstration (remove when API is connected)
 
   // Use dummy groups if no real groups exist (for demonstration)
-  const displayGroups = groups.length > 0 ? groups : [];
+  //const displayGroups = groups.length > 0 ? groups : [];
 
   // Handle create group form submission
   const handleCreateGroup = async (data: CreateGroupFormData) => {
@@ -57,6 +58,10 @@ export default function GroupsPage() {
     console.log("View messages for group:", groupId);
     // TODO: Navigate to group chat
   };
+
+  useEffect(() => {
+    setDisplayGroups(groups);
+  }, [groups]);
 
   return (
     <div className="space-y-6">

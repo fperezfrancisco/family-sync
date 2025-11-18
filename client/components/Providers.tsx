@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthProvider } from "@/context/AuthContext";
+import { EventsProvider } from "@/context/EventsContext";
 import { GroupsProvider } from "@/context/GroupsContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -20,7 +21,9 @@ const Providers = ({ children }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <GroupsProvider>{children}</GroupsProvider>
+        <EventsProvider>
+          <GroupsProvider>{children}</GroupsProvider>
+        </EventsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

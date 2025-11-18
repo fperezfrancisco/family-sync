@@ -146,3 +146,106 @@ export const GroupsAPI = {
   getGroupMembers: (groupId: string) =>
     request(`/groups/${groupId}/members`).then((r) => r.json()),
 };
+
+export const EventsAPI = {
+  // Get all events for authenticated user with optional filtering
+  getAll: (params?: {
+    startDate?: string;
+    endDate?: string;
+    groupId?: string;
+    status?: "draft" | "published" | "cancelled" | "completed" | "all";
+    limit?: number;
+    offset?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append("startDate", params.startDate);
+    if (params?.endDate) searchParams.append("endDate", params.endDate);
+    if (params?.groupId) searchParams.append("groupId", params.groupId);
+    if (params?.status) searchParams.append("status", params.status);
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.offset) searchParams.append("offset", params.offset.toString());
+
+    const queryString = searchParams.toString();
+    const path = queryString ? `/events?${queryString}` : "/events";
+    return request(path).then((r) => r.json());
+  },
+
+  // Get specific event by ID
+  getById: (eventId: string) =>
+    request(`/events/${eventId}`).then((r) => r.json()),
+
+  // Create a new event
+  create: (body: {
+    name: string;
+    description?: string;
+    startDate: string;
+    endDate?: string;
+    isAllDay?: boolean;
+    timezone?: string;
+    location?: string;
+    locationUrl?: string;
+    isVirtual?: boolean;
+    group?: string;
+    isPrivate?: boolean;
+    allowGuestInvites?: boolean;
+    requireRSVP?: boolean;
+    maxAttendees?: number;
+    inviteUserIds?: string[];
+  }) =>
+    request("/events", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Update an existing event (owner only)
+  update: (
+    eventId: string,
+    body: {
+      name?: string;
+      description?: string;
+      startDate?: string;
+      endDate?: string;
+      isAllDay?: boolean;
+      timezone?: string;
+      location?: string;
+      locationUrl?: string;
+      isVirtual?: boolean;
+      isPrivate?: boolean;
+      allowGuestInvites?: boolean;
+      requireRSVP?: boolean;
+      maxAttendees?: number;
+      status?: "draft" | "published" | "cancelled" | "completed";
+    }
+  ) =>
+    request(`/events/${eventId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Delete an event (owner only)
+  delete: (eventId: string) =>
+    request(`/events/${eventId}`, {
+      method: "DELETE",
+    }).then((r) => r.json()),
+
+  // RSVP to an event
+  rsvp: (
+    eventId: string,
+    body: { status: "attending" | "not_attending" | "maybe" }
+  ) =>
+    request(`/events/${eventId}/rsvp`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Invite users to an event (owner only)
+  inviteUsers: (eventId: string, body: { userIds: string[] }) =>
+    request(`/events/${eventId}/invite`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Get events for a specific group
+  getByGroup: (groupId: string) =>
+    request(`/events/group/${groupId}`).then((r) => r.json()),
+};

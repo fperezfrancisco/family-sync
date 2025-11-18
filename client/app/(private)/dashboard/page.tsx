@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Calendar,
@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Bell,
 } from "lucide-react";
+import { useGroups } from "@/context/GroupsContext";
+import { useEvents } from "@/context/EventsContext";
 
 /**
  * Dashboard Page Component
@@ -18,19 +20,20 @@ import {
  */
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { groups } = useGroups();
+  const { events } = useEvents();
 
-  // Mock data for demonstration - replace with real data later
-  const stats = [
+  const [stats, setStats] = useState([
     {
       title: "Active Groups",
-      value: "3",
+      value: groups ? groups.length.toString() : "0",
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
     {
       title: "Upcoming Events",
-      value: "5",
+      value: events ? events.length.toString() : "0",
       icon: Calendar,
       color: "text-green-600",
       bgColor: "bg-green-100",
@@ -49,7 +52,9 @@ export default function DashboardPage() {
       color: "text-purple-600",
       bgColor: "bg-purple-100",
     },
-  ];
+  ]);
+
+  // Mock data for demonstration - replace with real data later
 
   const recentActivity = [
     {
@@ -85,7 +90,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Statistics cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (

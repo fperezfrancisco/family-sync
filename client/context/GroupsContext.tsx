@@ -18,6 +18,7 @@ interface GroupsContextType {
     description?: string;
     type: string;
   }) => Promise<void | GroupResponse>;
+  deleteGroup: (groupId: string) => Promise<void | GroupResponse>;
 }
 
 const GroupsContext = createContext<GroupsContextType | null>(null);
@@ -50,6 +51,14 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const deleteGroup = async (groupId: string) => {
+    const response: GroupResponse = await GroupsAPI.deleteGroup(groupId);
+    if (response.status === 200) {
+      setGroups((prev) => prev.filter((group) => group.id !== groupId));
+      return response;
+    }
+  };
+
   useEffect(() => {
     // Fetch groups when user changes
     (async () => {
@@ -67,7 +76,9 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <GroupsContext.Provider value={{ groups, loading, createNewGroup }}>
+    <GroupsContext.Provider
+      value={{ groups, loading, createNewGroup, deleteGroup }}
+    >
       {children}
     </GroupsContext.Provider>
   );
