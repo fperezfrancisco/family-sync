@@ -4,7 +4,7 @@ const GroupMemberSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: "User", required: true },
   role: {
     type: String,
-    enum: ["ownder", "admin", "member", "guest"],
+    enum: ["owner", "admin", "member", "guest"],
     default: "member",
   },
 });

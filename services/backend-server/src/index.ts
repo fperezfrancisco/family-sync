@@ -1,5 +1,6 @@
 import express from "express";
 import authRoutes from "./routes/auth.js";
+import groupsRoutes from "./routes/groups.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -26,6 +27,7 @@ app.get("/", (req, res) => {
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+app.use("/groups", groupsRoutes);
 
 // start server
 const startServer = async () => {
