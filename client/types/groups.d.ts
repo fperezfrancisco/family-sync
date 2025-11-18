@@ -1,7 +1,7 @@
-import { User } from "./auth";
-
 export interface GroupMember {
-  user: User;
+  id: string;
+  name: string;
+  email: string;
   role: "owner" | "admin" | "member" | "guest";
 }
 

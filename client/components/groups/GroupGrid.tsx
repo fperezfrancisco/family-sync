@@ -112,18 +112,6 @@ export default function GroupGrid({
           />
         ))}
       </div>
-
-      {/* Add more groups CTA */}
-      {groups.length > 0 && onCreateGroup && (
-        <div className="text-center pt-8">
-          <button
-            onClick={onCreateGroup}
-            className="px-6 py-3 rounded-md border border-border hover:bg-muted text-sm text-foreground transition-colors font-inter"
-          >
-            Create Another Group
-          </button>
-        </div>
-      )}
     </div>
   );
 }

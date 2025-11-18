@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   Calendar,
@@ -12,6 +13,8 @@ import {
   User,
 } from "lucide-react";
 import { Group } from "@/types/groups";
+import { User as MemberUser } from "@/types/auth";
+import { useQuery } from "@tanstack/react-query";
 
 interface GroupCardProps {
   group: Group;
@@ -32,11 +35,13 @@ export default function GroupCard({
   onViewMessages,
   currentUserId,
 }: GroupCardProps) {
+  const router = useRouter();
+
   // Get user's role in the group
   const getUserRole = () => {
     if (group.owner === currentUserId) return "owner";
     const memberEntry = group.members.find(
-      (m) => m.user.id && m.user.id === currentUserId
+      (m) => m.id && m.id === currentUserId
     );
     return memberEntry?.role || "guest";
   };
@@ -160,7 +165,12 @@ export default function GroupCard({
       <div className="px-6 pb-6 pt-2">
         <div className="flex space-x-2">
           <button
-            onClick={() => onViewDetails?.(group.id)}
+            onClick={() => {
+              // Navigate to individual group page
+              router.push(`/dashboard/groups/${group.id}`);
+              // Also call the callback if provided
+              onViewDetails?.(group.id);
+            }}
             className="flex-1 px-3 py-2 text-sm font-medium text-foreground bg-[var(--muted)] hover:bg-[var(--muted)]/80 rounded-md transition-colors font-inter"
           >
             View Details
@@ -189,13 +199,13 @@ export default function GroupCard({
           <div className="flex -space-x-2">
             {group.members.slice(0, 4).map((member) => (
               <div
-                key={member.user.id || member.user.email}
+                key={member.id || member.email}
                 className="relative"
-                title={member.user.name}
+                title={member.name}
               >
                 <div className="h-6 w-6 bg-blue-600 rounded-full border-2 border-background flex items-center justify-center">
                   <span className="text-xs font-medium text-white">
-                    {member.user.name.charAt(0).toUpperCase()}
+                    {member.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 {member.role === "owner" && (

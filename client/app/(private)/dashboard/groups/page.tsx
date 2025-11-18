@@ -22,95 +22,9 @@ export default function GroupsPage() {
   const { user } = useAuth();
 
   // Dummy groups for demonstration (remove when API is connected)
-  const dummyGroups: Group[] = [
-    {
-      id: "1",
-      name: "Smith Family",
-      description:
-        "Our loving family group where we share memories, plan gatherings, and stay connected.",
-      type: "family",
-      owner: user?.id || "user1",
-      members: [
-        {
-          user: {
-            id: user?.id || "user1",
-            name: user?.name || "John Smith",
-            email: user?.email || "john@example.com",
-            groups: [],
-          },
-          role: "owner",
-        },
-        {
-          user: {
-            id: "user2",
-            name: "Jane Smith",
-            email: "jane@example.com",
-            groups: [],
-          },
-          role: "admin",
-        },
-        {
-          user: {
-            id: "user3",
-            name: "Mike Smith",
-            email: "mike@example.com",
-            groups: [],
-          },
-          role: "member",
-        },
-      ],
-      createdAt: "2024-01-15T10:30:00Z",
-    },
-    {
-      id: "2",
-      name: "Weekend Warriors",
-      description: "Friends who love outdoor adventures and weekend getaways.",
-      type: "friends",
-      owner: "user4",
-      members: [
-        {
-          user: {
-            id: user?.id || "user1",
-            name: user?.name || "John Smith",
-            email: user?.email || "john@example.com",
-            groups: [],
-          },
-          role: "member",
-        },
-        {
-          user: {
-            id: "user4",
-            name: "Sarah Connor",
-            email: "sarah@example.com",
-            groups: [],
-          },
-          role: "owner",
-        },
-        {
-          user: {
-            id: "user5",
-            name: "David Wilson",
-            email: "david@example.com",
-            groups: [],
-          },
-          role: "member",
-        },
-        {
-          user: {
-            id: "user6",
-            name: "Lisa Johnson",
-            email: "lisa@example.com",
-            groups: [],
-          },
-          role: "admin",
-        },
-      ],
-      createdAt: "2024-02-20T14:15:00Z",
-    },
-  ];
 
   // Use dummy groups if no real groups exist (for demonstration)
-  const displayGroups = groups.length > 0 ? groups : dummyGroups;
+  const displayGroups = groups.length > 0 ? groups : [];
 
   // Handle create group form submission
   const handleCreateGroup = async (data: CreateGroupFormData) => {

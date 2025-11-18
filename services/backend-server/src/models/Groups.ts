@@ -1,7 +1,9 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
 
 const GroupMemberSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true },
   role: {
     type: String,
     enum: ["owner", "admin", "member", "guest"],

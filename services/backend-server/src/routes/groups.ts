@@ -15,7 +15,9 @@ interface AuthRequest extends Request {
 
 // Type for populated group member
 interface GroupMember {
-  user: string | { _id: string; name: string; email: string };
+  id: string;
+  name: string;
+  email: string;
   role: "owner" | "admin" | "member" | "guest";
 }
 
@@ -33,7 +35,9 @@ const UpdateGroupSchema = z.object({
 });
 
 const AddMemberSchema = z.object({
-  userId: z.string(),
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
   role: z.enum(["admin", "member", "guest"]).default("member"),
 });
 
@@ -55,7 +59,7 @@ async function getUserRoleInGroup(
   if (group.owner.toString() === userId) return "owner";
 
   // Check if user is a member
-  const member = group.members.find((m: any) => m.user.toString() === userId);
+  const member = group.members.find((m: any) => m.id.toString() === userId);
   return member ? (member as any).role : null;
 }
 
@@ -128,7 +132,6 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       $or: [{ owner: userId }, { "members.user": userId }],
     })
       .populate("owner", "name email")
-      .populate("members.user", "name email")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -145,7 +148,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
           group.owner.toString() === userId
             ? "owner"
             : (group.members as any).find(
-                (m: any) => m.user.toString() === userId
+                (m: any) => m.id.toString() === userId
               )?.role || null,
       })),
     });
@@ -238,7 +241,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       owner: userId,
       members: [
         {
-          user: userId,
+          id: userId,
+          name: user.name,
+          email: user.email,
           role: "owner",
         },
       ],
@@ -246,7 +251,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
     await group.save();
     await group.populate("owner", "name email");
-    await group.populate("members.user", "name email");
+    //await group.populate("members.user", "name email");
 
     return res.status(201).json({
       message: "Group created successfully",
@@ -394,7 +399,7 @@ router.post("/:groupId/members", async (req: AuthRequest, res: Response) => {
   try {
     const { groupId } = req.params;
     const userId = req.user?.id;
-    const { userId: newMemberId, role } = AddMemberSchema.parse(req.body);
+    const { id: newMemberId, role } = AddMemberSchema.parse(req.body);
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
