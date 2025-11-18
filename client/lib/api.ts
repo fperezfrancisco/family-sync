@@ -98,5 +98,51 @@ export const AuthAPI = {
     request("/auth/login", { method: "POST", body: JSON.stringify(body) }).then(
       (r) => r.json()
     ),
-  logout: () => {},
+  logout: () => {
+    //request("/auth/logout", { method: "POST" });
+    localStorage.removeItem("accessToken");
+  },
+};
+
+export const GroupsAPI = {
+  getMine: () => request("/groups/").then((r) => r.json()),
+  getById: (groupId: string) =>
+    request(`/groups/${groupId}`).then((r) => r.json()),
+  create: (body: { name: string; description?: string; type: string }) =>
+    request("/groups/", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+  editGroup: (
+    groupId: string,
+    body: { name?: string; description?: string; type?: string }
+  ) =>
+    request(`/groups/${groupId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  deleteGroup: (groupId: string) =>
+    request(`/groups/${groupId}`, {
+      method: "DELETE",
+    }),
+  addMember: (groupId: string, body: { userId: string; role: string }) =>
+    request(`/groups/${groupId}/members`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  removeMember: (groupId: string, memberId: string) =>
+    request(`/groups/${groupId}/members/${memberId}`, {
+      method: "DELETE",
+    }),
+  updateMemberRole: (
+    groupId: string,
+    memberId: string,
+    body: { role: string }
+  ) =>
+    request(`/groups/${groupId}/members/${memberId}/role`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  getGroupMembers: (groupId: string) =>
+    request(`/groups/${groupId}/members`).then((r) => r.json()),
 };

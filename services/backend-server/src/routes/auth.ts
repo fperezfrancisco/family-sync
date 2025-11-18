@@ -170,6 +170,13 @@ router.post("/logout", async (req, res) => {
       }
     } catch (error) {
       // token invalid or expired, nothing to do
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/auth/refresh",
+      });
+      return res.status(200).json({ message: "Logged out successfully" });
     }
   }
   res.clearCookie("refreshToken", {
