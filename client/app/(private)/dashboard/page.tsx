@@ -1,22 +1,254 @@
 "use client";
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+
 import React from "react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  Calendar,
+  Users,
+  CheckSquare,
+  MessageCircle,
+  TrendingUp,
+  Bell,
+} from "lucide-react";
 
-//type Props = {};
+/**
+ * Dashboard Page Component
+ * Main landing page after user authentication
+ * Shows overview of user's groups, events, tasks, and recent activity
+ */
+export default function DashboardPage() {
+  const { user } = useAuth();
 
-const Page = () => {
-  const { logout, user } = useAuth();
-  const router = useRouter();
+  // Mock data for demonstration - replace with real data later
+  const stats = [
+    {
+      title: "Active Groups",
+      value: "3",
+      icon: Users,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+    },
+    {
+      title: "Upcoming Events",
+      value: "5",
+      icon: Calendar,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+    },
+    {
+      title: "Pending Tasks",
+      value: "8",
+      icon: CheckSquare,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+    },
+    {
+      title: "Unread Messages",
+      value: "12",
+      icon: MessageCircle,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+    },
+  ];
+
+  const recentActivity = [
+    {
+      id: 1,
+      type: "event",
+      message: 'New event "Family BBQ" was added to Smith Family group',
+      time: "2 hours ago",
+    },
+    {
+      id: 2,
+      type: "task",
+      message: 'Task "Buy groceries" was completed by John',
+      time: "4 hours ago",
+    },
+    {
+      id: 3,
+      type: "message",
+      message: "3 new messages in Friends group chat",
+      time: "6 hours ago",
+    },
+  ];
 
   return (
-    <div className="flex w-full flex-col">
-      <h1> Welcome to your Dashboard </h1>
-      <button className="p-4 border border-neutral-200" onClick={logout}>
-        Logout
-      </button>
+    <div className="space-y-8">
+      {/* Page header */}
+      <div className="border-b border-border pb-6">
+        <h1 className="text-3xl font-bold text-foreground font-inter">
+          Welcome back, {user?.name || "User"}!
+        </h1>
+        <p className="text-muted-foreground mt-2 font-inter">
+          Here&apos;s what&apos;s happening with your family and friends.
+        </p>
+      </div>
+
+      {/* Statistics cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow duration-200"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground font-inter">
+                    {stat.title}
+                  </p>
+                  <p className="text-3xl font-bold text-foreground mt-2 font-inter">
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-full ${stat.bgColor}`}>
+                  <Icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Activity */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-foreground font-inter">
+              Recent Activity
+            </h2>
+            <Bell className="h-5 w-5 text-muted-foreground" />
+          </div>
+
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-start space-x-3 py-2 rounded-md hover:bg-accent transition-colors duration-150"
+              >
+                <div
+                  className={`size-12 rounded-full shrink-0
+                  ${activity.type === "event" ? "bg-blue-100" : ""}
+                  ${activity.type === "task" ? "bg-green-100" : ""}
+                  ${activity.type === "message" ? "bg-purple-100" : ""}
+                  `}
+                >
+                  {activity.type === "event" && (
+                    <Calendar className="h-6 w-6 text-blue-600 m-3" />
+                  )}
+                  {activity.type === "task" && (
+                    <CheckSquare className="h-6 w-6 text-green-600 m-3" />
+                  )}
+                  {activity.type === "message" && (
+                    <MessageCircle className="h-6 w-6 text-purple-600 m-3" />
+                  )}
+                </div>
+                <div className="flex-1 pt-1">
+                  <p className="text-sm font-medium text-foreground font-inter">
+                    {activity.message}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 font-inter">
+                    {activity.time}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button className="w-full mt-4 text-sm text-primary hover:text-primary/80 font-medium font-inter">
+            View all activity
+          </button>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-foreground mb-6 font-inter">
+            Quick Actions
+          </h2>
+
+          <div className="space-y-3">
+            <button
+              className="w-full flex items-center justify-between p-3 rounded-md 
+                             bg-primary text-primary-foreground hover:bg-primary/90 
+                             transition-colors duration-150 font-inter"
+            >
+              <span className="font-medium">Create New Event</span>
+              <Calendar className="h-5 w-5" />
+            </button>
+
+            <button
+              className="w-full flex items-center justify-between p-3 rounded-md 
+                             border border-border hover:bg-accent transition-colors duration-150 font-inter"
+            >
+              <span className="font-medium text-foreground">Add Task</span>
+              <CheckSquare className="h-5 w-5 text-muted-foreground" />
+            </button>
+
+            <button
+              className="w-full flex items-center justify-between p-3 rounded-md 
+                             border border-border hover:bg-accent transition-colors duration-150 font-inter"
+            >
+              <span className="font-medium text-foreground">
+                Invite Members
+              </span>
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Placeholder sections for future development */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Upcoming Events Preview */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
+            Upcoming Events
+          </h3>
+          <div className="text-center py-8">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground font-inter">
+              No upcoming events
+            </p>
+            <button className="text-sm text-primary hover:text-primary/80 font-medium mt-2 font-inter">
+              Create your first event
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Messages */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
+            Recent Messages
+          </h3>
+          <div className="text-center py-8">
+            <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground font-inter">
+              No recent messages
+            </p>
+            <button className="text-sm text-primary hover:text-primary/80 font-medium mt-2 font-inter">
+              Start a conversation
+            </button>
+          </div>
+        </div>
+
+        {/* Task Progress */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
+            Task Progress
+          </h3>
+          <div className="text-center py-8">
+            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground font-inter">
+              No tasks assigned
+            </p>
+            <button className="text-sm text-primary hover:text-primary/80 font-medium mt-2 font-inter">
+              Add your first task
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default Page;
+}
