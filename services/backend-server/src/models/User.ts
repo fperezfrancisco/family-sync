@@ -18,6 +18,10 @@ const UserSchema = new Schema(
     },
     phone: { type: PhoneSchema, required: false },
     groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
+    // INVITATION SYSTEM: Track pending invitations for this user
+    pendingInvitations: [
+      { type: Schema.Types.ObjectId, ref: "GroupInvitation" },
+    ],
   },
   { timestamps: true }
 );

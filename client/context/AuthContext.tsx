@@ -32,7 +32,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // fetch user on mount
   useEffect(() => {
     (async () => {
+      console.log("Entered User Refresh in auth context: ");
       const refresh = localStorage.getItem("refreshExists");
+      console.log("Does refresh exist?: ", refresh);
       if (refresh) {
         try {
           const response = await AuthAPI.me();

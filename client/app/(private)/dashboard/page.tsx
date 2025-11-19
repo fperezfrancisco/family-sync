@@ -14,6 +14,8 @@ import { useGroups } from "@/context/GroupsContext";
 import { useEvents } from "@/context/EventsContext";
 import CreateEventModal from "@/components/events/CreateEventModal";
 import UpcomingEventsCard from "@/components/dashboard/UpcomingEventsCard";
+// INVITATION SYSTEM: Import pending invitations component
+import PendingInvitations from "@/components/dashboard/PendingInvitations";
 import { CreateEventData } from "@/types/events";
 
 /**
@@ -23,7 +25,7 @@ import { CreateEventData } from "@/types/events";
  */
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { groups } = useGroups();
+  const { groups, refreshGroups } = useGroups();
   const { events, createEvent } = useEvents();
 
   // Modal states
@@ -105,6 +107,13 @@ export default function DashboardPage() {
    */
   const handleOpenCreateEventModal = () => {
     setIsCreateEventModalOpen(true);
+  };
+
+  /**
+   * INVITATION SYSTEM: Handle invitation response to refresh groups data
+   */
+  const handleInvitationResponse = () => {
+    refreshGroups(); // Refresh groups when user accepts/declines invitations
   };
 
   useEffect(() => {
@@ -273,21 +282,8 @@ export default function DashboardPage() {
           onCreateEvent={handleOpenCreateEventModal}
         />
 
-        {/* Recent Messages */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
-            Recent Messages
-          </h3>
-          <div className="text-center py-8">
-            <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground font-inter">
-              No recent messages
-            </p>
-            <button className="text-sm text-primary hover:text-primary/80 font-medium mt-2 font-inter">
-              Start a conversation
-            </button>
-          </div>
-        </div>
+        {/* INVITATION SYSTEM: Pending Invitations */}
+        <PendingInvitations onInvitationResponse={handleInvitationResponse} />
 
         {/* Task Progress */}
         <div className="bg-card border border-border rounded-lg p-6">

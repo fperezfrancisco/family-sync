@@ -77,12 +77,13 @@ async function refreshAccessToken() {
 
       // Store the new access token
       localStorage.setItem("accessToken", newAccessToken);
+      localStorage.setItem("refreshExists", "true");
       return newAccessToken;
     } catch (error) {
       console.error("Failed to refresh access token:", error);
       // Clear stored token on refresh failure
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshExists");
+      //localStorage.removeItem("refreshExists");
       throw error;
     } finally {
       // Reset refresh state
@@ -112,7 +113,6 @@ async function request(path: string, init: RequestInit = {}, retryCount = 0) {
       //console.log("Access token expired, attempting refresh...");
       await refreshAccessToken();
       //console.log("Token refreshed successfully, retrying request");
-
       // Retry the original request with new token (only once)
       return request(path, init, 1);
     } catch (refreshError) {
@@ -226,6 +226,32 @@ export const GroupsAPI = {
     }),
   getGroupMembers: (groupId: string) =>
     request(`/groups/${groupId}/members`).then((r) => r.json()),
+
+  // INVITATION SYSTEM: Group invitation management
+  createInvitation: (
+    groupId: string,
+    body: {
+      email: string;
+      message?: string;
+      role?: "admin" | "member" | "guest";
+    }
+  ) =>
+    request(`/groups/${groupId}/invitations`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  getInvitations: (groupId: string, status?: string) => {
+    const path = status
+      ? `/groups/${groupId}/invitations?status=${status}`
+      : `/groups/${groupId}/invitations`;
+    return request(path).then((r) => r.json());
+  },
+
+  cancelInvitation: (groupId: string, invitationId: string) =>
+    request(`/groups/${groupId}/invitations/${invitationId}`, {
+      method: "DELETE",
+    }).then((r) => r.json()),
 };
 
 export const EventsAPI = {
@@ -329,4 +355,27 @@ export const EventsAPI = {
   // Get events for a specific group
   getByGroup: (groupId: string) =>
     request(`/events/group/${groupId}`).then((r) => r.json()),
+};
+
+// INVITATION SYSTEM: User invitation management
+export const InvitationsAPI = {
+  // Get current user's pending invitations
+  getMine: () => request("/invitations/me").then((r) => r.json()),
+
+  // Get invitation details
+  getById: (invitationId: string) =>
+    request(`/invitations/${invitationId}`).then((r) => r.json()),
+
+  // Respond to an invitation
+  respond: (
+    invitationId: string,
+    body: {
+      action: "accept" | "decline";
+      message?: string;
+    }
+  ) =>
+    request(`/invitations/${invitationId}/respond`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
 };

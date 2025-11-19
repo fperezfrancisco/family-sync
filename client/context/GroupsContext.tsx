@@ -19,6 +19,8 @@ interface GroupsContextType {
     type: string;
   }) => Promise<void | GroupResponse>;
   deleteGroup: (groupId: string) => Promise<void | GroupResponse>;
+  // INVITATION SYSTEM: Add refresh method to reload groups after invitation acceptance
+  refreshGroups: () => Promise<void>;
 }
 
 const GroupsContext = createContext<GroupsContextType | null>(null);
@@ -59,6 +61,21 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // INVITATION SYSTEM: Method to refresh groups data (for use after accepting invitations)
+  const refreshGroups = async () => {
+    if (user) {
+      try {
+        setLoading(true);
+        const response = await GroupsAPI.getMine();
+        setGroups(response.groups);
+      } catch (error) {
+        console.error("Error refreshing groups:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
     // Fetch groups when user changes
     (async () => {
@@ -77,7 +94,7 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <GroupsContext.Provider
-      value={{ groups, loading, createNewGroup, deleteGroup }}
+      value={{ groups, loading, createNewGroup, deleteGroup, refreshGroups }}
     >
       {children}
     </GroupsContext.Provider>

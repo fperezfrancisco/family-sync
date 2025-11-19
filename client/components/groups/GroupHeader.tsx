@@ -1,12 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Trash2, Users, Edit3, ArrowLeft, Calendar } from "lucide-react";
+import {
+  Trash2,
+  Users,
+  Edit3,
+  ArrowLeft,
+  Calendar,
+  UserPlus,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Group, GroupMember } from "@/types/groups";
 import Modal from "@/components/ui/Modal";
-import { GroupsAPI } from "@/lib/api";
 import { useGroups } from "@/context/GroupsContext";
+// INVITATION SYSTEM: Import invite modal
+import InviteMembersModal from "./InviteMembersModal";
 
 interface GroupHeaderProps {
   group: Group;
@@ -43,6 +51,14 @@ const canDeleteGroup = (role: GroupMember["role"] | null): boolean => {
 };
 
 /**
+ * INVITATION SYSTEM: Utility function to check if user can invite members
+ * Owners and admins can invite
+ */
+const canInviteMembers = (role: GroupMember["role"] | null): boolean => {
+  return role === "owner" || role === "admin";
+};
+
+/**
  * Group Header Component
  * Displays group information and action buttons based on user permissions
  */
@@ -55,12 +71,16 @@ export default function GroupHeader({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // INVITATION SYSTEM: Add invite modal state
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const { deleteGroup } = useGroups();
 
   const userRole = getUserRole(group, currentUserId);
   const canEdit = canEditGroup(userRole);
   const canDelete = canDeleteGroup(userRole);
+  // INVITATION SYSTEM: Add invite permission check
+  const canInvite = canInviteMembers(userRole);
 
   // Get group type styling
   const getGroupTypeColor = (type: Group["type"]) => {
@@ -121,6 +141,14 @@ export default function GroupHeader({
     }
   };
 
+  // INVITATION SYSTEM: Handle invitation sent
+  const handleInvitationSent = () => {
+    // Refresh group data to show updated member count
+    if (onGroupUpdate) {
+      onGroupUpdate();
+    }
+  };
+
   return (
     <>
       <div className="bg-card border border-border rounded-lg p-6 space-y-6">
@@ -135,8 +163,18 @@ export default function GroupHeader({
           </button>
 
           {/* Action Buttons - Only show if user has permissions */}
-          {(canEdit || canDelete) && (
+          {(canEdit || canDelete || canInvite) && (
             <div className="flex items-center gap-2">
+              {/* INVITATION SYSTEM: Invite Members button */}
+              {canInvite && (
+                <button
+                  onClick={() => setIsInviteModalOpen(true)}
+                  className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-500 transition-colors"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite Members
+                </button>
+              )}
               {canEdit && (
                 <button
                   onClick={handleEditGroup}
@@ -217,10 +255,10 @@ export default function GroupHeader({
               Members:
             </span>
             <div className="flex -space-x-2">
-              {group.members.slice(0, 5).map((member, index) => (
+              {group.members.slice(0, 5).map((member) => (
                 <div
                   key={member.id}
-                  className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
+                  className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
                   title={`${member.name} (${member.role})`}
                 >
                   {member.name?.charAt(0).toUpperCase() || "?"}
@@ -289,6 +327,15 @@ export default function GroupHeader({
           </div>
         </div>
       </Modal>
+
+      {/* INVITATION SYSTEM: Invite Members Modal */}
+      <InviteMembersModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        groupId={group.id}
+        groupName={group.name}
+        onInvitationSent={handleInvitationSent}
+      />
     </>
   );
 }
