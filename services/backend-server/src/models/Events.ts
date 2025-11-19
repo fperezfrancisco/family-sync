@@ -106,14 +106,14 @@ const EventSchema = new Schema(
 EventSchema.index({ startDate: 1 });
 EventSchema.index({ endDate: 1 });
 EventSchema.index({ owner: 1 });
-EventSchema.index({ group: 1 });
+EventSchema.index({ "group.id": 1 });
 EventSchema.index({ status: 1 });
 EventSchema.index({ "attendees.user": 1 });
 EventSchema.index({ createdAt: -1 });
 
 // Compound indexes
 EventSchema.index({ owner: 1, startDate: 1 });
-EventSchema.index({ group: 1, startDate: 1 });
+EventSchema.index({ "group.id": 1, startDate: 1 });
 EventSchema.index({ owner: 1, status: 1 });
 
 // Virtual for attendee count

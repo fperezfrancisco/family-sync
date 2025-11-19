@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { useGroups } from "@/context/GroupsContext";
 import { useEvents } from "@/context/EventsContext";
+import CreateEventModal from "@/components/events/CreateEventModal";
+import UpcomingEventsCard from "@/components/dashboard/UpcomingEventsCard";
+import { CreateEventData } from "@/types/events";
 
 /**
  * Dashboard Page Component
@@ -21,7 +24,11 @@ import { useEvents } from "@/context/EventsContext";
 export default function DashboardPage() {
   const { user } = useAuth();
   const { groups } = useGroups();
-  const { events } = useEvents();
+  const { events, createEvent } = useEvents();
+
+  // Modal states
+  const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
 
   const [stats, setStats] = useState([
     {
@@ -77,10 +84,38 @@ export default function DashboardPage() {
     },
   ];
 
+  /**
+   * Handle creating a new event
+   */
+  const handleCreateEvent = async (eventData: CreateEventData) => {
+    try {
+      setIsCreatingEvent(true);
+      await createEvent(eventData);
+      setIsCreateEventModalOpen(false);
+    } catch (error) {
+      console.error("Failed to create event:", error);
+      throw error; // Re-throw to let the modal handle it
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
+  /**
+   * Open create event modal
+   */
+  const handleOpenCreateEventModal = () => {
+    setIsCreateEventModalOpen(true);
+  };
+
   useEffect(() => {
     // Update stats when groups or events change
-
     const updateStats = async () => {
+      // Calculate upcoming events count
+      const now = new Date();
+      const upcomingEventsCount = events
+        ? events.filter((event) => new Date(event.startDate) > now).length
+        : 0;
+
       setStats((prevStats) =>
         prevStats.map((stat) => {
           if (stat.title === "Active Groups") {
@@ -92,7 +127,7 @@ export default function DashboardPage() {
           if (stat.title === "Upcoming Events") {
             return {
               ...stat,
-              value: events ? events.length.toString() : "0",
+              value: upcomingEventsCount.toString(),
             };
           }
           return stat;
@@ -200,6 +235,7 @@ export default function DashboardPage() {
 
           <div className="space-y-3">
             <button
+              onClick={handleOpenCreateEventModal}
               className="w-full flex items-center justify-between p-3 rounded-md 
                              bg-primary text-primary-foreground hover:bg-primary/90 
                              transition-colors duration-150 font-inter"
@@ -232,20 +268,10 @@ export default function DashboardPage() {
       {/* Placeholder sections for future development */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming Events Preview */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
-            Upcoming Events
-          </h3>
-          <div className="text-center py-8">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground font-inter">
-              No upcoming events
-            </p>
-            <button className="text-sm text-primary hover:text-primary/80 font-medium mt-2 font-inter">
-              Create your first event
-            </button>
-          </div>
-        </div>
+        <UpcomingEventsCard
+          events={events || []}
+          onCreateEvent={handleOpenCreateEventModal}
+        />
 
         {/* Recent Messages */}
         <div className="bg-card border border-border rounded-lg p-6">
@@ -279,6 +305,15 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Event Modal */}
+      <CreateEventModal
+        isOpen={isCreateEventModalOpen}
+        onClose={() => setIsCreateEventModalOpen(false)}
+        onSubmit={handleCreateEvent}
+        isLoading={isCreatingEvent}
+        availableGroups={groups || []}
+      />
     </div>
   );
 }

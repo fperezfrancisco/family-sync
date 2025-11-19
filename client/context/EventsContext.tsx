@@ -1,6 +1,6 @@
 import { EventsAPI } from "@/lib/api";
 import { useAuth } from "./AuthContext";
-import { CreateEventData, Event } from "@/types";
+import { CreateEventData, Event, UpdateEventData } from "@/types";
 import React, { createContext, useEffect, useState } from "react";
 
 interface EventsContextType {
@@ -12,6 +12,10 @@ interface EventsContextType {
   deleteEvent: (
     eventId: string
   ) => Promise<void | { status: number; message?: string }>;
+  editEvent: (
+    eventId: string,
+    eventData: UpdateEventData
+  ) => Promise<void | { event?: Event; message?: string }>;
 }
 
 const EventsContext = createContext<EventsContextType | null>(null);
@@ -52,6 +56,18 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     return response;
   };
 
+  const editEvent = async (eventId: string, eventData: UpdateEventData) => {
+    // Implementation for editing an event
+    const response = await EventsAPI.update(eventId, eventData);
+    console.log("Edited Event Data from response: ", response.event);
+    if (response.event) {
+      setEvents((prev) =>
+        prev.map((event) => (event.id === eventId ? response.event! : event))
+      );
+    }
+    return response;
+  };
+
   useEffect(() => {
     (async () => {
       if (user) {
@@ -77,7 +93,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <EventsContext.Provider
-      value={{ events, loading, createEvent, deleteEvent }}
+      value={{ events, loading, createEvent, deleteEvent, editEvent }}
     >
       {children}
     </EventsContext.Provider>

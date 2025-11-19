@@ -32,8 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // fetch user on mount
   useEffect(() => {
     (async () => {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
+      const refresh = localStorage.getItem("refreshExists");
+      if (refresh) {
         try {
           const response = await AuthAPI.me();
           setUser(response.user);
@@ -52,6 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Response after login: ", response);
       setUser(response.user);
       localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshExists", "true");
+      setLoading(false);
       return { ok: true, message: response.message };
     } catch (error) {
       console.error("Login failed", error);
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setUser(null);
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshExists");
     //await AuthAPI.logout();
   };
 
@@ -79,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await AuthAPI.register({ name, email, password });
       setUser(response.user);
       localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshExists", "true");
       return { ok: true, message: response.message };
     } catch (error) {
       console.error("Registration failed", error);

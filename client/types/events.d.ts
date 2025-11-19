@@ -128,6 +128,7 @@ export interface UpdateEventData {
   allowGuestInvites?: boolean;
   requireRSVP?: boolean;
   maxAttendees?: number;
+  owner?: { id: string; name: string; email: string }; // Owner ID
   status?: "draft" | "published" | "cancelled" | "completed";
 }
 

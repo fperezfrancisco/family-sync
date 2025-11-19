@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -15,6 +15,7 @@ import {
 import { Group } from "@/types/groups";
 import { User as MemberUser } from "@/types/auth";
 import { useQuery } from "@tanstack/react-query";
+import { EventsAPI } from "@/lib/api";
 
 interface GroupCardProps {
   group: Group;
@@ -36,6 +37,14 @@ export default function GroupCard({
   currentUserId,
 }: GroupCardProps) {
   const router = useRouter();
+
+  const [groupEvents, setGroupEvents] = useState([]);
+
+  const fetchGroupEvents = async (groupId: string) => {
+    const response = await EventsAPI.getByGroup(groupId);
+    console.log("Response of events: ", response);
+    return response.events;
+  };
 
   // Get user's role in the group
   const getUserRole = () => {
@@ -97,6 +106,14 @@ export default function GroupCard({
     }
   };
 
+  useEffect(() => {
+    const loadGroupEvents = async () => {
+      const events = await fetchGroupEvents(group.id);
+      setGroupEvents(events);
+    };
+    loadGroupEvents();
+  }, [group.id]);
+
   return (
     <div className="group bg-card border border-border rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Card Header */}
@@ -152,7 +169,7 @@ export default function GroupCard({
           </div>
           <div className="flex items-center space-x-1">
             <Calendar className="h-3 w-3" />
-            <span>0 events</span>
+            <span>{groupEvents.length} events</span>
           </div>
           <div className="flex items-center space-x-1">
             <MessageCircle className="h-3 w-3" />

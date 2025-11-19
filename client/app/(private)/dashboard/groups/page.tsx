@@ -10,6 +10,7 @@ import { GroupGrid } from "@/components/groups";
 import { useGroups } from "@/context/GroupsContext";
 import { useAuth } from "@/context/AuthContext";
 import { Group } from "@/types/groups";
+import { useEvents } from "@/context/EventsContext";
 
 /**
  * Groups Page
@@ -20,6 +21,7 @@ export default function GroupsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { createNewGroup, groups, loading } = useGroups();
   const { user } = useAuth();
+
   const [displayGroups, setDisplayGroups] = useState<Group[]>([]);
 
   // Dummy groups for demonstration (remove when API is connected)

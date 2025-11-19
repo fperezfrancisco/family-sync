@@ -128,8 +128,8 @@ async function canViewEvent(event: EventDoc, userId: string): Promise<boolean> {
   if (!event.isPrivate) return true;
 
   // If event is associated with a group, check group membership
-  if (event.group) {
-    const group = await Group.findById(event.group);
+  if (event.group?.id) {
+    const group = await Group.findById(event.group.id);
     if (group) {
       // Check if user is owner of the group
       if (group.owner.toString() === userId) return true;
@@ -216,7 +216,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         // Events user is invited to
         { "attendees.user": userId },
         // Events from groups user belongs to (public events only)
-        { group: { $in: await getUserGroups(userId) }, isPrivate: false },
+        { "group.id": { $in: await getUserGroups(userId) }, isPrivate: false },
       ],
     };
 
@@ -238,7 +238,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     // Add group filter
     if (groupId) {
-      query.group = groupId;
+      query["group.id"] = groupId;
     }
 
     const events = await Event.find(query)
@@ -804,7 +804,7 @@ router.get("/group/:groupId", async (req: AuthRequest, res: Response) => {
     }
 
     const events = await Event.find({
-      group: groupId,
+      "group.id": groupId,
       status: { $in: ["published", "draft"] },
     })
       .populate("owner", "name email")

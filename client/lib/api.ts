@@ -33,44 +33,108 @@ function buildInit(path: string, init: RequestInit = {}): RequestInit {
   };
 }
 
-async function refreshAccessToken() {
-  try {
-    // Call the refresh endpoint
-    const res = await request("/auth/refresh", {
-      method: "POST",
-      // Include credentials for cookie-based refresh token
-      credentials: "include",
-    });
+// Track refresh attempts to prevent multiple simultaneous refreshes
+let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
 
-    const data = await res.json();
-    const newAccessToken = data.accessToken;
-    // Store the new access token
-    localStorage.setItem("accessToken", newAccessToken);
-    return newAccessToken;
-  } catch (error) {
-    console.error("Failed to refresh access token", error);
-    throw error;
-  }
+// Helper function to reset refresh state
+function resetRefreshState() {
+  isRefreshing = false;
+  refreshPromise = null;
 }
 
-async function request(path: string, init: RequestInit = {}) {
+async function refreshAccessToken() {
+  // If already refreshing, return the existing promise
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
+  // Set the refreshing flag and create the promise
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      // Make direct fetch call to avoid recursion through request()
+      const url = `${BASE}/auth/refresh`;
+      const res = await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        credentials: "include", // Essential for sending cookies
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Refresh failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const newAccessToken = data.accessToken;
+
+      if (!newAccessToken) {
+        throw new Error("No access token received from refresh");
+      }
+
+      // Store the new access token
+      localStorage.setItem("accessToken", newAccessToken);
+      return newAccessToken;
+    } catch (error) {
+      console.error("Failed to refresh access token:", error);
+      // Clear stored token on refresh failure
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshExists");
+      throw error;
+    } finally {
+      // Reset refresh state
+      resetRefreshState();
+    }
+  })();
+
+  return refreshPromise;
+}
+
+async function request(path: string, init: RequestInit = {}, retryCount = 0) {
   const url = `${BASE}${path}`;
   // Helpful debug: print the full URL in dev when debugging 404s
   if (typeof window !== "undefined" && (!BASE || BASE.indexOf("http") !== 0)) {
-    // eslint-disable-next-line no-console
     console.warn("API base URL may be misconfigured:", BASE, "full path:", url);
   }
+
   const res = await fetch(url, buildInit(path, init));
 
-  if (res.status === 401 && !path.match(/^\/auth\/(login|register|refresh)$/)) {
+  // Handle 401 (Unauthorized) - attempt token refresh
+  if (
+    res.status === 401 &&
+    !path.match(/^\/auth\/(login|register|refresh)$/) &&
+    retryCount === 0
+  ) {
     try {
+      //console.log("Access token expired, attempting refresh...");
       await refreshAccessToken();
-      return request(path, init);
-    } catch (error) {
+      //console.log("Token refreshed successfully, retrying request");
+
+      // Retry the original request with new token (only once)
+      return request(path, init, 1);
+    } catch (refreshError) {
+      console.error("Token refresh failed:", refreshError);
+
+      // Clear any stored tokens
       localStorage.removeItem("accessToken");
-      window.location.href = "/auth/login";
-      // If refresh also fails, propagate the original 401 error
-      throw error;
+      localStorage.removeItem("refreshExists");
+
+      // Only redirect if we're in a browser environment
+      if (typeof window !== "undefined") {
+        // Give user feedback before redirect
+        console.log("Session expired. Redirecting to login...");
+
+        // Small delay to let any pending operations complete
+        setTimeout(() => {
+          window.location.href = "/auth/login";
+        }, 100);
+      }
+
+      // Re-throw the original error for proper error handling
+      throw refreshError;
     }
   }
 
@@ -79,11 +143,14 @@ async function request(path: string, init: RequestInit = {}) {
     try {
       const data = await res.json();
       if (data?.message) msg = data.message;
-    } catch {}
+    } catch {
+      // Ignore JSON parsing errors for error messages
+    }
     const err = new Error(msg) as Error & { status?: number };
     err.status = res.status;
     throw err;
   }
+
   return res;
 }
 
@@ -98,9 +165,23 @@ export const AuthAPI = {
     request("/auth/login", { method: "POST", body: JSON.stringify(body) }).then(
       (r) => r.json()
     ),
-  logout: () => {
-    //request("/auth/logout", { method: "POST" });
-    localStorage.removeItem("accessToken");
+  logout: async () => {
+    try {
+      // Call backend logout to revoke refresh token
+      await request("/auth/logout", {
+        method: "POST",
+        credentials: "include", // Include cookies for refresh token
+      });
+    } catch (error) {
+      console.error("Logout request failed:", error);
+      // Continue with local cleanup even if backend call fails
+    } finally {
+      // Always clear local storage
+      localStorage.removeItem("accessToken");
+
+      // Reset refresh state on logout
+      resetRefreshState();
+    }
   },
 };
 

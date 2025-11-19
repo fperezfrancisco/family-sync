@@ -13,9 +13,10 @@ import {
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Event } from "@/types/events";
+import { Event, UpdateEventData } from "@/types/events";
 import Modal from "@/components/ui/Modal";
 import { useEvents } from "@/context/EventsContext";
+import EditEventModal from "./EditEventModal";
 
 interface EventHeaderProps {
   event: Event;
@@ -48,12 +49,13 @@ const canDeleteEvent = (event: Event, userId?: string): boolean => {
 export default function EventHeader({
   event,
   currentUserId,
+  onEventUpdate,
 }: EventHeaderProps) {
   const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { deleteEvent } = useEvents();
+  const { deleteEvent, editEvent } = useEvents();
 
   const canEdit = canEditEvent(event, currentUserId);
   const canDelete = canDeleteEvent(event, currentUserId);
@@ -142,9 +144,33 @@ export default function EventHeader({
 
   // Handle edit event
   const handleEditEvent = () => {
-    // TODO: Implement edit functionality
-    console.log("Edit event:", event.id);
     setIsEditModalOpen(true);
+  };
+
+  // Handle event update (placeholder for API integration)
+  const handleEventUpdate = async (
+    eventId: string,
+    updateData: UpdateEventData
+  ) => {
+    try {
+      // TODO: Implement API call to update event
+      console.log("Updating event:", eventId, updateData);
+
+      // Placeholder for actual API implementation:
+      // const response = await updateEvent(eventId, updateData);
+      // if (response) {
+      //   onEventUpdate?.(); // Refresh event data
+      // }
+      const response = await editEvent(eventId, updateData); // For now, just show success message and refresh
+      if (response) {
+        console.log("Event updated: ", response);
+        onEventUpdate?.(); // Refresh event data even with placeholder
+      }
+    } catch (error) {
+      console.error("Error updating event:", error);
+      alert("Failed to update event. Please try again.");
+      throw error; // Re-throw to let the modal handle the error state
+    }
   };
 
   // Handle delete event
@@ -353,7 +379,7 @@ export default function EventHeader({
               </span>
               <div className="flex -space-x-2">
                 {event.attendees
-                  .filter((attendee, index) => attendee.status === "attending")
+                  .filter((attendee) => attendee.status === "attending")
                   .slice(0, 5)
                   .map((attendee, index) => (
                     <div
@@ -407,27 +433,15 @@ export default function EventHeader({
         </div>
       </Modal>
 
-      {/* Edit Event Modal - Placeholder for now */}
-      <Modal
+      {/* Edit Event Modal */}
+      <EditEventModal
+        key={`edit-${event.id}-${isEditModalOpen}`}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Event"
-        size="lg"
-      >
-        <div className="space-y-4 p-4">
-          <p className="text-muted-foreground">
-            Edit event functionality will be implemented here.
-          </p>
-          <div className="flex justify-end">
-            <button
-              onClick={() => setIsEditModalOpen(false)}
-              className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onSubmit={handleEventUpdate}
+        isLoading={isLoading}
+        event={event}
+      />
     </>
   );
 }
