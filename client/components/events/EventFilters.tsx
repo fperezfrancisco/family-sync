@@ -13,7 +13,7 @@ interface EventFiltersProps {
   }>;
 }
 
-interface EventFilters {
+export interface EventFilters {
   dateRange?: "today" | "week" | "month" | "custom";
   startDate?: string;
   endDate?: string;

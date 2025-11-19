@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Calendar,
@@ -76,6 +76,31 @@ export default function DashboardPage() {
       time: "6 hours ago",
     },
   ];
+
+  useEffect(() => {
+    // Update stats when groups or events change
+
+    const updateStats = async () => {
+      setStats((prevStats) =>
+        prevStats.map((stat) => {
+          if (stat.title === "Active Groups") {
+            return {
+              ...stat,
+              value: groups ? groups.length.toString() : "0",
+            };
+          }
+          if (stat.title === "Upcoming Events") {
+            return {
+              ...stat,
+              value: events ? events.length.toString() : "0",
+            };
+          }
+          return stat;
+        })
+      );
+    };
+    updateStats();
+  }, [groups, events]);
 
   return (
     <div className="space-y-8">

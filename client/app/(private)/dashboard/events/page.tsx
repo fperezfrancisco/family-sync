@@ -7,186 +7,7 @@ import { Event, CreateEventData } from "@/types/events";
 import { useEvents } from "@/context/EventsContext";
 import { useGroups } from "@/context/GroupsContext";
 import { Group } from "@/types";
-
-// Dummy data for demonstration
-const dummyGroups = [
-  { id: "1", name: "Smith Family", type: "family" as const },
-  { id: "2", name: "Weekend Warriors", type: "friends" as const },
-  { id: "3", name: "Work Team", type: "work" as const },
-];
-
-const dummyEvents: Event[] = [
-  {
-    id: "1",
-    name: "Family BBQ",
-    description: "Annual summer barbecue at the park with games and good food!",
-    startDate: "2024-07-20T16:00:00Z",
-    endDate: "2024-07-20T20:00:00Z",
-    isAllDay: false,
-    timezone: "UTC",
-    location: "Central Park, Pavilion A",
-    isVirtual: false,
-    owner: { id: "user1", name: "John Smith", email: "john@example.com" },
-    group: { id: "1", name: "Smith Family", type: "family" },
-    isPrivate: false,
-    allowGuestInvites: true,
-    requireRSVP: true,
-    maxAttendees: 25,
-    attendees: [
-      {
-        user: {
-          id: "user1",
-          name: "John Smith",
-          email: "john@example.com",
-          groups: [],
-        },
-        status: "attending",
-        invitedAt: "2024-07-01T10:00:00Z",
-        respondedAt: "2024-07-01T10:00:00Z",
-      },
-      {
-        user: {
-          id: "user2",
-          name: "Jane Smith",
-          email: "jane@example.com",
-          groups: [],
-        },
-        status: "attending",
-        invitedAt: "2024-07-01T10:00:00Z",
-        respondedAt: "2024-07-02T14:30:00Z",
-      },
-      {
-        user: {
-          id: "user3",
-          name: "Mike Smith",
-          email: "mike@example.com",
-          groups: [],
-        },
-        status: "maybe",
-        invitedAt: "2024-07-01T10:00:00Z",
-        respondedAt: "2024-07-03T09:15:00Z",
-      },
-    ],
-    status: "published",
-    attendeeCount: 2,
-    pendingInvites: 3,
-    userRSVPStatus: "attending",
-    canEdit: true,
-    canDelete: true,
-    createdAt: "2024-07-01T10:00:00Z",
-    updatedAt: "2024-07-01T10:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Team Building Workshop",
-    description:
-      "Monthly team building activity to improve collaboration and communication.",
-    startDate: "2024-07-25T09:00:00Z",
-    endDate: "2024-07-25T17:00:00Z",
-    isAllDay: false,
-    timezone: "UTC",
-    location: "Conference Room B",
-    isVirtual: false,
-    owner: { id: "user4", name: "Sarah Wilson", email: "sarah@company.com" },
-    group: { id: "3", name: "Work Team", type: "work" },
-    isPrivate: false,
-    allowGuestInvites: false,
-    requireRSVP: true,
-    attendees: [
-      {
-        user: {
-          id: "user1",
-          name: "John Smith",
-          email: "john@example.com",
-          groups: [],
-        },
-        status: "pending",
-        invitedAt: "2024-07-10T08:00:00Z",
-      },
-    ],
-    status: "published",
-    attendeeCount: 8,
-    pendingInvites: 2,
-    userRSVPStatus: "pending",
-    canEdit: false,
-    canDelete: false,
-    createdAt: "2024-07-10T08:00:00Z",
-    updatedAt: "2024-07-10T08:00:00Z",
-  },
-  {
-    id: "3",
-    name: "Movie Night",
-    description:
-      "Virtual movie night - we'll watch the latest blockbuster together!",
-    startDate: "2024-07-15T19:00:00Z",
-    endDate: "2024-07-15T22:00:00Z",
-    isAllDay: false,
-    timezone: "UTC",
-    isVirtual: true,
-    locationUrl: "https://zoom.us/j/123456789",
-    owner: { id: "user5", name: "Alex Johnson", email: "alex@example.com" },
-    group: { id: "2", name: "Weekend Warriors", type: "friends" },
-    isPrivate: false,
-    allowGuestInvites: true,
-    requireRSVP: true,
-    maxAttendees: 10,
-    attendees: [
-      {
-        user: {
-          id: "user1",
-          name: "John Smith",
-          email: "john@example.com",
-          groups: [],
-        },
-        status: "attending",
-        invitedAt: "2024-07-05T12:00:00Z",
-        respondedAt: "2024-07-05T18:30:00Z",
-      },
-    ],
-    status: "published",
-    attendeeCount: 6,
-    pendingInvites: 1,
-    userRSVPStatus: "attending",
-    canEdit: false,
-    canDelete: false,
-    createdAt: "2024-07-05T12:00:00Z",
-    updatedAt: "2024-07-05T12:00:00Z",
-  },
-  {
-    id: "4",
-    name: "Birthday Celebration",
-    description: "Celebrating Emma's 25th birthday with cake and surprises!",
-    startDate: "2024-08-10T14:00:00Z",
-    isAllDay: true,
-    timezone: "UTC",
-    location: "Emma's House",
-    isVirtual: false,
-    owner: { id: "user1", name: "John Smith", email: "john@example.com" },
-    isPrivate: false,
-    allowGuestInvites: true,
-    requireRSVP: true,
-    attendees: [
-      {
-        user: {
-          id: "user1",
-          name: "John Smith",
-          email: "john@example.com",
-          groups: [],
-        },
-        status: "attending",
-        invitedAt: "2024-07-15T10:00:00Z",
-        respondedAt: "2024-07-15T10:00:00Z",
-      },
-    ],
-    status: "draft",
-    attendeeCount: 1,
-    userRSVPStatus: "attending",
-    canEdit: true,
-    canDelete: true,
-    createdAt: "2024-07-15T10:00:00Z",
-    updatedAt: "2024-07-16T15:30:00Z",
-  },
-];
+import { EventFilters as EventFiltersType } from "@/components/events/EventFilters";
 
 /**
  * Events Page
@@ -198,9 +19,19 @@ export default function EventsPage() {
   //const [events, setEvents] = useState<Event[]>(dummyEvents);
   const [displayEvents, setDisplayEvents] = useState<Event[]>([]);
   const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<EventFiltersType>({});
   const { groups } = useGroups();
   const { events, createEvent } = useEvents();
+
+  // for filters
+  const today = new Date();
+  const todayWeekday = today.getDay(); // 0 (Sun) to 6 (Sat)
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - todayWeekday);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
   /**
    * Handle event creation
@@ -271,11 +102,77 @@ export default function EventsPage() {
   /**
    * Filter events based on current filters
    */
-  const filteredEvents = displayEvents.filter(() => {
+  const filteredEvents = displayEvents.filter((event: Event) => {
     // Add filtering logic here based on filters state
     // For now, return all events
+    if (filters && Object.keys(filters).length > 0) {
+      // Implement actual filtering logic here
+      if (filters.dateRange) {
+        // Example: filter by date range
+        if (
+          filters.dateRange === "today" &&
+          event.startDate.split("T")[0] !== today.toISOString().split("T")[0]
+        ) {
+          return false;
+        }
+        if (
+          filters.dateRange === "week" &&
+          (event.startDate.split("T")[0] <
+            startOfWeek.toISOString().split("T")[0] ||
+            event.startDate.split("T")[0] >
+              endOfWeek.toISOString().split("T")[0])
+        ) {
+          return false;
+        }
+        if (
+          filters.dateRange === "month" &&
+          (event.startDate.split("T")[0] <
+            startOfMonth.toISOString().split("T")[0] ||
+            event.startDate.split("T")[0] >
+              endOfMonth.toISOString().split("T")[0])
+        ) {
+          return false;
+        }
+        if (filters.dateRange === "custom") {
+          if (
+            (filters.startDate &&
+              filters.startDate.split("T")[0] >
+                event.startDate.split("T")[0]) ||
+            (filters.endDate &&
+              filters.endDate.split("T")[0] < event.startDate.split("T")[0])
+          ) {
+            return false;
+          }
+        }
+      }
+      if (filters.status) {
+        if (filters.status !== event.status) {
+          return false;
+        }
+      }
+      if (filters.groupId) {
+        if (!event.group || filters.groupId !== event.group?.id) {
+          return false;
+        }
+      }
+      if (filters.rsvpStatus) {
+        if (
+          !event.userRSVPStatus ||
+          filters.rsvpStatus !== event.userRSVPStatus
+        ) {
+          return false;
+        }
+      }
+    }
     return true;
   });
+
+  useEffect(() => {
+    if (filters) {
+      // Apply filters to events
+      console.log("New Filters: ", filters);
+    }
+  }, [filters]);
 
   useEffect(() => {
     if (events) {

@@ -314,7 +314,7 @@ export default function EventCard({
                       : "bg-muted hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-600"
                   }`}
                 >
-                  Can&#39;t Go
+                  Can&
                 </button>
               </div>
             )}
