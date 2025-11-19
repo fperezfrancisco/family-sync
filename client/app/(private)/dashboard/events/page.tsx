@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { EventGrid, EventFilters, CreateEventModal } from "@/components/events";
 import { Event, CreateEventData } from "@/types/events";
 import { useEvents } from "@/context/EventsContext";
@@ -14,14 +15,14 @@ import { EventFilters as EventFiltersType } from "@/components/events/EventFilte
  * Shows user's events with filtering and management functionality
  */
 export default function EventsPage() {
+  const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   //const [events, setEvents] = useState<Event[]>(dummyEvents);
-  const [displayEvents, setDisplayEvents] = useState<Event[]>([]);
   const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
   const [filters, setFilters] = useState<EventFiltersType>({});
   const { groups } = useGroups();
-  const { events, createEvent } = useEvents();
+  const { events, createEvent, deleteEvent } = useEvents();
 
   // for filters
   const today = new Date();
@@ -84,9 +85,19 @@ export default function EventsPage() {
   /**
    * Handle event deletion
    */
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (confirm("Are you sure you want to delete this event?")) {
-      alert("Event deleted successfully!");
+      try {
+        const response = await deleteEvent(eventId);
+        if (response && response.message) {
+          alert(response.message);
+        } else {
+          alert("Event deleted successfully!");
+        }
+      } catch (error) {
+        console.error("Error deleting event:", error);
+        alert("Failed to delete event. Please try again.");
+      }
     }
   };
 
@@ -94,91 +105,78 @@ export default function EventsPage() {
    * Handle event details view
    */
   const handleViewDetails = (eventId: string) => {
-    console.log("View event details:", eventId);
-    // TODO: Navigate to event details page
-    alert("Event details page will be implemented soon!");
+    router.push(`/dashboard/events/${eventId}`);
   };
 
   /**
    * Filter events based on current filters
+   * Returns filtered events directly without local state
    */
-  const filteredEvents = displayEvents.filter((event: Event) => {
-    // Add filtering logic here based on filters state
-    // For now, return all events
-    if (filters && Object.keys(filters).length > 0) {
-      // Implement actual filtering logic here
-      if (filters.dateRange) {
-        // Example: filter by date range
-        if (
-          filters.dateRange === "today" &&
-          event.startDate.split("T")[0] !== today.toISOString().split("T")[0]
-        ) {
-          return false;
-        }
-        if (
-          filters.dateRange === "week" &&
-          (event.startDate.split("T")[0] <
-            startOfWeek.toISOString().split("T")[0] ||
-            event.startDate.split("T")[0] >
-              endOfWeek.toISOString().split("T")[0])
-        ) {
-          return false;
-        }
-        if (
-          filters.dateRange === "month" &&
-          (event.startDate.split("T")[0] <
-            startOfMonth.toISOString().split("T")[0] ||
-            event.startDate.split("T")[0] >
-              endOfMonth.toISOString().split("T")[0])
-        ) {
-          return false;
-        }
-        if (filters.dateRange === "custom") {
+  const getFilteredEvents = () => {
+    return events.filter((event: Event) => {
+      // Add filtering logic here based on filters state
+      if (filters && Object.keys(filters).length > 0) {
+        // Implement actual filtering logic here
+        if (filters.dateRange) {
+          // Example: filter by date range
           if (
-            (filters.startDate &&
-              filters.startDate.split("T")[0] >
-                event.startDate.split("T")[0]) ||
-            (filters.endDate &&
-              filters.endDate.split("T")[0] < event.startDate.split("T")[0])
+            filters.dateRange === "today" &&
+            event.startDate.split("T")[0] !== today.toISOString().split("T")[0]
+          ) {
+            return false;
+          }
+          if (
+            filters.dateRange === "week" &&
+            (event.startDate.split("T")[0] <
+              startOfWeek.toISOString().split("T")[0] ||
+              event.startDate.split("T")[0] >
+                endOfWeek.toISOString().split("T")[0])
+          ) {
+            return false;
+          }
+          if (
+            filters.dateRange === "month" &&
+            (event.startDate.split("T")[0] <
+              startOfMonth.toISOString().split("T")[0] ||
+              event.startDate.split("T")[0] >
+                endOfMonth.toISOString().split("T")[0])
+          ) {
+            return false;
+          }
+          if (filters.dateRange === "custom") {
+            if (
+              (filters.startDate &&
+                filters.startDate.split("T")[0] >
+                  event.startDate.split("T")[0]) ||
+              (filters.endDate &&
+                filters.endDate.split("T")[0] < event.startDate.split("T")[0])
+            ) {
+              return false;
+            }
+          }
+        }
+        if (filters.status) {
+          if (filters.status !== event.status) {
+            return false;
+          }
+        }
+        if (filters.groupId) {
+          if (!event.group || filters.groupId !== event.group?.id) {
+            return false;
+          }
+        }
+        if (filters.rsvpStatus) {
+          if (
+            !event.userRSVPStatus ||
+            filters.rsvpStatus !== event.userRSVPStatus
           ) {
             return false;
           }
         }
       }
-      if (filters.status) {
-        if (filters.status !== event.status) {
-          return false;
-        }
-      }
-      if (filters.groupId) {
-        if (!event.group || filters.groupId !== event.group?.id) {
-          return false;
-        }
-      }
-      if (filters.rsvpStatus) {
-        if (
-          !event.userRSVPStatus ||
-          filters.rsvpStatus !== event.userRSVPStatus
-        ) {
-          return false;
-        }
-      }
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    if (filters) {
-      // Apply filters to events
-      console.log("New Filters: ", filters);
-    }
-  }, [filters]);
-
-  useEffect(() => {
-    if (events) {
-      setDisplayEvents(events);
-    }
-  }, [events]);
+      return true;
+    });
+  };
 
   useEffect(() => {
     if (groups) {
@@ -216,7 +214,7 @@ export default function EventsPage() {
 
       {/* Events Grid */}
       <EventGrid
-        events={filteredEvents}
+        events={getFilteredEvents()}
         loading={false}
         onCreateEvent={() => setIsCreateModalOpen(true)}
         onRSVP={handleRSVP}

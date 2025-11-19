@@ -86,7 +86,7 @@ export default function GroupsPage() {
 
       {/* Groups Grid */}
       <GroupGrid
-        groups={groups}
+        groups={displayGroups}
         loading={loading}
         currentUserId={user?.id || undefined}
         onCreateGroup={() => setIsCreateModalOpen(true)}

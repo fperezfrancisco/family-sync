@@ -25,6 +25,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
   const createEvent = async (eventData: CreateEventData) => {
     // Implementation for creating a new event
     const response = await EventsAPI.create(eventData);
+    console.log("Created Event Data from response: ", response.event);
     if (response.event) {
       setEvents((prev) => [...prev, response.event]);
     }
@@ -33,10 +34,21 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
   const deleteEvent = async (eventId: string) => {
     // Implementation for deleting an event
+    console.log("Entered context delete function: ", eventId);
+    setEvents((prev) => {
+      console.log(
+        "[EventsContext] before delete:",
+        prev.map((e) => e.id)
+      );
+      const next = prev.filter((event) => event.id !== eventId);
+      console.log(
+        "[EventsContext] after delete:",
+        next.map((e) => e.id)
+      );
+      return next;
+    });
+
     const response = await EventsAPI.delete(eventId);
-    if (response.status === 200) {
-      setEvents((prev) => prev.filter((event) => event.id !== eventId));
-    }
     return response;
   };
 
@@ -49,6 +61,10 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           const response = await EventsAPI.getAll();
           if (response.events) {
             setEvents(response.events);
+            console.log(
+              "Respones events in the Global Events context: ",
+              response.events
+            );
           }
         } catch (error) {
           console.error("Error fetching events:", error);

@@ -91,6 +91,7 @@ export interface EventListItem {
  * Data structure for creating a new event
  */
 export interface CreateEventData {
+  id?: string;
   name: string;
   description?: string;
   startDate: string;
@@ -100,7 +101,8 @@ export interface CreateEventData {
   location?: string;
   locationUrl?: string;
   isVirtual?: boolean;
-  group?: string; // Group ID
+  owner: { id: string; name: string; email: string }; // Owner ID
+  group?: EventGroup; // Group ID
   isPrivate?: boolean;
   allowGuestInvites?: boolean;
   requireRSVP?: boolean;

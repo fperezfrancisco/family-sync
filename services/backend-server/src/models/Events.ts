@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
+import { id } from "zod/locales";
 
 /**
  * Event Attendee Schema
@@ -57,14 +58,18 @@ const EventSchema = new Schema(
 
     // Event ownership and group association
     owner: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      name: { type: String, required: true },
+      email: { type: String, required: true },
     },
     group: {
-      type: Schema.Types.ObjectId,
-      ref: "Group",
-      required: false, // null for standalone events
+      id: { type: Schema.Types.ObjectId, ref: "Group", required: false },
+      name: { type: String, required: false },
+      type: {
+        type: String,
+        enum: ["family", "friends", "work", "other"],
+        default: "other",
+      },
     },
 
     // Event settings

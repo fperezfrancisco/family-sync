@@ -198,7 +198,7 @@ export default function EventCard({
             </div>
 
             {/* Group Badge */}
-            {event.group && groupStyle && (
+            {event.group && event.group.id && groupStyle && (
               <div
                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mb-2 ${groupStyle.bg} ${groupStyle.text}`}
               >
@@ -209,7 +209,7 @@ export default function EventCard({
             {/* Event Description */}
             {event.description && (
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                {event.description}
+                {event.description || "No description provided."}
               </p>
             )}
           </div>

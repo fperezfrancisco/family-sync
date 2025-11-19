@@ -107,9 +107,11 @@ export default function GroupHeader({
 
       console.log("Delete group:", group.id);
       const response = await deleteGroup(group.id);
-      console.log("Delete group response:", response);
-      // Navigate back to groups page after deletion
-      router.push("/dashboard/groups");
+      if (response && response.message) {
+        console.log("Group deleted: ", response.message);
+        // Navigate back to groups page after deletion
+        router.push("/dashboard/groups");
+      }
     } catch (error) {
       console.error("Failed to delete group:", error);
       alert("Failed to delete group. Please try again.");

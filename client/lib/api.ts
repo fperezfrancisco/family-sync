@@ -185,7 +185,7 @@ export const EventsAPI = {
     location?: string;
     locationUrl?: string;
     isVirtual?: boolean;
-    group?: string;
+    group?: { id: string; name?: string; type?: string };
     isPrivate?: boolean;
     allowGuestInvites?: boolean;
     requireRSVP?: boolean;

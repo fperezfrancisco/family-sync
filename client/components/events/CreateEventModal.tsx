@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, Calendar, MapPin, Users, Globe } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { CreateEventData } from "@/types/events";
+import { useAuth } from "@/context/AuthContext";
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -39,7 +40,8 @@ export default function CreateEventModal({
     location: "",
     locationUrl: "",
     isVirtual: false,
-    group: "",
+    owner: { id: "", name: "", email: "" },
+    group: undefined,
     isPrivate: false,
     allowGuestInvites: true,
     requireRSVP: true,
@@ -47,6 +49,8 @@ export default function CreateEventModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { user } = useAuth();
 
   /**
    * Handle input change
@@ -58,19 +62,38 @@ export default function CreateEventModal({
   ) => {
     const { name, value, type } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox"
-          ? (e.target as HTMLInputElement).checked
-          : type === "number" && value
-          ? parseInt(value)
-          : value,
-    }));
+    if (name === "group" && value !== "") {
+      const selectedGroup = availableGroups.find((group) => group.id === value);
+      setFormData((prev) => ({
+        ...prev,
+        group: selectedGroup
+          ? {
+              id: selectedGroup.id,
+              name: selectedGroup.name,
+              type: selectedGroup.type,
+            }
+          : undefined,
+      }));
+      // Clear error when user starts typing
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+      return;
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]:
+          type === "checkbox"
+            ? (e.target as HTMLInputElement).checked
+            : type === "number" && value
+            ? parseInt(value)
+            : value,
+      }));
 
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      // Clear error when user starts typing
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
     }
   };
 
@@ -130,6 +153,11 @@ export default function CreateEventModal({
         locationUrl: formData.locationUrl || undefined,
         isVirtual: formData.isVirtual || false,
         group: formData.group || undefined,
+        owner: {
+          id: user?.id || "",
+          name: user?.name || "",
+          email: user?.email || "",
+        },
         isPrivate: formData.isPrivate || false,
         allowGuestInvites: formData.allowGuestInvites ?? true,
         requireRSVP: formData.requireRSVP ?? true,
@@ -157,7 +185,12 @@ export default function CreateEventModal({
       location: "",
       locationUrl: "",
       isVirtual: false,
-      group: "",
+      owner: { id: "", name: "", email: "" },
+      group: {
+        id: "",
+        name: "",
+        type: "other",
+      },
       isPrivate: false,
       allowGuestInvites: true,
       requireRSVP: true,
@@ -339,7 +372,7 @@ export default function CreateEventModal({
             </label>
             <select
               name="group"
-              value={formData.group || ""}
+              value={formData.group?.id || ""}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >

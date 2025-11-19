@@ -34,7 +34,18 @@ const CreateEventSchema = z
     location: z.string().max(500).trim().optional(),
     locationUrl: z.string().url().optional().or(z.literal("")),
     isVirtual: z.boolean().default(false),
-    group: z.string().optional(), // Group ID if event is associated with a group
+    owner: z.object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string(),
+    }),
+    group: z
+      .object({
+        id: z.string(),
+        name: z.string().optional(),
+        type: z.string().optional(),
+      })
+      .optional(),
     isPrivate: z.boolean().default(false),
     allowGuestInvites: z.boolean().default(true),
     requireRSVP: z.boolean().default(true),
@@ -111,7 +122,7 @@ const RSVPSchema = z.object({
  */
 async function canViewEvent(event: EventDoc, userId: string): Promise<boolean> {
   // Owner can always view
-  if (event.owner.toString() === userId) return true;
+  if (event.owner?.id.toString() === userId) return true;
 
   // If event is public (not private), user can view
   if (!event.isPrivate) return true;
@@ -143,14 +154,14 @@ async function canViewEvent(event: EventDoc, userId: string): Promise<boolean> {
  * Check if user can edit an event
  */
 function canEditEvent(event: EventDoc, userId: string): boolean {
-  return event.owner.toString() === userId;
+  return event.owner?.id.toString() === userId;
 }
 
 /**
  * Check if user can delete an event
  */
 function canDeleteEvent(event: EventDoc, userId: string): boolean {
-  return event.owner.toString() === userId;
+  return event.owner?.id.toString() === userId;
 }
 
 /**
@@ -232,7 +243,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     const events = await Event.find(query)
       .populate("owner", "name email")
-      .populate("group", "name type")
+      .populate("group", "_id name type")
       .populate("attendees.user", "name email")
       .sort({ startDate: 1 })
       .limit(parseInt(limit as string))
@@ -250,7 +261,13 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         location: event.location,
         isVirtual: event.isVirtual,
         owner: event.owner,
-        group: event.group,
+        group: event.group
+          ? {
+              id: event.group.id,
+              name: event.group.name,
+              type: event.group.type,
+            }
+          : undefined,
         isPrivate: event.isPrivate,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
@@ -293,7 +310,7 @@ router.get("/:eventId", async (req: AuthRequest, res: Response) => {
 
     const event = await Event.findById(eventId)
       .populate("owner", "name email")
-      .populate("group", "name type")
+      .populate("group", "_id name type")
       .populate("attendees.user", "name email");
 
     if (!event) {
@@ -322,7 +339,13 @@ router.get("/:eventId", async (req: AuthRequest, res: Response) => {
         locationUrl: event.locationUrl,
         isVirtual: event.isVirtual,
         owner: event.owner,
-        group: event.group,
+        group: event.group
+          ? {
+              id: event.group.id,
+              name: event.group.name,
+              type: event.group.type,
+            }
+          : undefined,
         isPrivate: event.isPrivate,
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
@@ -366,7 +389,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
     // If event is associated with a group, verify user has permission
     if (eventData.group) {
-      const userRole = await getUserRoleInGroup(eventData.group, userId);
+      const userRole = await getUserRoleInGroup(eventData.group.id, userId);
       if (!userRole) {
         return res.status(403).json({
           message: "Access denied: You are not a member of this group",
@@ -393,7 +416,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       location: eventData.location,
       locationUrl: eventData.locationUrl,
       isVirtual: eventData.isVirtual,
-      owner: userId,
+      owner: eventData.owner,
       group: eventData.group || undefined,
       isPrivate: eventData.isPrivate,
       allowGuestInvites: eventData.allowGuestInvites,
@@ -426,14 +449,14 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     }
 
     await event.save();
-    await event.populate("owner", "name email");
-    await event.populate("group", "name type");
+    //await event.populate("owner", "name email");
+    //await event.populate("group", "_id name type");
     await event.populate("attendees.user", "name email");
 
     return res.status(201).json({
       message: "Event created successfully",
       event: {
-        id: event._id,
+        id: String(event.toObject()._id),
         name: event.name,
         description: event.description,
         startDate: event.startDate,
@@ -444,7 +467,13 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         locationUrl: event.locationUrl,
         isVirtual: event.isVirtual,
         owner: event.owner,
-        group: event.group,
+        group: event.group
+          ? {
+              id: event.group.id,
+              name: event.group.name,
+              type: event.group.type,
+            }
+          : undefined,
         isPrivate: event.isPrivate,
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
@@ -509,7 +538,7 @@ router.put("/:eventId", async (req: AuthRequest, res: Response) => {
 
     await event.save();
     await event.populate("owner", "name email");
-    await event.populate("group", "name type");
+    await event.populate("group", "_id name type");
     await event.populate("attendees.user", "name email");
 
     return res.status(200).json({
@@ -526,7 +555,13 @@ router.put("/:eventId", async (req: AuthRequest, res: Response) => {
         locationUrl: event.locationUrl,
         isVirtual: event.isVirtual,
         owner: event.owner,
-        group: event.group,
+        group: event.group
+          ? {
+              id: event.group.id,
+              name: event.group.name,
+              type: event.group.type,
+            }
+          : undefined,
         isPrivate: event.isPrivate,
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
@@ -773,6 +808,7 @@ router.get("/group/:groupId", async (req: AuthRequest, res: Response) => {
       status: { $in: ["published", "draft"] },
     })
       .populate("owner", "name email")
+      .populate("group", "_id name type")
       .populate("attendees.user", "name email")
       .sort({ startDate: 1 });
 
@@ -788,6 +824,13 @@ router.get("/group/:groupId", async (req: AuthRequest, res: Response) => {
         location: event.location,
         isVirtual: event.isVirtual,
         owner: event.owner,
+        group: event.group
+          ? {
+              id: event.group.id,
+              name: event.group.name,
+              type: event.group.type,
+            }
+          : undefined,
         isPrivate: event.isPrivate,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
