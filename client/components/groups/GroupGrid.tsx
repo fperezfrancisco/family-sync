@@ -69,18 +69,18 @@ export default function GroupGrid({
   if (!groups || groups.length === 0) {
     return (
       <div className="text-center py-16">
-        <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-foreground mb-2 font-inter">
+        <Users className="h-16 w-16 text-[var(--muted-foreground)] mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 font-inter">
           No Groups Yet
         </h2>
-        <p className="text-muted-foreground mb-6 font-inter max-w-md mx-auto">
+        <p className="text-[var(--muted-foreground)] mb-6 font-inter max-w-md mx-auto">
           Create your first group to start connecting with family and friends.
           Organize events, share memories, and stay in touch.
         </p>
         {onCreateGroup && (
           <button
             onClick={onCreateGroup}
-            className="px-6 py-3 rounded-md bg-blue-600 hover:bg-blue-500 text-sm text-white transition-colors font-inter"
+            className="px-6 py-3 rounded-md bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-sm text-white transition-colors font-inter"
           >
             Create Your First Group
           </button>
@@ -94,7 +94,7 @@ export default function GroupGrid({
     <div className="space-y-6">
       {/* Groups count header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground font-inter">
+        <p className="text-sm text-[var(--muted-foreground)] font-inter">
           {groups.length} group{groups.length !== 1 ? "s" : ""} found
         </p>
       </div>

@@ -15,6 +15,7 @@ import Modal from "@/components/ui/Modal";
 import { useGroups } from "@/context/GroupsContext";
 // INVITATION SYSTEM: Import invite modal
 import InviteMembersModal from "./InviteMembersModal";
+import Image from "next/image";
 
 interface GroupHeaderProps {
   group: Group;
@@ -151,127 +152,138 @@ export default function GroupHeader({
 
   return (
     <>
-      <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-        {/* Navigation and Actions */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Groups
-          </button>
-
-          {/* Action Buttons - Only show if user has permissions */}
-          {(canEdit || canDelete || canInvite) && (
-            <div className="flex items-center gap-2">
-              {/* INVITATION SYSTEM: Invite Members button */}
-              {canInvite && (
-                <button
-                  onClick={() => setIsInviteModalOpen(true)}
-                  className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-500 transition-colors"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Invite Members
-                </button>
-              )}
-              {canEdit && (
-                <button
-                  onClick={handleEditGroup}
-                  className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
-                >
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Group
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Group
-                </button>
-              )}
-            </div>
-          )}
+      <div className="bg-card border border-[var(--border)] rounded-lg overflow-hidden">
+        <div className="w-full aspect-[3/2] md:aspect-[24/9] bg-neutral-200 relative overflow-hidden">
+          <div className="w-full h-full absolute z-[5] bg-black/20"></div>
+          <Image
+            src="/wallpapers/default-cabin.jpg"
+            alt="User Wallpaper"
+            width={2000}
+            height={1000}
+            className="object-cover bottom-0 h-full"
+          />
+          <div className="flex items-center justify-between absolute top-4 left-4 z-10">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center text-white hover:text-[var(--foreground)] transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Groups
+            </button>
+          </div>
         </div>
+        <div className="w-full p-6 flex flex-wrap items-start gap-6">
+          {/* Group Information */}
+          <div className="space-y-4">
+            {/* Title and Type */}
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold text-foreground font-inter">
+                    {group.name}
+                  </h1>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getGroupTypeColor(
+                      group.type
+                    )}`}
+                  >
+                    {group.type}
+                  </span>
+                </div>
 
-        {/* Group Information */}
-        <div className="space-y-4">
-          {/* Title and Type */}
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-foreground font-inter">
-                  {group.name}
-                </h1>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getGroupTypeColor(
-                    group.type
-                  )}`}
-                >
-                  {group.type}
+                {/* User's Role Badge */}
+                {userRole && (
+                  <span
+                    className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full capitalize ${getRoleBadgeColor(
+                      userRole
+                    )}`}
+                  >
+                    Your role: {userRole}
+                  </span>
+                )}
+              </div>
+            </div>
+            {/* Action Buttons - Only show if user has permissions */}
+            {(canEdit || canDelete || canInvite) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {/* INVITATION SYSTEM: Invite Members button */}
+                {canInvite && (
+                  <button
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-green-500 hover:dark:bg-green-700 transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Invite Members
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={handleEditGroup}
+                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-blue-500 hover:dark:bg-blue-700 transition-colors"
+                  >
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit Group
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-red-600 dark:text-red-400 rounded-md hover:bg-red-500 hover:text-white hover:dark:bg-red-700 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Group
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="space-y-2 grow flex flex-col">
+            {/* Description */}
+            {group.description && (
+              <p className="text-muted-foreground text-lg leading-relaxed w-full">
+                {group.description}
+              </p>
+            )}
+
+            {/* Group Statistics */}
+            <div className="flex items-center gap-6 text-sm text-muted-foreground w-full">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>{group.members.length} members</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  Created {new Date(group.createdAt).toLocaleDateString()}
                 </span>
               </div>
-
-              {/* User's Role Badge */}
-              {userRole && (
-                <span
-                  className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full capitalize ${getRoleBadgeColor(
-                    userRole
-                  )}`}
-                >
-                  Your role: {userRole}
-                </span>
-              )}
             </div>
-          </div>
 
-          {/* Description */}
-          {group.description && (
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              {group.description}
-            </p>
-          )}
-
-          {/* Group Statistics */}
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>{group.members.length} members</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>
-                Created {new Date(group.createdAt).toLocaleDateString()}
+            {/* Member Avatars Preview */}
+            <div className="flex items-center gap-3 w-full">
+              <span className="text-sm font-medium text-foreground">
+                Members:
               </span>
-            </div>
-          </div>
-
-          {/* Member Avatars Preview */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-foreground">
-              Members:
-            </span>
-            <div className="flex -space-x-2">
-              {group.members.slice(0, 5).map((member) => (
-                <div
-                  key={member.id}
-                  className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
-                  title={`${member.name} (${member.role})`}
-                >
-                  {member.name?.charAt(0).toUpperCase() || "?"}
-                </div>
-              ))}
-              {group.members.length > 5 && (
-                <div className="w-8 h-8 bg-muted border-2 border-background rounded-full flex items-center justify-center text-muted-foreground text-xs font-medium">
-                  +{group.members.length - 5}
-                </div>
-              )}
+              <div className="flex -space-x-2">
+                {group.members.slice(0, 5).map((member) => (
+                  <div
+                    key={member.id}
+                    className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
+                    title={`${member.name} (${member.role})`}
+                  >
+                    {member.name?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                ))}
+                {group.members.length > 5 && (
+                  <div className="w-8 h-8 bg-muted border-2 border-background rounded-full flex items-center justify-center text-muted-foreground text-xs font-medium">
+                    +{group.members.length - 5}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
+        {/* Navigation and Actions */}
       </div>
 
       {/* Delete Confirmation Modal */}

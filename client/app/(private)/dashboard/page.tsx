@@ -161,9 +161,17 @@ export default function DashboardPage() {
           />
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-end sm:gap-4 mt-[-90px] md:mt-[-110px]">
-          <div className="aspect-square bg-black dark:bg-white rounded-full border-4 border-[var(--background)] size-[180px] md:size-[220px]"></div>
+          <div className="aspect-square bg-black dark:bg-white rounded-full border-4 border-[var(--background)] size-[180px] md:size-[220px]">
+            <Image
+              src={"/avatars/ben-profile.jpg"}
+              alt="User Avatar"
+              width={220}
+              height={220}
+              className="object-cover rounded-full w-full h-full"
+            />
+          </div>
           <div className="w-full flex flex-col items-start py-4">
-            <h1 className="text-2xl md:text-3xl font-bold leading-none text-foreground font-inter">
+            <h1 className="text-2xl md:text-3xl font-bold leading-none text-[var(--foreground)] font-inter">
               Welcome back, {user?.name.split(" ")[0] || "User"}!
             </h1>
             <p className="text-sm md:text-base text-muted-foreground mt-2 font-inter">

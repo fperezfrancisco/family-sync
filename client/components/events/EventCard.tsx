@@ -174,14 +174,14 @@ export default function EventCard({
   const RSVPIcon = rsvpStatus.icon;
 
   return (
-    <div className="group bg-card border border-border rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="group bg-[var(--card)] border border-[var(--border)] rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Card Header */}
       <div className="p-6 pb-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3
-                className="font-semibold text-foreground font-inter text-lg leading-tight cursor-pointer hover:text-blue-600 transition-colors"
+                className="font-semibold text-[var(--foreground)] font-inter text-lg leading-tight cursor-pointer hover:text-[var(--primary)] transition-colors"
                 onClick={() => onViewDetails?.(event.id)}
               >
                 {event.name}
@@ -208,7 +208,7 @@ export default function EventCard({
 
             {/* Event Description */}
             {event.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+              <p className="text-sm text-[var(--muted-foreground)] line-clamp-2 mb-3">
                 {event.description || "No description provided."}
               </p>
             )}
@@ -217,8 +217,8 @@ export default function EventCard({
           {/* Actions Menu */}
           {(event.canEdit || event.canDelete) && (
             <div className="relative">
-              <button className="p-2 rounded-md hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
-                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+              <button className="p-2 rounded-md hover:bg-[var(--muted)] transition-colors opacity-0 group-hover:opacity-100">
+                <MoreHorizontal className="h-4 w-4 text-[var(--muted-foreground)]" />
               </button>
             </div>
           )}
@@ -227,13 +227,13 @@ export default function EventCard({
         {/* Event Details */}
         <div className="space-y-2 mb-4">
           {/* Date and Time */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
             <Calendar className="h-4 w-4" />
             <span>
               {formatEventDate(event.startDate, event.endDate, event.isAllDay)}
             </span>
             {event.isAllDay && (
-              <span className="px-2 py-1 bg-muted rounded text-xs font-medium">
+              <span className="px-2 py-1 bg-[var(--muted)] rounded text-xs font-medium">
                 All Day
               </span>
             )}
@@ -241,7 +241,7 @@ export default function EventCard({
 
           {/* Location */}
           {(event.location || event.isVirtual) && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
               {event.isVirtual ? (
                 <>
                   <Video className="h-4 w-4" />
@@ -257,7 +257,7 @@ export default function EventCard({
           )}
 
           {/* Attendees */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
             <Users className="h-4 w-4" />
             <span>
               {event.attendeeCount} attending
@@ -273,7 +273,7 @@ export default function EventCard({
 
         {/* RSVP Status & Actions */}
         {event.requireRSVP && (
-          <div className="flex items-center justify-between pt-3 border-t border-border">
+          <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
             <div
               className={`flex items-center gap-2 px-3 py-1 rounded-full ${rsvpStatus.bg}`}
             >
@@ -291,7 +291,7 @@ export default function EventCard({
                   className={`px-3 py-1 text-xs rounded-md transition-colors ${
                     event.userRSVPStatus === "attending"
                       ? "bg-green-600 text-white"
-                      : "bg-muted hover:bg-green-50 dark:hover:bg-green-950/30 text-muted-foreground hover:text-green-600"
+                      : "bg-[var(--muted)] hover:bg-green-50 dark:hover:bg-green-950/30 text-[var(--muted-foreground)] hover:text-green-600"
                   }`}
                 >
                   Going
@@ -301,7 +301,7 @@ export default function EventCard({
                   className={`px-3 py-1 text-xs rounded-md transition-colors ${
                     event.userRSVPStatus === "maybe"
                       ? "bg-yellow-600 text-white"
-                      : "bg-muted hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-muted-foreground hover:text-yellow-600"
+                      : "bg-[var(--muted)] hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-[var(--muted-foreground)] hover:text-yellow-600"
                   }`}
                 >
                   Maybe
@@ -311,7 +311,7 @@ export default function EventCard({
                   className={`px-3 py-1 text-xs rounded-md transition-colors ${
                     event.userRSVPStatus === "not_attending"
                       ? "bg-red-600 text-white"
-                      : "bg-muted hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-600"
+                      : "bg-[var(--muted)] hover:bg-red-50 dark:hover:bg-red-950/30 text-[var(--muted-foreground)] hover:text-red-600"
                   }`}
                 >
                   Can&

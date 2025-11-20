@@ -82,18 +82,20 @@ export default function EventFilters({
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-muted-foreground" />
-          <h3 className="font-semibold text-foreground font-inter">Filters</h3>
+          <Filter className="h-5 w-5 text-[var(--muted-foreground)]" />
+          <h3 className="font-semibold text-[var(--foreground)] font-inter">
+            Filters
+          </h3>
         </div>
 
         {hasActiveFilters() && (
           <button
             onClick={clearAllFilters}
-            className="flex items-center gap-1 px-3 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 px-3 py-1 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
           >
             <X className="h-3 w-3" />
             Clear All
@@ -105,7 +107,7 @@ export default function EventFilters({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Date Range Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground font-inter">
+          <label className="text-sm font-medium text-[var(--foreground)] font-inter">
             Date Range
           </label>
           <select
@@ -113,7 +115,7 @@ export default function EventFilters({
             onChange={(e) =>
               handleFilterUpdate("dateRange", e.target.value || undefined)
             }
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">All Events</option>
             <option value="today">Today</option>
@@ -127,7 +129,7 @@ export default function EventFilters({
         {currentFilters.dateRange === "custom" && (
           <>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground font-inter">
+              <label className="text-sm font-medium text-[var(--foreground)] font-inter">
                 Start Date
               </label>
               <input
@@ -136,12 +138,12 @@ export default function EventFilters({
                 onChange={(e) =>
                   handleFilterUpdate("startDate", e.target.value || undefined)
                 }
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground font-inter">
+              <label className="text-sm font-medium text-[var(--foreground)] font-inter">
                 End Date
               </label>
               <input
@@ -150,7 +152,7 @@ export default function EventFilters({
                 onChange={(e) =>
                   handleFilterUpdate("endDate", e.target.value || undefined)
                 }
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </>
@@ -158,7 +160,7 @@ export default function EventFilters({
 
         {/* Status Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground font-inter">
+          <label className="text-sm font-medium text-[var(--foreground)] font-inter">
             Status
           </label>
           <select
@@ -169,7 +171,7 @@ export default function EventFilters({
                 e.target.value === "all" ? undefined : e.target.value
               )
             }
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Statuses</option>
             <option value="published">Published</option>
@@ -182,7 +184,7 @@ export default function EventFilters({
         {/* Group Filter */}
         {availableGroups.length > 0 && (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground font-inter">
+            <label className="text-sm font-medium text-[var(--foreground)] font-inter">
               Group
             </label>
             <select
@@ -190,7 +192,7 @@ export default function EventFilters({
               onChange={(e) =>
                 handleFilterUpdate("groupId", e.target.value || undefined)
               }
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Groups</option>
               {availableGroups.map((group) => (
@@ -204,7 +206,7 @@ export default function EventFilters({
 
         {/* RSVP Status Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground font-inter">
+          <label className="text-sm font-medium text-[var(--foreground)] font-inter">
             My RSVP Status
           </label>
           <select
@@ -215,7 +217,7 @@ export default function EventFilters({
                 e.target.value === "all" ? undefined : e.target.value
               )
             }
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Events</option>
             <option value="attending">Attending</option>
@@ -228,9 +230,9 @@ export default function EventFilters({
 
       {/* Active Filters Display */}
       {hasActiveFilters() && (
-        <div className="pt-4 border-t border-border">
+        <div className="pt-4 border-t border-[var(--border)]">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium text-foreground font-inter">
+            <span className="text-sm font-medium text-[var(--foreground)] font-inter">
               Active Filters:
             </span>
           </div>
@@ -238,7 +240,7 @@ export default function EventFilters({
           <div className="flex flex-wrap gap-2">
             {/* Date Range Filter Tag */}
             {currentFilters.dateRange && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 text-sm rounded-full">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-[var(--foreground)] dark:bg-blue-900/20 dark:text-blue-300 text-sm rounded-full">
                 <Calendar className="h-3 w-3" />
                 {currentFilters.dateRange === "custom"
                   ? "Custom Date Range"

@@ -93,7 +93,7 @@ export default function GroupTabs({
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-border">
+      <div className="border-b border-[var(--border)]">
         <nav className="-mb-px flex space-x-8 overflow-x-auto">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -105,16 +105,16 @@ export default function GroupTabs({
                 onClick={() => setActiveTab(tab.id)}
                 className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                   isActive
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300"
+                    ? "border-[var(--primary)] text-[var(--primary)] dark:text-[var(--primary)]"
+                    : "border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]"
                 }`}
                 title={tab.description}
               >
                 <Icon
                   className={`mr-2 h-5 w-5 ${
                     isActive
-                      ? "text-blue-500 dark:text-blue-400"
-                      : "text-muted-foreground group-hover:text-foreground"
+                      ? "text-[var(--primary)] dark:text-[var(--primary)]"
+                      : "text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]"
                   }`}
                 />
                 {tab.label}
@@ -125,7 +125,7 @@ export default function GroupTabs({
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-[400px]">{renderTabContent()}</div>
+      <div className="min-h-[400px] h-full">{renderTabContent()}</div>
     </div>
   );
 }
@@ -140,11 +140,13 @@ function OverviewTab({ group }: { group: Group }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Members Section */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="h-5 w-5 text-blue-500" />
-            <h3 className="text-lg font-semibold text-foreground">Members</h3>
-            <span className="text-sm text-muted-foreground">
+            <Users className="h-5 w-5 text-[var(--primary)]" />
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Members
+            </h3>
+            <span className="text-sm text-[var(--muted-foreground)]">
               ({group.members.length})
             </span>
           </div>
@@ -160,8 +162,10 @@ function OverviewTab({ group }: { group: Group }) {
                     {member.name?.charAt(0).toUpperCase() || "?"}
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-medium text-[var(--foreground)]">
+                      {member.name}
+                    </p>
+                    <p className="text-sm text-[var(--muted-foreground)]">
                       {member.email}
                     </p>
                   </div>
@@ -185,16 +189,16 @@ function OverviewTab({ group }: { group: Group }) {
         </div>
 
         {/* Recent Activity Section - Placeholder */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
+        <div className="bg-card border border-[var(--border)] rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
             Recent Activity
           </h3>
           <div className="space-y-3">
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
+              <p className="text-[var(--muted-foreground)]">
                 No recent activity to display
               </p>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-[var(--muted-foreground)] mt-2">
                 Activity will appear here when members interact with the group
               </p>
             </div>
@@ -203,30 +207,36 @@ function OverviewTab({ group }: { group: Group }) {
       </div>
 
       {/* Group Statistics */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">
+      <div className="bg-card border border-[var(--border)] rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
           Group Statistics
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+            <div className="text-2xl font-bold text-[var(--foreground)]">
               {group.members.length}
             </div>
-            <div className="text-sm text-muted-foreground">Members</div>
+            <div className="text-sm text-[var(--muted-foreground)]">
+              Members
+            </div>
           </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-foreground">0</div>
-            <div className="text-sm text-muted-foreground">Messages</div>
+          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+            <div className="text-2xl font-bold text-[var(--foreground)]">0</div>
+            <div className="text-sm text-[var(--muted-foreground)]">
+              Messages
+            </div>
           </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+            <div className="text-2xl font-bold text-[var(--foreground)]">
               {groupEvents.length}
             </div>
-            <div className="text-sm text-muted-foreground">Events</div>
+            <div className="text-sm text-[var(--muted-foreground)]">Events</div>
           </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-foreground">0</div>
-            <div className="text-sm text-muted-foreground">Media Files</div>
+          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+            <div className="text-2xl font-bold text-[var(--foreground)]">0</div>
+            <div className="text-sm text-[var(--muted-foreground)]">
+              Media Files
+            </div>
           </div>
         </div>
       </div>
@@ -464,16 +474,16 @@ function GroupEventsTab({
       {/* Group Events Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-foreground font-inter">
+          <h2 className="text-xl font-semibold text-[var(--foreground)] font-inter">
             Group Events
           </h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-[var(--muted-foreground)] text-sm mt-1">
             Events organized by this group ({groupEvents.length} total)
           </p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors font-inter"
+          className="flex items-center px-4 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-md hover:bg-[var(--primary)]/80 transition-colors font-inter"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Group Event

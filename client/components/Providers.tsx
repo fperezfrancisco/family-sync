@@ -3,6 +3,8 @@
 import { AuthProvider } from "@/context/AuthContext";
 import { EventsProvider } from "@/context/EventsContext";
 import { GroupsProvider } from "@/context/GroupsContext";
+import { TasksProvider } from "@/context/TasksContext";
+import { ToastProvider } from "@/context/ToastContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 interface ProvidersProps {
@@ -21,9 +23,13 @@ const Providers = ({ children }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <EventsProvider>
-          <GroupsProvider>{children}</GroupsProvider>
-        </EventsProvider>
+        <ToastProvider>
+          <EventsProvider>
+            <TasksProvider>
+              <GroupsProvider>{children}</GroupsProvider>
+            </TasksProvider>
+          </EventsProvider>
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -189,10 +189,10 @@ export default function EventGrid({
         <div key={groupKey}>
           {/* Group Header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground font-inter">
+            <h2 className="text-lg font-semibold text-[var(--foreground)] font-inter">
               {groupKey}
             </h2>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-[var(--muted-foreground)]">
               {eventGroups[groupKey].length} event
               {eventGroups[groupKey].length !== 1 ? "s" : ""}
             </span>

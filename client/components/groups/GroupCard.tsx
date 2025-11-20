@@ -16,6 +16,7 @@ import { Group } from "@/types/groups";
 import { User as MemberUser } from "@/types/auth";
 import { useQuery } from "@tanstack/react-query";
 import { EventsAPI } from "@/lib/api";
+import Image from "next/image";
 
 interface GroupCardProps {
   group: Group;
@@ -106,6 +107,10 @@ export default function GroupCard({
     }
   };
 
+  const handleCardClick = () => {
+    router.push(`/dashboard/groups/${group.id}`);
+  };
+
   useEffect(() => {
     const loadGroupEvents = async () => {
       const events = await fetchGroupEvents(group.id);
@@ -115,7 +120,21 @@ export default function GroupCard({
   }, [group.id]);
 
   return (
-    <div className="group bg-card border border-border rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div
+      onClick={handleCardClick}
+      className="group bg-[var(--card)] border border-[var(--border)] rounded-lg hover:shadow-md hover:dark:shadow-neutral-700 transition-all duration-200 overflow-hidden"
+    >
+      {/* Card Image */}
+      <div className="w-full aspect-[5/3] bg-neutral-400 overflow-hidden">
+        <Image
+          src={"/wallpapers/default-cabin.jpg"}
+          width={500}
+          height={333}
+          alt="Group Image"
+          className="w-full object-cover "
+        />
+      </div>
+
       {/* Card Header */}
       <div className="p-6 pb-4">
         <div className="flex items-start justify-between mb-3">
@@ -126,7 +145,7 @@ export default function GroupCard({
               <Users className={`h-5 w-5 ${typeStyle.icon}`} />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground font-inter text-lg leading-tight">
+              <h3 className="font-semibold text-[var(--foreground)] font-inter text-lg leading-tight">
                 {group.name}
               </h3>
               <div className="flex items-center space-x-2 mt-1">
@@ -137,7 +156,7 @@ export default function GroupCard({
                 </span>
                 <div className="flex items-center space-x-1">
                   {getRoleIcon()}
-                  <span className="text-xs text-muted-foreground capitalize">
+                  <span className="text-xs text-[var(--muted-foreground)] capitalize">
                     {userRole}
                   </span>
                 </div>
@@ -146,20 +165,20 @@ export default function GroupCard({
           </div>
 
           {/* More actions dropdown trigger */}
-          <button className="p-2 rounded-md hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
-            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+          <button className="p-2 rounded-md hover:bg-[var(--muted)] transition-colors opacity-0 group-hover:opacity-100">
+            <MoreHorizontal className="h-4 w-4 text-[var(--muted-foreground)]" />
           </button>
         </div>
 
         {/* Description */}
         {group.description && (
-          <p className="text-sm text-muted-foreground font-inter line-clamp-2 mb-4">
+          <p className="text-sm text-[var(--muted-foreground)] font-inter line-clamp-2 mb-4">
             {group.description}
           </p>
         )}
 
         {/* Group Stats */}
-        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+        <div className="flex items-center space-x-4 text-xs text-[var(--muted-foreground)]">
           <div className="flex items-center space-x-1">
             <Users className="h-3 w-3" />
             <span>
@@ -177,9 +196,8 @@ export default function GroupCard({
           </div>
         </div>
       </div>
-
       {/* Card Actions */}
-      <div className="px-6 pb-6 pt-2">
+      <div className="px-6 pb-6 pt-2 hidden">
         <div className="flex space-x-2">
           <button
             onClick={() => {
@@ -220,7 +238,7 @@ export default function GroupCard({
                 className="relative"
                 title={member.name}
               >
-                <div className="h-6 w-6 bg-blue-600 rounded-full border-2 border-background flex items-center justify-center">
+                <div className="h-6 w-6 bg-[var(--primary)]/90 rounded-full border-2 border-[var(--background)] flex items-center justify-center">
                   <span className="text-xs font-medium text-white">
                     {member.name.charAt(0).toUpperCase()}
                   </span>

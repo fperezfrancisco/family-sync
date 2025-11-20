@@ -383,3 +383,146 @@ export const InvitationsAPI = {
       body: JSON.stringify(body),
     }).then((r) => r.json()),
 };
+
+// TASK MANAGEMENT: Task API endpoints
+export const TasksAPI = {
+  // Get all tasks with filtering and pagination
+  getAll: (params?: {
+    groupId?: string;
+    eventId?: string;
+    status?: string;
+    priority?: string;
+    category?: string;
+    assignedToMe?: boolean;
+    createdByMe?: boolean;
+    dueDate?: string;
+    isOverdue?: boolean;
+    page?: number;
+    limit?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.groupId) searchParams.append("groupId", params.groupId);
+    if (params?.eventId) searchParams.append("eventId", params.eventId);
+    if (params?.status) searchParams.append("status", params.status);
+    if (params?.priority) searchParams.append("priority", params.priority);
+    if (params?.category) searchParams.append("category", params.category);
+    if (params?.assignedToMe) searchParams.append("assignedToMe", "true");
+    if (params?.createdByMe) searchParams.append("createdByMe", "true");
+    if (params?.dueDate) searchParams.append("dueDate", params.dueDate);
+    if (params?.isOverdue) searchParams.append("isOverdue", "true");
+    if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+
+    const queryString = searchParams.toString();
+    const path = queryString ? `/tasks?${queryString}` : "/tasks";
+    return request(path).then((r) => r.json());
+  },
+
+  // Get specific task by ID
+  getById: (taskId: string) =>
+    request(`/tasks/${taskId}`).then((r) => r.json()),
+
+  // Create a new task
+  create: (body: {
+    title: string;
+    description?: string;
+    groupId: string;
+    eventId?: string;
+    assigneeIds?: string[];
+    priority: string;
+    category: string;
+    dueDate?: string;
+    allowSelfAssign: boolean;
+    requiresVerification: boolean;
+  }) =>
+    request("/tasks", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Update an existing task
+  update: (
+    taskId: string,
+    body: {
+      title?: string;
+      description?: string;
+      priority?: string;
+      category?: string;
+      dueDate?: string | null;
+      allowSelfAssign?: boolean;
+      requiresVerification?: boolean;
+      status?: string;
+      blockReason?: string;
+    }
+  ) =>
+    request(`/tasks/${taskId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Delete a task
+  delete: (taskId: string) =>
+    request(`/tasks/${taskId}`, {
+      method: "DELETE",
+    }).then((r) => r.json()),
+
+  // Assign/unassign users to a task
+  assign: (taskId: string, body: { assigneeIds: string[] }) =>
+    request(`/tasks/${taskId}/assign`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Update task status
+  updateStatus: (
+    taskId: string,
+    body: {
+      status: string;
+      comment?: string;
+      blockReason?: string;
+    }
+  ) =>
+    request(`/tasks/${taskId}/status`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Add comment to task
+  addComment: (taskId: string, body: { content: string }) =>
+    request(`/tasks/${taskId}/comments`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Get tasks for a specific group
+  getByGroup: (
+    groupId: string,
+    params?: { status?: string; priority?: string }
+  ) => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append("status", params.status);
+    if (params?.priority) searchParams.append("priority", params.priority);
+
+    const queryString = searchParams.toString();
+    const path = queryString
+      ? `/tasks/group/${groupId}?${queryString}`
+      : `/tasks/group/${groupId}`;
+    return request(path).then((r) => r.json());
+  },
+
+  // Get tasks for a specific event
+  getByEvent: (
+    eventId: string,
+    params?: { status?: string; priority?: string }
+  ) => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append("status", params.status);
+    if (params?.priority) searchParams.append("priority", params.priority);
+
+    const queryString = searchParams.toString();
+    const path = queryString
+      ? `/tasks/event/${eventId}?${queryString}`
+      : `/tasks/event/${eventId}`;
+    return request(path).then((r) => r.json());
+  },
+};

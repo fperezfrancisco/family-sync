@@ -68,18 +68,18 @@ export default function GroupsPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border pb-6">
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground font-inter">
+          <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
             Groups
           </h1>
-          <p className="text-muted-foreground mt-2 font-inter">
+          <p className="text-[var(--muted-foreground)] mt-2 font-inter">
             Manage your family and friend groups
           </p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-sm text-white transition-colors font-inter"
+          className="flex items-center px-4 py-2 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/50 text-sm text-white transition-colors font-inter"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Group
