@@ -88,7 +88,7 @@ export default function UpcomingEventsCard({
 
   if (upcomingEvents.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
           Upcoming Events
         </h3>
@@ -109,14 +109,14 @@ export default function UpcomingEventsCard({
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground font-inter">
           Upcoming Events
         </h3>
         <button
           onClick={handleViewAllEvents}
-          className="text-sm text-primary hover:text-primary/80 font-medium font-inter flex items-center gap-1"
+          className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium font-inter flex items-center gap-1"
         >
           View all
           <ExternalLink className="h-3 w-3" />
@@ -128,15 +128,15 @@ export default function UpcomingEventsCard({
           <div
             key={event.id}
             onClick={() => handleEventClick(event.id)}
-            className="p-3 rounded-lg border border-border hover:border-primary/20 hover:bg-accent/50 transition-all duration-200 cursor-pointer group"
+            className="p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)]/20 hover:bg-[var(--accent)]/50 transition-all duration-200 cursor-pointer group"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-foreground group-hover:text-primary transition-colors truncate font-inter">
+                <h4 className="font-medium text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors truncate font-inter">
                   {event.name}
                 </h4>
 
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 mt-1 text-xs text-[var(--muted-foreground)]">
                   <Clock className="h-3 w-3 shrink-0" />
                   <span className="truncate">
                     {formatEventDate(event.startDate, event.isAllDay)}
@@ -146,7 +146,7 @@ export default function UpcomingEventsCard({
                 <div className="flex items-center gap-4 mt-2">
                   {/* Location */}
                   {(event.location || event.isVirtual) && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
                       <MapPin className="h-3 w-3 shrink-0" />
                       <span className="truncate">
                         {event.isVirtual ? "Virtual" : event.location}
@@ -156,7 +156,7 @@ export default function UpcomingEventsCard({
 
                   {/* Group */}
                   {event.group && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
                       <Users className="h-3 w-3 shrink-0" />
                       <span className="truncate">{event.group.name}</span>
                     </div>
@@ -167,7 +167,7 @@ export default function UpcomingEventsCard({
               {/* Event type indicator */}
               <div className="shrink-0">
                 {event.isAllDay && (
-                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 font-inter">
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[var(--primary)]/10 text-[var(--primary)] font-inter">
                     All Day
                   </span>
                 )}
@@ -190,7 +190,7 @@ export default function UpcomingEventsCard({
       {/* Quick action to create event */}
       <button
         onClick={onCreateEvent}
-        className="w-full mt-4 p-2 border border-dashed border-border rounded-lg text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors font-inter"
+        className="w-full mt-4 p-2 border border-dashed border-[var(--border)] rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]/50 transition-colors font-inter"
       >
         + Create new event
       </button>

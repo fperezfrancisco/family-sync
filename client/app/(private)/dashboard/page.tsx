@@ -17,6 +17,7 @@ import UpcomingEventsCard from "@/components/dashboard/UpcomingEventsCard";
 // INVITATION SYSTEM: Import pending invitations component
 import PendingInvitations from "@/components/dashboard/PendingInvitations";
 import { CreateEventData } from "@/types/events";
+import Image from "next/image";
 
 /**
  * Dashboard Page Component
@@ -147,15 +148,29 @@ export default function DashboardPage() {
   }, [groups, events]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 h-fit">
       {/* Page header */}
-      <div className="border-b border-border pb-6">
-        <h1 className="text-3xl font-bold text-foreground font-inter">
-          Welcome back, {user?.name || "User"}!
-        </h1>
-        <p className="text-muted-foreground mt-2 font-inter">
-          Here&apos;s what&apos;s happening with your family and friends.
-        </p>
+      <div className="w-full relative flex flex-col gap-4 pb-4">
+        <div className="w-full min-h-[120px] aspect-[20/9] md:aspect-[32/9] bg-neutral-400 rounded-2xl overflow-hidden object-bottom">
+          <Image
+            src="/wallpapers/default-lake.jpg"
+            alt="User Wallpaper"
+            width={2000}
+            height={1000}
+            className="object-cover object-bottom w-full h-auto"
+          />
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-end sm:gap-4 mt-[-90px] md:mt-[-110px]">
+          <div className="aspect-square bg-black dark:bg-white rounded-full border-4 border-[var(--background)] size-[180px] md:size-[220px]"></div>
+          <div className="w-full flex flex-col items-start py-4">
+            <h1 className="text-2xl md:text-3xl font-bold leading-none text-foreground font-inter">
+              Welcome back, {user?.name.split(" ")[0] || "User"}!
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-2 font-inter">
+              Here&apos;s what&apos;s happening with your family and friends.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Statistics cards */}
@@ -165,7 +180,7 @@ export default function DashboardPage() {
           return (
             <div
               key={index}
-              className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow duration-200"
+              className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 hover:shadow-md transition-shadow duration-200"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -188,7 +203,7 @@ export default function DashboardPage() {
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Activity */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground font-inter">
               Recent Activity
@@ -237,7 +252,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
           <h2 className="text-xl font-semibold text-foreground mb-6 font-inter">
             Quick Actions
           </h2>
@@ -246,7 +261,7 @@ export default function DashboardPage() {
             <button
               onClick={handleOpenCreateEventModal}
               className="w-full flex items-center justify-between p-3 rounded-md 
-                             bg-primary text-primary-foreground hover:bg-primary/90 
+                             bg-[var(--border)] dark:bg-[var(--secondary)] text-[var(--secondary)] dark:text-[var(--foreground)] hover:bg-[var(--primary)]/90 
                              transition-colors duration-150 font-inter"
             >
               <span className="font-medium">Create New Event</span>
@@ -286,16 +301,16 @@ export default function DashboardPage() {
         <PendingInvitations onInvitationResponse={handleInvitationResponse} />
 
         {/* Task Progress */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4 font-inter">
             Task Progress
           </h3>
           <div className="text-center py-8">
-            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground font-inter">
+            <TrendingUp className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-3" />
+            <p className="text-sm text-[var(--muted-foreground)] font-inter">
               No tasks assigned
             </p>
-            <button className="text-sm text-primary hover:text-primary/80 font-medium mt-2 font-inter">
+            <button className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium mt-2 font-inter">
               Add your first task
             </button>
           </div>

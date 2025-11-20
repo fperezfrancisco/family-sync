@@ -117,14 +117,14 @@ export default function PendingInvitations({
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground font-inter">
+          <h3 className="text-lg font-semibold text-[var(--foreground)] font-inter">
             Pending Invitations
           </h3>
         </div>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin h-6 w-6 border-[3px] border-current border-t-transparent rounded-full text-muted-foreground"></div>
+          <div className="animate-spin h-6 w-6 border-[3px] border-current border-t-transparent rounded-full text-[var(--muted-foreground)]"></div>
         </div>
       </div>
     );
@@ -132,13 +132,13 @@ export default function PendingInvitations({
 
   if (invitations.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4 font-inter">
           Pending Invitations
         </h3>
         <div className="text-center py-8">
-          <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground font-inter">
+          <Mail className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-3" />
+          <p className="text-sm text-[var(--muted-foreground)] font-inter">
             No pending invitations
           </p>
         </div>
@@ -147,12 +147,12 @@ export default function PendingInvitations({
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-foreground font-inter">
+        <h3 className="text-lg font-semibold text-[var(--foreground)] font-inter">
           Pending Invitations
         </h3>
-        <span className="text-sm text-muted-foreground font-inter">
+        <span className="text-sm text-[var(--muted-foreground)] font-inter">
           {invitations.length} pending
         </span>
       </div>
@@ -167,32 +167,32 @@ export default function PendingInvitations({
         {invitations.map((invitation) => (
           <div
             key={invitation.id}
-            className="p-4 border border-border rounded-lg hover:border-primary/20 transition-colors"
+            className="p-4 border border-[var(--border)] rounded-lg hover:border-[var(--primary)]/20 transition-colors"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <h4 className="font-medium text-foreground truncate font-inter">
+                  <Users className="h-4 w-4 text-[var(--muted-foreground)] shrink-0" />
+                  <h4 className="font-medium text-[var(--foreground)] truncate font-inter">
                     {invitation.group.name}
                   </h4>
-                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded font-inter">
+                  <span className="text-xs bg-[var(--muted)] text-[var(--muted-foreground)] px-2 py-1 rounded font-inter">
                     {invitation.group.type}
                   </span>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-2 font-inter">
+                <p className="text-sm text-[var(--muted-foreground)] mb-2 font-inter">
                   <strong>{invitation.inviter.name}</strong> invited you to join
                   this group
                 </p>
 
                 {invitation.message && (
-                  <p className="text-sm text-foreground bg-muted/50 p-2 rounded italic font-inter">
+                  <p className="text-sm text-[var(--foreground)] bg-[var(--muted)]/50 p-2 rounded italic font-inter">
                     &ldquo;{invitation.message}&rdquo;
                   </p>
                 )}
 
-                <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1 mt-2 text-xs text-[var(--muted-foreground)]">
                   <Clock className="h-3 w-3" />
                   <span className="font-inter">
                     {formatDate(invitation.createdAt)}
@@ -221,7 +221,7 @@ export default function PendingInvitations({
             </div>
 
             {processingId === invitation.id && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground font-inter">
+              <div className="mt-2 flex items-center gap-2 text-xs text-[var(--muted-foreground)] font-inter">
                 <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
                 Processing...
               </div>
@@ -233,7 +233,7 @@ export default function PendingInvitations({
       {invitations.length > 0 && (
         <button
           onClick={fetchInvitations}
-          className="w-full mt-4 text-sm text-primary hover:text-primary/80 font-medium font-inter flex items-center justify-center gap-1"
+          className="w-full mt-4 text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium font-inter flex items-center justify-center gap-1"
         >
           <ExternalLink className="h-3 w-3" />
           Refresh invitations

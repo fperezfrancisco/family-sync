@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto lg:ml-64 h-full lg:h-screen">
+        <main className="flex-1 overflow-y-auto bg-[var(--secondary)]/25 dark:bg-[var(--background)] lg:ml-64 h-full lg:h-screen">
           {/* Content container with padding */}
           <div className="p-6 lg:p-8 min-h-full">{children}</div>
         </main>
