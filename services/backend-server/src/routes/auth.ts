@@ -71,7 +71,7 @@ router.post("/register", async (req, res) => {
   return res
     .cookie("refreshToken", refresh, {
       httpOnly: true,
-      secure: true,
+      secure: false, //process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/auth/refresh",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -135,7 +135,7 @@ router.post("/login", async (req, res) => {
   return res
     .cookie("refreshToken", refresh, {
       httpOnly: true,
-      secure: true,
+      secure: false, //process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/auth/refresh",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -172,7 +172,7 @@ router.post("/logout", async (req, res) => {
       // token invalid or expired, nothing to do
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: true,
+        secure: false, //process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/auth/refresh",
       });
@@ -181,7 +181,7 @@ router.post("/logout", async (req, res) => {
   }
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: true,
+    secure: false, //process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/auth/refresh",
   });
@@ -190,7 +190,10 @@ router.post("/logout", async (req, res) => {
 
 // Refresh Token Route
 router.post("/refresh", async (req, res) => {
+  console.log("Refresh route hit. All cookies:", req.cookies);
+  console.log("Cookie header:", req.headers.cookie);
   const refreshToken = req.cookies.refreshToken;
+  console.log("Refresh token? : ", refreshToken);
   if (!refreshToken) {
     return res.status(401).json({ message: "Missing refresh token" });
   }
@@ -234,7 +237,7 @@ router.post("/refresh", async (req, res) => {
     return res
       .cookie("refreshToken", newRefresh, {
         httpOnly: true,
-        secure: true,
+        secure: false, //process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/auth/refresh",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days

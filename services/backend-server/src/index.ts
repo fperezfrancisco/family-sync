@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import groupsRoutes from "./routes/groups.js";
 import eventsRoutes from "./routes/events.js";
@@ -22,6 +23,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Hello from the Backend Server!");

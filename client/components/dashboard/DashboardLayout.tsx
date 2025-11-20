@@ -57,7 +57,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="h-screen bg-background overflow-hidden">
+    <div className="h-screen w-full bg-background overflow-hidden">
       {/* Mobile Header - only visible on mobile */}
       <MobileHeader onMenuToggle={toggleSidebar} />
 

@@ -3,10 +3,10 @@
 :root {
   /* Light mode colors */
   --background: #ffffff;
-  --foreground: #171717;
-  --primary: #3b82f6; /* blue-500 */
+  --foreground: #0f0f0f;
+  --primary: #ff6f61; /* coral */
   --primary-foreground: #ffffff;
-  --secondary: #f5f5f5; /* neutral-100 */
+  --secondary: #ebe2d9; /* neutral-100 */
   --secondary-foreground: #737373; /* neutral-500 */
   --muted: #f5f5f5; /* neutral-100 */
   --muted-foreground: #737373; /* neutral-500 */
@@ -14,19 +14,19 @@
   --accent-foreground: #171717;
   --card: #ffffff;
   --card-foreground: #171717;
-  --border: #e5e5e5; /* neutral-200 */
+  --border: #333; /* neutral-200 */
   --input: #e5e5e5; /* neutral-200 */
   --ring: #3b82f6; /* blue-500 */
 }
 
 .dark {
   /* Dark mode colors */
-  --background: #0a0a0a;
+  --background: #0f0f0f;
   --foreground: #ededed;
-  --primary: #3b82f6; /* blue-500 */
+  --primary: #ff6f61; /* coral */
   --primary-foreground: #ffffff;
-  --secondary: #262626; /* neutral-800 */
-  --secondary-foreground: #a3a3a3; /* neutral-400 */
+  --secondary: #ebe2d9; /* neutral-800 */
+  --secondary-foreground: #ebe2d9; /* light orange */
   --muted: #262626; /* neutral-800 */
   --muted-foreground: #a3a3a3; /* neutral-400 */
   --accent: #262626; /* neutral-800 */
@@ -41,9 +41,9 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Auto dark mode fallback */
-    --background: #0a0a0a;
+    --background: #0f0f0f;
     --foreground: #ededed;
-    --primary: #3b82f6;
+    --primary: #ff6f61;
     --primary-foreground: #ffffff;
     --secondary: #262626;
     --secondary-foreground: #a3a3a3;
@@ -55,7 +55,7 @@
     --card-foreground: #ededed;
     --border: #404040;
     --input: #404040;
-    --ring: #3b82f6;
+    --ring: #ff6f61;
   }
 }
 

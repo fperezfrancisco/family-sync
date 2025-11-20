@@ -25,9 +25,13 @@ function buildInit(path: string, init: RequestInit = {}): RequestInit {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
+  // Check if this is a login or register route that needs to accept cookies
+  const isLoginOrRegister = path.match(/^\/auth\/(login|register)$/);
+
   return {
     mode: "cors",
-    // No credentials: 'include' – we're using Bearer now
+    // Include credentials for login/register to store refresh token cookie
+    credentials: isLoginOrRegister ? "include" : undefined,
     ...init,
     headers,
   };

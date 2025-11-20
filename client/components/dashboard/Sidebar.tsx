@@ -8,14 +8,15 @@ import {
   Users,
   Calendar,
   MessageCircle,
-  Image,
   CheckSquare,
   ChevronDown,
   User,
+  Image as ImageIcon,
   Settings,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -57,7 +58,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     {
       name: "Media",
       href: "/dashboard/media",
-      icon: Image,
+      icon: ImageIcon,
     },
     {
       name: "Tasks",
@@ -105,7 +106,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Mobile overlay - only visible when sidebar is open on mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -113,17 +114,32 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar container */}
       <div
         className={`
-        fixed top-0 left-0 h-screen w-64 bg-card border-r border-border z-50
+        fixed top-0 left-0 h-screen w-64 bg-[var(--secondary)] dark:bg-[var(--background)] border-r border-[var(--border)] z-50
         transform transition-transform duration-300 ease-in-out flex flex-col
         lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}
       >
         {/* Sidebar header - visible on desktop always, mobile when open */}
-        <div className="p-4 border-b border-border">
-          <h2 className="text-xl font-bold text-foreground font-inter">
-            FamilySync
-          </h2>
+        <div className="p-4 border-b border-[var(--border)]">
+          <div className="w-full">
+            <Image
+              src="/logos/bt-light.png"
+              alt="Better Together Logo"
+              className="w-[120px] h-auto block dark:hidden"
+              width={300}
+              height={135}
+            />
+          </div>
+          <div className="w-full">
+            <Image
+              src="/logos/bt-dark.png"
+              alt="Better Together Logo"
+              className="w-[120px] h-auto hidden dark:block"
+              width={500}
+              height={135}
+            />
+          </div>
         </div>
 
         {/* Navigation section */}
@@ -142,8 +158,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   transition-colors duration-150 ease-in-out font-inter
                   ${
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+                      : "text-muted-foreground hover:bg-[var(--primary)]/75 hover:text-[var(--primary-foreground)]"
                   }
                 `}
               >
@@ -155,8 +171,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* User profile section at bottom */}
-        <div className="px-2 py-4 border-t border-border mt-auto">
-          <div className="relative">
+        <div className="px-2 py-4 mt-auto">
+          <div className="relative border border-[var(--border)] rounded-md py-2">
             {/* User profile button */}
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -165,7 +181,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
               {/* User avatar with initials */}
               <div className="shrink-0 mr-3">
-                <div className="size-9 bg-primary bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="size-9 bg-[var(--primary)] rounded-full flex items-center justify-center">
                   <span className="text-xs font-semibold text-primary-foreground">
                     {getUserInitials()}
                   </span>
@@ -193,13 +209,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             {/* User dropdown menu */}
             {showUserMenu && (
               <div
-                className="absolute bottom-full left-0 right-0 mb-2 bg-neutral-800 border border-border 
+                className="absolute bottom-full left-0 right-0 mb-2 bg-[var(--card)] text-[var(--card-foreground)] border border-[var(--border)] 
                             rounded-md shadow-lg dark:shadow-xl dark:shadow-black py-1 z-10"
               >
                 {/* Profile option */}
                 <button
                   onClick={() => handleUserMenuClick("profile")}
-                  className="w-full flex items-center px-3 py-2 text-sm text-white
+                  className="w-full flex items-center px-3 py-2 text-sm
                            hover:bg-accent transition-colors duration-150 font-inter"
                 >
                   <User className="mr-2 h-4 w-4" />
@@ -209,7 +225,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {/* Settings option */}
                 <button
                   onClick={() => handleUserMenuClick("settings")}
-                  className="w-full flex items-center px-3 py-2 text-sm text-white
+                  className="w-full flex items-center px-3 py-2 text-sm 
                            hover:bg-accent transition-colors duration-150 font-inter"
                 >
                   <Settings className="mr-2 h-4 w-4" />

@@ -103,9 +103,10 @@ export function Button({
     "inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none font-inter";
 
   const variantClasses = {
-    primary: "bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500",
+    primary:
+      "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/80 focus:ring-[var(--primary)]",
     secondary:
-      "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border",
+      "bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--secondary)]/80 border border-[var(--border)]",
   };
 
   const sizeClasses = {

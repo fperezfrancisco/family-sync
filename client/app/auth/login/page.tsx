@@ -79,17 +79,19 @@ export default function LoginPage() {
     try {
       const res = await login(formData.email, formData.password);
       console.log(res);
+      if (res && !res.ok) {
+        alert(`Login failed: ${res.message}`);
+        return;
+      }
       if (res && res.ok) {
         // Redirect or handle success
-        alert(`Login successful: ${res.message}`);
+        //alert(`Login successful: ${res.message}`);
         //navigate to dashboard page
         router.push("/dashboard");
       }
-
-      // Redirect or handle success
-      //alert("Login successful! (This is temporary)");
     } catch (error) {
       console.error("Login error:", error);
+      alert(`Login failed: ${error}`);
       setErrors({ general: "Login failed. Please try again." });
     } finally {
       setIsLoading(false);
