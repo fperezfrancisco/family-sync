@@ -5,6 +5,8 @@ import groupsRoutes from "./routes/groups.js";
 import eventsRoutes from "./routes/events.js";
 // INVITATION SYSTEM: Import invitation routes
 import invitationsRoutes from "./routes/invitations.js";
+// TASK SYSTEM: Import task routes
+import tasksRoutes from "./routes/tasks.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -36,6 +38,8 @@ app.use("/groups", groupsRoutes);
 app.use("/events", eventsRoutes);
 // INVITATION SYSTEM: Register invitation routes
 app.use("/invitations", invitationsRoutes);
+// TASK SYSTEM: Register task routes
+app.use("/tasks", tasksRoutes);
 
 // start server
 const startServer = async () => {
