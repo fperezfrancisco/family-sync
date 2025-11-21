@@ -18,6 +18,7 @@ import UpcomingEventsCard from "@/components/dashboard/UpcomingEventsCard";
 import PendingInvitations from "@/components/dashboard/PendingInvitations";
 import { CreateEventData } from "@/types/events";
 import Image from "next/image";
+import { useTasks } from "@/context/TasksContext";
 
 /**
  * Dashboard Page Component
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { groups, refreshGroups } = useGroups();
   const { events, createEvent } = useEvents();
+  const { tasks } = useTasks();
 
   // Modal states
   const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
@@ -50,7 +52,7 @@ export default function DashboardPage() {
     },
     {
       title: "Pending Tasks",
-      value: "8",
+      value: tasks ? tasks.length.toString() : "0",
       icon: CheckSquare,
       color: "text-orange-600",
       bgColor: "bg-orange-100",
@@ -140,12 +142,18 @@ export default function DashboardPage() {
               value: upcomingEventsCount.toString(),
             };
           }
+          if (stat.title === "Pending Tasks") {
+            return {
+              ...stat,
+              value: tasks ? tasks.length.toString() : "0",
+            };
+          }
           return stat;
         })
       );
     };
     updateStats();
-  }, [groups, events]);
+  }, [groups, events, tasks]);
 
   return (
     <div className="space-y-8 h-fit">

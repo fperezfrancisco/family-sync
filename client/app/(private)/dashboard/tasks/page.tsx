@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search, RefreshCw } from "lucide-react";
 import { Task, TaskFilters, TaskStatus, CreateTaskData } from "@/types/tasks";
 import TaskGrid, { TaskGridSkeleton } from "@/components/tasks/TaskGrid";
@@ -16,6 +17,8 @@ import { useAuth } from "@/context/AuthContext";
  * Main page for task management with filtering, creation, and grid display
  */
 export default function TasksPage() {
+  const router = useRouter();
+
   // Context hooks
   const {
     tasks,
@@ -126,8 +129,7 @@ export default function TasksPage() {
    * Handle task view details
    */
   const handleTaskViewDetails = (taskId: string) => {
-    console.log(`Viewing task details for ${taskId}`);
-    // TODO: Navigate to task detail page or open modal
+    router.push(`/dashboard/tasks/${taskId}`);
   };
 
   /**

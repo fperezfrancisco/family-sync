@@ -13,9 +13,17 @@ import {
 import { useRouter } from "next/navigation";
 import { Group } from "@/types/groups";
 import { Event, CreateEventData } from "@/types/events";
+import {
+  Task,
+  CreateTaskData,
+  TaskStatus,
+  TaskFilters as TaskFiltersType,
+} from "@/types/tasks";
 import { useEvents } from "@/context/EventsContext";
+import { useTasks } from "@/context/TasksContext";
 import { useAuth } from "@/context/AuthContext";
 import { EventGrid, EventFilters, CreateEventModal } from "@/components/events";
+import { TaskGrid, TaskFilters, CreateTaskModal } from "@/components/tasks";
 import { EventFilters as EventFiltersType } from "@/components/events/EventFilters";
 
 interface GroupTabsProps {
@@ -135,7 +143,9 @@ export default function GroupTabs({
  */
 function OverviewTab({ group }: { group: Group }) {
   const { events } = useEvents();
+  const { tasks } = useTasks();
   const groupEvents = events.filter((event) => event.group?.id === group.id);
+  const groupTasks = tasks.filter((task) => task.group?.id === group.id);
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -221,10 +231,10 @@ function OverviewTab({ group }: { group: Group }) {
             </div>
           </div>
           <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
-            <div className="text-2xl font-bold text-[var(--foreground)]">0</div>
-            <div className="text-sm text-[var(--muted-foreground)]">
-              Messages
+            <div className="text-2xl font-bold text-[var(--foreground)]">
+              {groupTasks.length}
             </div>
+            <div className="text-sm text-[var(--muted-foreground)]">Tasks</div>
           </div>
           <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
             <div className="text-2xl font-bold text-[var(--foreground)]">
@@ -284,19 +294,7 @@ function MediaTab({ groupId }: { groupId: string }) {
 }
 
 function TasksTab({ groupId }: { groupId: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <CheckSquare className="h-16 w-16 text-muted-foreground mb-4" />
-      <h3 className="text-xl font-semibold text-foreground mb-2">
-        Tasks Coming Soon
-      </h3>
-      <p className="text-muted-foreground text-center max-w-md">
-        Task management functionality will be implemented here. Members will be
-        able to create tasks, assign them to others, and track progress.
-      </p>
-      <p className="text-sm text-muted-foreground mt-4">Group ID: {groupId}</p>
-    </div>
-  );
+  return <GroupTasksTab groupId={groupId} />;
 }
 
 /**
@@ -517,6 +515,177 @@ function GroupEventsTab({
         onSubmit={handleCreateEvent}
         isLoading={isLoading}
         availableGroups={[]} // Empty since we're creating events for this specific group
+      />
+    </div>
+  );
+}
+
+/**
+ * Group Tasks Tab Component
+ * Displays and manages tasks specific to a group
+ */
+function GroupTasksTab({ groupId }: { groupId: string }) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { tasks, createTask, updateTaskStatus, assignTask } = useTasks();
+
+  // Local state for the tasks tab
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filters, setFilters] = useState<TaskFiltersType>({});
+
+  // Filter tasks for this specific group
+  const groupTasks = tasks.filter((task) => task.group?.id === groupId);
+
+  /**
+   * Handle task creation for this group
+   */
+  const handleCreateTask = async (data: CreateTaskData) => {
+    setIsLoading(true);
+    try {
+      // Automatically associate the task with this group
+      const groupTaskData: CreateTaskData = {
+        ...data,
+        groupId: groupId,
+      };
+
+      console.log("Creating group task:", groupTaskData);
+      await createTask(groupTaskData);
+    } catch (error) {
+      console.error("Error creating task:", error);
+      alert("Failed to create task. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handle task status update
+   */
+  const handleTaskStatusUpdate = async (taskId: string, status: TaskStatus) => {
+    try {
+      await updateTaskStatus(taskId, status);
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+    }
+  };
+
+  /**
+   * Handle task view details
+   */
+  const handleTaskViewDetails = (taskId: string) => {
+    router.push(`/dashboard/tasks/${taskId}`);
+  };
+
+  /**
+   * Handle task claim (self-assignment)
+   */
+  const handleTaskClaim = async (taskId: string) => {
+    if (!user?.id) return;
+
+    try {
+      await assignTask(taskId, { assigneeIds: [user.id] });
+    } catch (error) {
+      console.error("Failed to claim task:", error);
+    }
+  };
+
+  /**
+   * Filter tasks based on current filters
+   */
+  const getFilteredTasks = () => {
+    let filtered = [...groupTasks];
+
+    // Apply filters
+    if (filters.status && filters.status !== "all") {
+      filtered = filtered.filter((task) => task.status === filters.status);
+    }
+
+    if (filters.priority && filters.priority !== "all") {
+      filtered = filtered.filter((task) => task.priority === filters.priority);
+    }
+
+    if (filters.category && filters.category !== "all") {
+      filtered = filtered.filter((task) => task.category === filters.category);
+    }
+
+    if (filters.assignedToMe && user) {
+      filtered = filtered.filter((task) =>
+        task.assignees.some((assignee) => assignee.id === user.id)
+      );
+    }
+
+    if (filters.createdByMe && user) {
+      filtered = filtered.filter((task) => task.creator.id === user.id);
+    }
+
+    if (filters.isOverdue) {
+      filtered = filtered.filter((task) => task.isOverdue);
+    }
+
+    if (filters.dueDate) {
+      const filterDate = new Date(filters.dueDate);
+      filtered = filtered.filter((task) => {
+        if (!task.dueDate) return false;
+        const taskDueDate = new Date(task.dueDate);
+        return taskDueDate <= filterDate;
+      });
+    }
+
+    return filtered;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Group Tasks Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--foreground)] font-inter">
+            Group Tasks
+          </h2>
+          <p className="text-[var(--muted-foreground)] text-sm mt-1">
+            Tasks organized by this group ({groupTasks.length} total)
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center px-4 py-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-md hover:bg-[var(--primary)]/80 transition-colors font-inter"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Group Task
+        </button>
+      </div>
+
+      {/* Task Filters */}
+      <TaskFilters
+        currentFilters={filters}
+        onFilterChange={setFilters}
+        availableGroups={[]} // Empty since we're in group context
+      />
+
+      {/* Tasks Grid */}
+      <div className="min-h-[400px]">
+        <TaskGrid
+          tasks={getFilteredTasks()}
+          isLoading={false}
+          error={null}
+          onCreateTask={() => setIsCreateModalOpen(true)}
+          onTaskStatusUpdate={handleTaskStatusUpdate}
+          onTaskViewDetails={handleTaskViewDetails}
+          onTaskClaim={handleTaskClaim}
+          currentUserId={user?.id || undefined}
+          showGroupInfo={false} // Hide group info since we're already in group context
+        />
+      </div>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateTask={handleCreateTask}
+        availableGroups={[]} // Will be handled by the modal to use current group
+        availableEvents={[]} // TODO: Filter events for this group
+        availableUsers={[]} // TODO: Get group members
       />
     </div>
   );
