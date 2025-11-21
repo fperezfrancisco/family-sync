@@ -10,6 +10,9 @@ import tasksRoutes from "./routes/tasks.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { socketService } from "./services/socketServices.js";
 
 // Configure dotenv first
 dotenv.config();
@@ -23,6 +26,14 @@ const corsOptions = {
   origin: allowedOrigins,
   credentials: true,
 };
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+  },
+});
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
@@ -41,6 +52,9 @@ app.use("/invitations", invitationsRoutes);
 // TASK SYSTEM: Register task routes
 app.use("/tasks", tasksRoutes);
 
+// Initialize socket service (handles all connection logic)
+socketService.initialize(io);
+
 // start server
 const startServer = async () => {
   try {
@@ -53,7 +67,7 @@ const startServer = async () => {
     console.log("MongoDB connected successfully");
 
     // Start the server
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`API listening on http://localhost:${PORT}`);
     });
   } catch (error) {
