@@ -152,7 +152,7 @@ export default function GroupHeader({
 
   return (
     <>
-      <div className="bg-card border border-[var(--border)] rounded-lg overflow-hidden">
+      <div className="w-full bg-card border border-[var(--border)] rounded-lg overflow-hidden">
         <div className="w-full aspect-[3/2] md:aspect-[24/9] bg-neutral-200 relative overflow-hidden">
           <div className="w-full h-full absolute z-[5] bg-black/20"></div>
           <Image

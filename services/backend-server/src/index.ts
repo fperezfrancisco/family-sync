@@ -7,12 +7,16 @@ import eventsRoutes from "./routes/events.js";
 import invitationsRoutes from "./routes/invitations.js";
 // TASK SYSTEM: Import task routes
 import tasksRoutes from "./routes/tasks.js";
+// MESSAGE SYSTEM: Import message routes
+import messagesRoutes from "./routes/messages.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { socketService } from "./services/socketServices.js";
+// MESSAGE SYSTEM: Import cleanup utility
+import { scheduleMessageCleanup } from "./utils/messageCleanup.js";
 
 // Configure dotenv first
 dotenv.config();
@@ -51,6 +55,8 @@ app.use("/events", eventsRoutes);
 app.use("/invitations", invitationsRoutes);
 // TASK SYSTEM: Register task routes
 app.use("/tasks", tasksRoutes);
+// MESSAGE SYSTEM: Register message routes (all authenticated)
+app.use("/messages", messagesRoutes);
 
 // Initialize socket service (handles all connection logic)
 socketService.initialize(io);
@@ -66,9 +72,14 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected successfully");
 
+    // MESSAGE SYSTEM: Start automatic message cleanup (30-day retention)
+    scheduleMessageCleanup(30);
+
     // Start the server
     httpServer.listen(PORT, () => {
       console.log(`API listening on http://localhost:${PORT}`);
+      console.log(`💬 Message persistence system initialized`);
+      console.log(`🧹 Automatic cleanup: 30-day message retention`);
     });
   } catch (error) {
     console.error("Error starting server:", error);

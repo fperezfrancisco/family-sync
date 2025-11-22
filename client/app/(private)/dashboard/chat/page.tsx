@@ -14,24 +14,13 @@ import { useGroups } from "@/context/GroupsContext";
  */
 export default function ChatPage() {
   const { groups, loading: groupsLoading } = useGroups();
-  const { isConnected, isConnecting, connectionError } = useSocket();
+  const { connectionError } = useSocket();
 
   // Loading state while groups are being fetched
   if (groupsLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-border pb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground font-inter">
-              Chat
-            </h1>
-            <p className="text-muted-foreground mt-2 font-inter">
-              Stay connected with your groups
-            </p>
-          </div>
-        </div>
-
-        <div className="text-center py-16">
+      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-white">
+        <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your groups...</p>
         </div>
@@ -42,19 +31,8 @@ export default function ChatPage() {
   // Show empty state if no groups exist
   if (!groupsLoading && groups.length === 0) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-border pb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground font-inter">
-              Chat
-            </h1>
-            <p className="text-muted-foreground mt-2 font-inter">
-              Stay connected with your groups
-            </p>
-          </div>
-        </div>
-
-        <div className="text-center py-16">
+      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-white">
+        <div className="text-center">
           <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2 font-inter">
             No Groups Yet
@@ -78,19 +56,8 @@ export default function ChatPage() {
   // Show connection error if socket failed to connect
   if (connectionError) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-border pb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground font-inter">
-              Chat
-            </h1>
-            <p className="text-muted-foreground mt-2 font-inter">
-              Stay connected with your groups
-            </p>
-          </div>
-        </div>
-
-        <div className="text-center py-16">
+      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-white">
+        <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageCircle className="h-8 w-8 text-red-600" />
           </div>
@@ -112,66 +79,11 @@ export default function ChatPage() {
     );
   }
 
-  // Main chat interface
+  // Main chat interface - use negative margins to escape container padding
+  // h variables: h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)]
   return (
-    <div className="space-y-6">
-      {/* Page header with connection status */}
-      <div className="flex items-center justify-between border-b border-border pb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground font-inter">
-            Chat
-          </h1>
-          <div className="flex items-center space-x-2 mt-2">
-            <p className="text-muted-foreground font-inter">
-              Stay connected with your groups
-            </p>
-            <div className="flex items-center space-x-1">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  isConnecting
-                    ? "bg-yellow-500 animate-pulse"
-                    : isConnected
-                    ? "bg-green-500"
-                    : "bg-red-500"
-                }`}
-              />
-              <span className="text-xs text-muted-foreground">
-                {isConnecting
-                  ? "Connecting..."
-                  : isConnected
-                  ? "Connected"
-                  : "Disconnected"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          {groups.length} group{groups.length !== 1 ? "s" : ""} available
-        </div>
-      </div>
-
-      {/* Main Chat Layout */}
+    <div className="h-full w-full">
       <ChatLayout />
-
-      {/* Chat Instructions */}
-      <div className="bg-muted/50 border border-border rounded-lg p-4">
-        <h3 className="font-semibold text-foreground mb-2">Chat Features</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-          <div>
-            <strong>Real-time messaging:</strong> Messages appear instantly for
-            all group members
-          </div>
-          <div>
-            <strong>Typing indicators:</strong> See when others are typing a
-            message
-          </div>
-          <div>
-            <strong>Online status:</strong> Know who&apos;s currently online in
-            each group
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

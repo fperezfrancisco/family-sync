@@ -132,6 +132,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       }));
     });
 
+    // Handle message history when joining a group
+    newSocket.on("message_history", (messages: ChatMessage[]) => {
+      console.log(`📜 Received message history: ${messages.length} messages`);
+
+      if (messages.length > 0) {
+        const groupId = messages[0].groupId;
+        setMessages((prev) => ({
+          ...prev,
+          [groupId]: messages, // Replace with historical messages
+        }));
+      }
+    });
+
     // User join/leave events
     newSocket.on(
       "user_joined",

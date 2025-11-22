@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Users, MoreVertical, Phone, Video, Info } from "lucide-react";
+import {
+  Send,
+  Users,
+  MoreVertical,
+  Phone,
+  Video,
+  Info,
+  ArrowLeft,
+} from "lucide-react";
 import { useChat } from "@/hooks/socket";
 import { useAuth } from "@/context/AuthContext";
 import type { Group } from "@/types/groups";
@@ -12,12 +20,14 @@ import type { ChatMessage } from "@/context/SocketContext";
  *
  * Instagram/iMessage style chat interface with messages,
  * typing indicators, and message composition.
+ * Mobile: Includes back button to return to chat list.
  */
 interface ChatWindowProps {
   group: Group | null;
+  onBackToSidebar?: () => void;
 }
 
-export function ChatWindow({ group }: ChatWindowProps) {
+export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
   const { user } = useAuth();
   const [messageInput, setMessageInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -71,11 +81,22 @@ export function ChatWindow({ group }: ChatWindowProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[var(--background)]">
+    <div className="flex-1 flex flex-col bg-[var(--background)] h-full">
       {/* Chat Header */}
       <div className="p-4 border-b border-[var(--border)] bg-[var(--background)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
+            {/* Back Button - Mobile Only */}
+            {onBackToSidebar && (
+              <button
+                onClick={onBackToSidebar}
+                className="md:hidden p-2 hover:bg-[var(--muted)] rounded-lg transition-colors -ml-2"
+                aria-label="Back to chats"
+              >
+                <ArrowLeft className="h-5 w-5 text-[var(--foreground)]" />
+              </button>
+            )}
+
             {/* Group Avatar */}
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
               <Users className="h-5 w-5 text-white" />
@@ -113,7 +134,7 @@ export function ChatWindow({ group }: ChatWindowProps) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 h-full overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center py-16">
             <Users className="h-16 w-16 text-[var(--muted-foreground)] mx-auto mb-4" />
@@ -239,7 +260,7 @@ function MessageBubble({
       {!isOwnMessage && (
         <div className="w-8 h-8 flex-shrink-0">
           {showAvatar ? (
-            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-linear-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
               <span className="text-xs font-semibold text-white">
                 {message.senderName.charAt(0).toUpperCase()}
               </span>

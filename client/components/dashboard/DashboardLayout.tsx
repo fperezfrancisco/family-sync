@@ -57,18 +57,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="h-screen w-full bg-background overflow-hidden">
+    <div className="h-screen w-full bg-background ">
       {/* Mobile Header - only visible on mobile */}
       <MobileHeader onMenuToggle={toggleSidebar} />
 
-      <div className="flex h-full">
+      <div className="flex h-full w-full ">
         {/* Sidebar - responsive behavior handled within component */}
         <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto bg-[var(--secondary)]/25 dark:bg-[var(--background)] lg:ml-64 h-full lg:h-screen">
+        <main className="flex-1 bg-[var(--secondary)]/25 dark:bg-[var(--background)] lg:ml-64 h-full w-full ">
           {/* Content container with padding */}
-          <div className="p-6 lg:p-8 min-h-full">{children}</div>
+          <div className="p-6 lg:p-8 min-h-full w-full">{children}</div>
         </main>
       </div>
     </div>

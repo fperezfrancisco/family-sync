@@ -99,7 +99,7 @@ export default function GroupTabs({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {/* Tab Navigation */}
       <div className="border-b border-[var(--border)]">
         <nav className="-mb-px flex space-x-8 overflow-x-auto">
@@ -147,7 +147,7 @@ function OverviewTab({ group }: { group: Group }) {
   const groupEvents = events.filter((event) => event.group?.id === group.id);
   const groupTasks = tasks.filter((task) => task.group?.id === group.id);
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Members Section */}
         <div className="bg-card border border-[var(--border)] rounded-lg p-6">
