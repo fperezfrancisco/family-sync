@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   MessageCircle,
   Calendar,
@@ -9,12 +9,12 @@ import {
   Info,
   Users,
   Plus,
+  Send,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Group } from "@/types/groups";
 import { Event, CreateEventData } from "@/types/events";
 import {
-  Task,
   CreateTaskData,
   TaskStatus,
   TaskFilters as TaskFiltersType,
@@ -22,6 +22,8 @@ import {
 import { useEvents } from "@/context/EventsContext";
 import { useTasks } from "@/context/TasksContext";
 import { useAuth } from "@/context/AuthContext";
+import { useGroups } from "@/context/GroupsContext";
+import { useChat, ChatMessage } from "@/hooks/socket";
 import { EventGrid, EventFilters, CreateEventModal } from "@/components/events";
 import { TaskGrid, TaskFilters, CreateTaskModal } from "@/components/tasks";
 import { EventFilters as EventFiltersType } from "@/components/events/EventFilters";
@@ -255,22 +257,11 @@ function OverviewTab({ group }: { group: Group }) {
 }
 
 /**
- * Placeholder tab components for future implementation
+ * Group Chat Tab Component
+ * Provides dedicated chat interface for the current group
  */
 function ChatTab({ groupId }: { groupId: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <MessageCircle className="h-16 w-16 text-muted-foreground mb-4" />
-      <h3 className="text-xl font-semibold text-foreground mb-2">
-        Chat Coming Soon
-      </h3>
-      <p className="text-muted-foreground text-center max-w-md">
-        Group chat functionality will be implemented here. Members will be able
-        to send messages, share files, and communicate in real-time.
-      </p>
-      <p className="text-sm text-muted-foreground mt-4">Group ID: {groupId}</p>
-    </div>
-  );
+  return <GroupChatTab groupId={groupId} />;
 }
 
 function EventsTab({ groupId, group }: { groupId: string; group?: Group }) {
@@ -528,20 +519,22 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
   const router = useRouter();
   const { user } = useAuth();
   const { tasks, createTask, updateTaskStatus, assignTask } = useTasks();
+  const { groups } = useGroups();
 
   // Local state for the tasks tab
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState<TaskFiltersType>({});
 
   // Filter tasks for this specific group
   const groupTasks = tasks.filter((task) => task.group?.id === groupId);
 
+  // Get current group information
+  const currentGroup = groups.find((group: Group) => group.id === groupId);
+
   /**
    * Handle task creation for this group
    */
   const handleCreateTask = async (data: CreateTaskData) => {
-    setIsLoading(true);
     try {
       // Automatically associate the task with this group
       const groupTaskData: CreateTaskData = {
@@ -554,8 +547,6 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
     } catch (error) {
       console.error("Error creating task:", error);
       alert("Failed to create task. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -683,10 +674,302 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreateTask={handleCreateTask}
-        availableGroups={[]} // Will be handled by the modal to use current group
+        defaultGroupId={groupId}
+        availableGroups={
+          currentGroup
+            ? [
+                {
+                  id: currentGroup.id,
+                  name: currentGroup.name,
+                  type: currentGroup.type,
+                },
+              ]
+            : []
+        }
         availableEvents={[]} // TODO: Filter events for this group
         availableUsers={[]} // TODO: Get group members
       />
+    </div>
+  );
+}
+
+/**
+ * Group Chat Tab Component
+ * Simplified chat interface specifically for group conversations
+ */
+function GroupChatTab({ groupId }: { groupId: string }) {
+  const { user } = useAuth();
+  const { groups } = useGroups();
+  const [messageInput, setMessageInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Get current group information
+  const currentGroup = groups.find((group: Group) => group.id === groupId);
+
+  const {
+    messages,
+    sendMessage,
+    typingUsers,
+    onlineUserCount,
+    isConnected,
+    startTyping,
+    stopTyping,
+    isTyping,
+  } = useChat(groupId);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Handle message sending
+  const handleSendMessage = () => {
+    if (messageInput.trim() && currentGroup) {
+      sendMessage(messageInput.trim());
+      setMessageInput("");
+      stopTyping();
+    }
+  };
+
+  // Handle input changes with typing indicators
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageInput(e.target.value);
+
+    // Start typing indicator if not already typing
+    if (e.target.value.trim() && !isTyping) {
+      startTyping();
+    }
+  };
+
+  // Handle key presses
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  if (!currentGroup) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <p className="text-muted-foreground">Group not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col bg-[var(--background)] h-[calc(100vh-200px)] md:h-[calc(100vh-160px)] min-h-[500px] md:min-h-[400px] border border-[var(--border)] rounded-lg overflow-hidden">
+      {/* Chat Header */}
+      <div className="flex-shrink-0 p-4 border-b border-[var(--border)] bg-[var(--background)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {/* Group Avatar */}
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+              <MessageCircle className="h-4 w-4 text-white" />
+            </div>
+
+            {/* Group Info */}
+            <div>
+              <h3 className="font-semibold text-[var(--foreground)] text-sm">
+                {currentGroup.name} Chat
+              </h3>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                {onlineUserCount > 0
+                  ? `${onlineUserCount} online`
+                  : "No one online"}
+              </p>
+            </div>
+          </div>
+
+          {/* Status indicator */}
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isConnected ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+            <span className="text-xs text-[var(--muted-foreground)]">
+              {isConnected ? "Connected" : "Disconnected"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages Area */}
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth"
+        style={{ scrollBehavior: "smooth" }}
+      >
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
+            <MessageCircle className="h-16 w-16 text-[var(--muted-foreground)] mb-4 opacity-50" />
+            <h4 className="text-lg font-semibold text-[var(--foreground)] mb-2">
+              Start the conversation
+            </h4>
+            <p className="text-sm text-[var(--muted-foreground)] max-w-sm">
+              Be the first to send a message to {currentGroup.name}. Your
+              messages will appear here.
+            </p>
+          </div>
+        ) : (
+          <>
+            {messages.map((message, index) => {
+              const isOwnMessage = message.senderId === user?.id;
+              const showAvatar =
+                index === 0 ||
+                messages[index - 1].senderId !== message.senderId;
+
+              return (
+                <GroupMessageBubble
+                  key={message.id}
+                  message={message}
+                  isOwnMessage={isOwnMessage}
+                  showAvatar={showAvatar}
+                />
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+      </div>
+
+      {/* Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="flex-shrink-0 px-4 py-2 bg-[var(--background)]">
+          <div className="flex items-center space-x-2 text-xs text-[var(--muted-foreground)]">
+            <div className="flex space-x-1">
+              <div className="w-1.5 h-1.5 bg-[var(--muted-foreground)] rounded-full animate-bounce" />
+              <div
+                className="w-1.5 h-1.5 bg-[var(--muted-foreground)] rounded-full animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              />
+              <div
+                className="w-1.5 h-1.5 bg-[var(--muted-foreground)] rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              />
+            </div>
+            <span>
+              {typingUsers.length === 1
+                ? `${typingUsers[0]} is typing...`
+                : `${typingUsers.length} people are typing...`}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Message Input */}
+      <div className="flex-shrink-0 p-4 border-t border-[var(--border)] bg-[var(--background)]">
+        <div className="flex items-center space-x-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={messageInput}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              onBlur={stopTyping}
+              placeholder={
+                isConnected
+                  ? `Message ${currentGroup.name}...`
+                  : "Disconnected - reconnecting..."
+              }
+              disabled={!isConnected}
+              className="w-full px-3 py-2 bg-[var(--muted)] border border-[var(--border)] rounded-full 
+                         text-[var(--foreground)] placeholder-[var(--muted-foreground)] text-sm
+                         focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <button
+            onClick={handleSendMessage}
+            disabled={!messageInput.trim() || !isConnected}
+            className="p-2 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-full 
+                       hover:bg-[var(--primary)]/90 transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Group Message Bubble Component
+ * Displays individual messages in the group chat
+ */
+function GroupMessageBubble({
+  message,
+  isOwnMessage,
+  showAvatar,
+}: {
+  message: ChatMessage;
+  isOwnMessage: boolean;
+  showAvatar: boolean;
+}) {
+  const formatTime = (timestamp: Date) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    {
+      /**
+       * return timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+       */
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-end space-x-2 ${
+        isOwnMessage ? "justify-end" : "justify-start"
+      }`}
+    >
+      {/* Avatar (for other users) */}
+      {!isOwnMessage && (
+        <div className={`w-6 h-6 ${showAvatar ? "visible" : "invisible"}`}>
+          {showAvatar && (
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+              {message.senderName?.charAt(0).toUpperCase() || "?"}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Message Bubble */}
+      <div
+        className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+          isOwnMessage
+            ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+            : "bg-[var(--muted)] text-[var(--foreground)]"
+        }`}
+      >
+        {/* Sender name (for other users) */}
+        {!isOwnMessage && showAvatar && (
+          <p className="text-xs text-[var(--muted-foreground)] mb-1">
+            {message.senderName || "Unknown User"}
+          </p>
+        )}
+
+        {/* Message content */}
+        <p className="text-sm break-words">{message.content}</p>
+
+        {/* Timestamp */}
+        <p
+          className={`text-xs mt-1 ${
+            isOwnMessage
+              ? "text-[var(--primary-foreground)]/70"
+              : "text-[var(--muted-foreground)]"
+          }`}
+        >
+          {formatTime(message.timestamp)}
+        </p>
+      </div>
     </div>
   );
 }

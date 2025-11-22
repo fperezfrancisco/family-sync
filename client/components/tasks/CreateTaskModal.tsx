@@ -253,8 +253,8 @@ export default function CreateTaskModal({
               <select
                 value={formData.groupId}
                 onChange={(e) => handleFieldChange("groupId", e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--border)] rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-[var(--border)] rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] disabled:bg-muted disabled:cursor-not-allowed"
+                disabled={isSubmitting || !!defaultGroupId}
               >
                 <option value="">Select a group...</option>
                 {availableGroups.map((group) => (
@@ -263,6 +263,11 @@ export default function CreateTaskModal({
                   </option>
                 ))}
               </select>
+              {defaultGroupId && availableGroups.length > 0 && (
+                <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                  Creating task for current group
+                </p>
+              )}
               {errors.groupId && (
                 <p className="text-red-600 dark:text-red-400 text-sm mt-1">
                   {errors.groupId}

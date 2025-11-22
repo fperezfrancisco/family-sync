@@ -196,12 +196,12 @@ export default function EventHeader({
 
   return (
     <>
-      <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-6">
         {/* Navigation and Actions */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Events
@@ -238,7 +238,7 @@ export default function EventHeader({
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-foreground font-inter">
+                <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
                   {event.name}
                 </h1>
                 <span
@@ -268,19 +268,21 @@ export default function EventHeader({
 
           {/* Description */}
           {event.description && (
-            <p className="text-muted-foreground text-lg leading-relaxed">
+            <p className="text-[var(--muted-foreground)] text-lg leading-relaxed">
               {event.description}
             </p>
           )}
 
           {/* Event Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[var(--muted)]/30 rounded-lg">
             {/* Date and Time */}
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-medium text-foreground">Date & Time</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium text-[var(--foreground)]">
+                  Date & Time
+                </p>
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {formatEventDate(
                     event.startDate,
                     event.endDate,
@@ -288,7 +290,9 @@ export default function EventHeader({
                   )}
                 </p>
                 {event.isAllDay && (
-                  <p className="text-xs text-muted-foreground">All day event</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    All day event
+                  </p>
                 )}
               </div>
             </div>
@@ -301,10 +305,10 @@ export default function EventHeader({
                 <MapPin className="h-5 w-5 text-red-500 mt-0.5" />
               )}
               <div>
-                <p className="font-medium text-foreground">
+                <p className="font-medium text-[var(--foreground)]">
                   {event.isVirtual ? "Virtual Event" : "Location"}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {event.location || "Location not specified"}
                 </p>
                 {event.locationUrl && (
@@ -324,11 +328,13 @@ export default function EventHeader({
             <div className="flex items-start gap-3">
               <User className="h-5 w-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-foreground">Organizer</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium text-[var(--foreground)]">
+                  Organizer
+                </p>
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {event.owner?.name || "Unknown Organizer"}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[var(--muted-foreground)]">
                   {event.owner?.email || "No email provided"}
                 </p>
               </div>
@@ -339,8 +345,10 @@ export default function EventHeader({
               <div className="flex items-start gap-3">
                 <Users className="h-5 w-5 text-orange-500 mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground">Group Event</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-[var(--foreground)]">
+                    Group Event
+                  </p>
+                  <p className="text-sm text-[var(--muted-foreground)]">
                     {event.group.name}
                   </p>
                   <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded capitalize">
@@ -352,7 +360,7 @@ export default function EventHeader({
           </div>
 
           {/* Event Statistics */}
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-6 text-sm text-[var(--muted-foreground)]">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span>{event.attendeeCount} attending</span>
@@ -374,7 +382,7 @@ export default function EventHeader({
           {/* Attendees Preview */}
           {event.attendees && event.attendees.length > 0 && (
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-medium text-[var(--foreground)]">
                 Attendees:
               </span>
               <div className="flex -space-x-2">
@@ -384,14 +392,14 @@ export default function EventHeader({
                   .map((attendee, index) => (
                     <div
                       key={attendee.user.id || index}
-                      className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
+                      className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white text-xs font-medium"
                       title={`${attendee.user.name} (${attendee.status})`}
                     >
                       {attendee.user.name?.charAt(0).toUpperCase() || "?"}
                     </div>
                   ))}
                 {event.attendeeCount > 5 && (
-                  <div className="w-8 h-8 bg-muted border-2 border-background rounded-full flex items-center justify-center text-muted-foreground text-xs font-medium">
+                  <div className="w-8 h-8 bg-[var(--muted)] border-2 border-[var(--background)] rounded-full flex items-center justify-center text-[var(--muted-foreground)] text-xs font-medium">
                     +{event.attendeeCount - 5}
                   </div>
                 )}
@@ -409,7 +417,7 @@ export default function EventHeader({
         size="md"
       >
         <div className="space-y-4 p-4">
-          <p className="text-muted-foreground">
+          <p className="text-[var(--muted-foreground)]">
             Are you sure you want to delete &quot;{event.name}&quot;? This
             action cannot be undone. All event data, RSVPs, and associated
             information will be permanently lost.
@@ -418,7 +426,7 @@ export default function EventHeader({
             <button
               onClick={() => setIsDeleteModalOpen(false)}
               disabled={isLoading}
-              className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm border border-[var(--border)] rounded-md hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

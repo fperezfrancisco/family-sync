@@ -526,3 +526,54 @@ export const TasksAPI = {
     return request(path).then((r) => r.json());
   },
 };
+
+// EVENT COMMENTS API: Event comment management endpoints
+export const EventCommentsAPI = {
+  // Get all comments for an event with threading
+  getByEvent: (eventId: string, params?: { limit?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+
+    const queryString = searchParams.toString();
+    const path = queryString
+      ? `/event-comments/${eventId}?${queryString}`
+      : `/event-comments/${eventId}`;
+    return request(path).then((r) => r.json());
+  },
+
+  // Create a new comment or reply
+  create: (
+    eventId: string,
+    body: {
+      content: string;
+      parentCommentId?: string;
+    }
+  ) =>
+    request(`/event-comments/${eventId}`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Update a comment (author only)
+  update: (commentId: string, body: { content: string }) =>
+    request(`/event-comments/${commentId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }).then((r) => r.json()),
+
+  // Delete a comment (soft delete)
+  delete: (commentId: string) =>
+    request(`/event-comments/${commentId}`, {
+      method: "DELETE",
+    }).then((r) => r.json()),
+
+  // Toggle like on a comment
+  toggleLike: (commentId: string) =>
+    request(`/event-comments/${commentId}/like`, {
+      method: "PATCH",
+    }).then((r) => r.json()),
+
+  // Get comment count for an event
+  getCount: (eventId: string) =>
+    request(`/event-comments/${eventId}/count`).then((r) => r.json()),
+};

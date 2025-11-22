@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthProvider } from "@/context/AuthContext";
+import { EventCommentsProvider } from "@/context/EventCommentsContext";
 import { EventsProvider } from "@/context/EventsContext";
 import { GroupsProvider } from "@/context/GroupsContext";
 import { SocketProvider } from "@/context/SocketContext";
@@ -27,9 +28,11 @@ const Providers = ({ children }: ProvidersProps) => {
         <ToastProvider>
           <SocketProvider>
             <EventsProvider>
-              <TasksProvider>
-                <GroupsProvider>{children}</GroupsProvider>
-              </TasksProvider>
+              <EventCommentsProvider>
+                <TasksProvider>
+                  <GroupsProvider>{children}</GroupsProvider>
+                </TasksProvider>
+              </EventCommentsProvider>
             </EventsProvider>
           </SocketProvider>
         </ToastProvider>

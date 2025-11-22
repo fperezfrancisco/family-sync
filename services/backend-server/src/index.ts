@@ -9,6 +9,8 @@ import invitationsRoutes from "./routes/invitations.js";
 import tasksRoutes from "./routes/tasks.js";
 // MESSAGE SYSTEM: Import message routes
 import messagesRoutes from "./routes/messages.js";
+// EVENT COMMENT SYSTEM: Import event comment routes
+import eventCommentsRoutes from "./routes/eventComments.js";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -57,6 +59,8 @@ app.use("/invitations", invitationsRoutes);
 app.use("/tasks", tasksRoutes);
 // MESSAGE SYSTEM: Register message routes (all authenticated)
 app.use("/messages", messagesRoutes);
+// EVENT COMMENT SYSTEM: Register event comment routes (all authenticated)
+app.use("/event-comments", eventCommentsRoutes);
 
 // Initialize socket service (handles all connection logic)
 socketService.initialize(io);

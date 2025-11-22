@@ -19,6 +19,7 @@ import PendingInvitations from "@/components/dashboard/PendingInvitations";
 import { CreateEventData } from "@/types/events";
 import Image from "next/image";
 import { useTasks } from "@/context/TasksContext";
+import { useSocket } from "@/context/SocketContext";
 
 /**
  * Dashboard Page Component
