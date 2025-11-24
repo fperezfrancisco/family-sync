@@ -22,6 +22,18 @@ const UserSchema = new Schema(
     pendingInvitations: [
       { type: Schema.Types.ObjectId, ref: "GroupInvitation" },
     ],
+    // PROFILE IMAGES: Store URLs for profile avatar and banner images
+    avatar: {
+      fullSize: { type: String, required: false },
+      small: { type: String, required: false },
+    },
+    banner: {
+      fullSize: { type: String, required: false },
+      small: { type: String, required: false },
+    },
+    // Legacy fields for backward compatibility
+    avatarUrl: { type: String, required: false },
+    bannerUrl: { type: String, required: false },
   },
   { timestamps: true }
 );

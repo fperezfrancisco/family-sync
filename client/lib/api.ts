@@ -187,6 +187,87 @@ export const AuthAPI = {
       resetRefreshState();
     }
   },
+  // Profile image upload
+  uploadAvatar: async (
+    file: File
+  ): Promise<{
+    message: string;
+    urls: {
+      fullSize: {
+        direct: string;
+        presigned: string;
+      };
+      small: {
+        direct: string;
+        presigned: string;
+      };
+    };
+    metadata: {
+      originalName: string;
+      size: number;
+      mimeType: string;
+      dimensions: {
+        width: number;
+        height: number;
+      };
+    };
+  }> => {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await request("/auth/profile/avatar", {
+      method: "POST",
+      body: formData, // FormData handles Content-Type automatically
+    });
+
+    return response.json();
+  },
+  // Profile update
+  updateProfile: async (profileData: {
+    name?: string;
+    dob?: string;
+    gender?: "male" | "female" | "other" | "";
+    phone?: {
+      countryCode: string;
+      number: string;
+    };
+  }): Promise<{
+    success: boolean;
+    message: string;
+    user?: {
+      id: string;
+      name: string;
+      email: string;
+      dob?: string;
+      gender?: string;
+      phone?: {
+        countryCode: string;
+        number: string;
+      };
+      groups: string[];
+      avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+      };
+      banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+      };
+      avatarUrl?: string;
+      bannerUrl?: string;
+    };
+    errors?: Array<{
+      field: string;
+      message: string;
+    }>;
+  }> => {
+    const response = await request("/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(profileData),
+    });
+
+    return response.json();
+  },
 };
 
 export const GroupsAPI = {

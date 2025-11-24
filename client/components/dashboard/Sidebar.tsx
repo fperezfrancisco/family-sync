@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Navigation items with icons and routes (private routes)
   const navigationItems = [
@@ -88,8 +90,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     switch (action) {
       case "profile":
-        // TODO: Navigate to profile page
-        console.log("Navigate to profile");
+        setShowProfileModal(true);
         break;
       case "settings":
         // TODO: Navigate to settings page
@@ -246,6 +247,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </>
   );
 }
