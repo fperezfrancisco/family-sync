@@ -20,6 +20,24 @@ export default function UpcomingEventsCard({
 }: UpcomingEventsCardProps) {
   const router = useRouter();
 
+  /**
+   * Helper function to create timezone-adjusted dates
+   */
+  const createTimezoneAdjustedDate = (
+    dateString: string,
+    forceAdjust = false
+  ) => {
+    const date = new Date(dateString);
+    // Adjust for timezone offset to prevent day shifting when needed
+    if (forceAdjust) {
+      const adjustedDate = new Date(
+        date.getTime() + date.getTimezoneOffset() * 60000
+      );
+      return adjustedDate;
+    }
+    return date;
+  };
+
   // Filter and sort upcoming events (next 5 events)
   const now = new Date();
   const upcomingEvents = events
@@ -31,10 +49,10 @@ export default function UpcomingEventsCard({
     .slice(0, 5);
 
   /**
-   * Format date for display
+   * Format date for display with timezone handling
    */
   const formatEventDate = (dateString: string, isAllDay?: boolean) => {
-    const date = new Date(dateString);
+    const date = createTimezoneAdjustedDate(dateString, isAllDay);
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);

@@ -129,13 +129,28 @@ export default function EventGrid({
   }
 
   /**
+   * Helper function to create timezone-adjusted dates for date comparisons
+   */
+  const createTimezoneAdjustedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    // For all-day events and date comparisons, adjust for timezone to prevent day shifting
+    const adjustedDate = new Date(
+      date.getTime() + date.getTimezoneOffset() * 60000
+    );
+    return adjustedDate;
+  };
+
+  /**
    * Group events by date for better organization
    */
   const groupEventsByDate = (events: Event[]) => {
     const groups: { [key: string]: Event[] } = {};
 
     events.forEach((event) => {
-      const eventDate = new Date(event.startDate);
+      // Use timezone-adjusted date for consistent grouping
+      const eventDate = event.isAllDay
+        ? createTimezoneAdjustedDate(event.startDate)
+        : new Date(event.startDate);
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -162,6 +177,19 @@ export default function EventGrid({
       groups[groupKey].push(event);
     });
 
+    // Sort events within each group chronologically
+    Object.keys(groups).forEach((groupKey) => {
+      groups[groupKey].sort((a, b) => {
+        const dateA = a.isAllDay
+          ? createTimezoneAdjustedDate(a.startDate)
+          : new Date(a.startDate);
+        const dateB = b.isAllDay
+          ? createTimezoneAdjustedDate(b.startDate)
+          : new Date(b.startDate);
+        return dateA.getTime() - dateB.getTime();
+      });
+    });
+
     return groups;
   };
 
@@ -179,7 +207,15 @@ export default function EventGrid({
     } else if (bIndex !== -1) {
       return 1;
     } else {
-      return a.localeCompare(b);
+      // For future date groups (month/year format), parse and sort chronologically
+      try {
+        const dateA = new Date(a + " 1"); // Add day to make it a valid date
+        const dateB = new Date(b + " 1");
+        return dateA.getTime() - dateB.getTime();
+      } catch {
+        // Fallback to alphabetical if date parsing fails
+        return a.localeCompare(b);
+      }
     }
   });
 

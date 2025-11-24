@@ -18,10 +18,10 @@ interface AuthRequest extends Request {
 // Zod schemas for request validation
 const CreateTaskSchema = z.object({
   title: z.string().min(1).max(200),
-  description: z.string().max(2000).optional(),
+  description: z.string().max(2000).optional().or(z.literal("")),
   groupId: z.string(),
-  eventId: z.string().optional(),
-  assigneeIds: z.array(z.string()).optional(),
+  eventId: z.string().optional().or(z.literal("")),
+  assigneeIds: z.array(z.string()).optional().default([]),
   priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
   category: z
     .enum([
@@ -33,7 +33,7 @@ const CreateTaskSchema = z.object({
       "other",
     ])
     .default("other"),
-  dueDate: z.string().datetime().optional(),
+  dueDate: z.string().datetime().optional().or(z.literal("")),
   allowSelfAssign: z.boolean().default(true),
   requiresVerification: z.boolean().default(false),
 });
@@ -275,8 +275,8 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
     }
 
     // Validate event if provided
-    let eventInfo = null;
-    if (validatedData.eventId) {
+    let eventInfo = undefined;
+    if (validatedData.eventId && validatedData.eventId.trim() !== "") {
       const event = await Event.findById(validatedData.eventId);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
@@ -336,9 +336,12 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
     }
 
     // Create task
-    const task = new Task({
+    const taskData: any = {
       title: validatedData.title,
-      description: validatedData.description,
+      description:
+        validatedData.description && validatedData.description.trim() !== ""
+          ? validatedData.description
+          : undefined,
       creator: {
         id: creator._id,
         name: creator.name,
@@ -349,16 +352,23 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
         name: (group as any).name,
         type: (group as any).type,
       },
-      event: eventInfo,
       assignees,
       priority: validatedData.priority,
       category: validatedData.category,
-      dueDate: validatedData.dueDate
-        ? new Date(validatedData.dueDate)
-        : undefined,
+      dueDate:
+        validatedData.dueDate && validatedData.dueDate.trim() !== ""
+          ? new Date(validatedData.dueDate)
+          : undefined,
       allowSelfAssign: validatedData.allowSelfAssign,
       requiresVerification: validatedData.requiresVerification,
-    });
+    };
+
+    // Only set event if provided
+    if (eventInfo) {
+      taskData.event = eventInfo;
+    }
+
+    const task = new Task(taskData);
 
     await task.save();
 
@@ -516,11 +526,9 @@ router.delete(
         role !== "owner" &&
         role !== "admin"
       ) {
-        return res
-          .status(403)
-          .json({
-            message: "Only task creator or group admin can delete tasks",
-          });
+        return res.status(403).json({
+          message: "Only task creator or group admin can delete tasks",
+        });
       }
 
       await Task.findByIdAndDelete(taskId);
@@ -850,11 +858,9 @@ router.post(
       // Handle special status requirements
       if (validatedData.status === "blocked") {
         if (!validatedData.blockReason) {
-          return res
-            .status(400)
-            .json({
-              message: "Block reason is required when marking task as blocked",
-            });
+          return res.status(400).json({
+            message: "Block reason is required when marking task as blocked",
+          });
         }
         (task as any).isBlocked = true;
         (task as any).blockReason = validatedData.blockReason;

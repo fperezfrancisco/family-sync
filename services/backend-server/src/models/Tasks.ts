@@ -4,67 +4,73 @@ import { Schema, model, type InferSchemaType } from "mongoose";
  * Task Comment Schema
  * Represents comments, status updates, and activity history for a task
  */
-const TaskCommentSchema = new Schema({
-  user: {
-    id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-  },
-  content: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 1000,
-  },
-  type: {
-    type: String,
-    enum: ["comment", "status_change", "assignment_change", "system"],
-    default: "comment",
-  },
-  // For status change comments, track what changed
-  statusChange: {
-    from: {
-      type: String,
-      enum: [
-        "not_started",
-        "in_progress",
-        "blocked",
-        "completed",
-        "verified",
-        "cancelled",
-      ],
-      required: false,
+const TaskCommentSchema = new Schema(
+  {
+    user: {
+      id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      name: { type: String, required: true },
+      email: { type: String, required: true },
     },
-    to: {
+    content: {
       type: String,
-      enum: [
-        "not_started",
-        "in_progress",
-        "blocked",
-        "completed",
-        "verified",
-        "cancelled",
-      ],
-      required: false,
+      required: true,
+      trim: true,
+      maxlength: 1000,
     },
+    type: {
+      type: String,
+      enum: ["comment", "status_change", "assignment_change", "system"],
+      default: "comment",
+    },
+    // For status change comments, track what changed
+    statusChange: {
+      from: {
+        type: String,
+        enum: [
+          "not_started",
+          "in_progress",
+          "blocked",
+          "completed",
+          "verified",
+          "cancelled",
+        ],
+        required: false,
+      },
+      to: {
+        type: String,
+        enum: [
+          "not_started",
+          "in_progress",
+          "blocked",
+          "completed",
+          "verified",
+          "cancelled",
+        ],
+        required: false,
+      },
+    },
+    createdAt: { type: Date, default: Date.now },
   },
-  createdAt: { type: Date, default: Date.now },
-});
+  { _id: true }
+);
 
 /**
  * Task Assignee Schema
  * Represents users assigned to a task
  */
-const TaskAssigneeSchema = new Schema({
-  id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  assignedAt: { type: Date, default: Date.now },
-  assignedBy: {
+const TaskAssigneeSchema = new Schema(
+  {
     id: { type: Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
+    email: { type: String, required: true },
+    assignedAt: { type: Date, default: Date.now },
+    assignedBy: {
+      id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      name: { type: String, required: true },
+    },
   },
-});
+  { _id: true }
+);
 
 /**
  * Task Schema
@@ -104,13 +110,20 @@ const TaskSchema = new Schema(
 
     // Optional event association
     event: {
-      id: { type: Schema.Types.ObjectId, ref: "Event", required: false },
-      name: { type: String, required: false },
-      startDate: { type: Date, required: false },
+      type: {
+        id: { type: Schema.Types.ObjectId, ref: "Event", required: true },
+        name: { type: String, required: true },
+        startDate: { type: Date, required: true },
+      },
+      required: false,
+      default: undefined,
     },
 
     // Task assignment and status
-    assignees: [TaskAssigneeSchema],
+    assignees: {
+      type: [TaskAssigneeSchema],
+      default: [],
+    },
     status: {
       type: String,
       enum: [
@@ -142,27 +155,43 @@ const TaskSchema = new Schema(
       ],
       default: "other",
     },
-    dueDate: { type: Date, required: false },
+    dueDate: { type: Date, required: false, default: undefined },
 
     // Task settings
     allowSelfAssign: { type: Boolean, default: true },
     requiresVerification: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
-    blockReason: { type: String, required: false, maxlength: 500 },
+    blockReason: {
+      type: String,
+      required: false,
+      maxlength: 500,
+      default: undefined,
+    },
 
     // Comments and updates
-    comments: [TaskCommentSchema],
+    comments: {
+      type: [TaskCommentSchema],
+      default: [],
+    },
 
     // Completion tracking
-    completedAt: { type: Date, required: false },
+    completedAt: { type: Date, required: false, default: undefined },
     completedBy: {
-      id: { type: Schema.Types.ObjectId, ref: "User", required: false },
-      name: { type: String, required: false },
+      type: {
+        id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        name: { type: String, required: true },
+      },
+      required: false,
+      default: undefined,
     },
-    verifiedAt: { type: Date, required: false },
+    verifiedAt: { type: Date, required: false, default: undefined },
     verifiedBy: {
-      id: { type: Schema.Types.ObjectId, ref: "User", required: false },
-      name: { type: String, required: false },
+      type: {
+        id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        name: { type: String, required: true },
+      },
+      required: false,
+      default: undefined,
     },
 
     // Metadata
@@ -305,14 +334,9 @@ TaskSchema.pre("save", function (next) {
 
 // Pre-save validation
 TaskSchema.pre("save", function (next) {
-  // Validate due date is in the future for new tasks
-  if (this.isNew && this.dueDate && this.dueDate <= new Date()) {
-    next(new Error("Due date must be in the future"));
-  }
-
   // Validate block reason is provided when blocked
   if (this.status === "blocked" && !this.blockReason) {
-    next(new Error("Block reason is required when task is blocked"));
+    return next(new Error("Block reason is required when task is blocked"));
   }
 
   // Ensure blocked flag matches status

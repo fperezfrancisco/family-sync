@@ -39,15 +39,33 @@ export default function EventCard({
   onViewDetails,
 }: EventCardProps) {
   /**
-   * Format date for display
+   * Helper function to create timezone-adjusted dates
+   */
+  const createTimezoneAdjustedDate = (
+    dateString: string,
+    forceAdjust = false
+  ) => {
+    const date = new Date(dateString);
+    // Adjust for timezone offset to prevent day shifting when needed
+    if (forceAdjust) {
+      const adjustedDate = new Date(
+        date.getTime() + date.getTimezoneOffset() * 60000
+      );
+      return adjustedDate;
+    }
+    return date;
+  };
+
+  /**
+   * Format date for display with timezone handling
    */
   const formatEventDate = (
     startDate: string,
     endDate?: string,
     isAllDay?: boolean
   ) => {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : null;
+    const start = createTimezoneAdjustedDate(startDate, isAllDay);
+    const end = endDate ? createTimezoneAdjustedDate(endDate, isAllDay) : null;
 
     const options: Intl.DateTimeFormatOptions = {
       weekday: "short",

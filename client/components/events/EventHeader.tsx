@@ -92,14 +92,30 @@ export default function EventHeader({
     }
   };
 
-  // Format date and time
+  // Helper function to create timezone-adjusted dates
+  const createTimezoneAdjustedDate = (
+    dateString: string,
+    forceAdjust = false
+  ) => {
+    const date = new Date(dateString);
+    // Adjust for timezone offset to prevent day shifting when needed
+    if (forceAdjust) {
+      const adjustedDate = new Date(
+        date.getTime() + date.getTimezoneOffset() * 60000
+      );
+      return adjustedDate;
+    }
+    return date;
+  };
+
+  // Format date and time with timezone handling
   const formatEventDate = (
     startDate: string,
     endDate?: string,
     isAllDay?: boolean
   ) => {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : null;
+    const start = createTimezoneAdjustedDate(startDate, isAllDay);
+    const end = endDate ? createTimezoneAdjustedDate(endDate, isAllDay) : null;
 
     const dateOptions: Intl.DateTimeFormatOptions = {
       weekday: "long",
@@ -374,7 +390,11 @@ export default function EventHeader({
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <span>
-                Created {new Date(event.createdAt).toLocaleDateString()}
+                Created{" "}
+                {createTimezoneAdjustedDate(
+                  event.createdAt,
+                  true
+                ).toLocaleDateString()}
               </span>
             </div>
           </div>
