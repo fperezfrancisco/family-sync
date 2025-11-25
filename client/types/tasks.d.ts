@@ -57,7 +57,7 @@ export interface Task {
     name: string;
     email: string;
   };
-  group: {
+  group?: {
     id: string;
     name: string;
     type: "family" | "friends" | "work" | "other";
@@ -98,7 +98,7 @@ export interface Task {
 export interface CreateTaskData {
   title: string;
   description?: string;
-  groupId: string;
+  groupId?: string;
   eventId?: string;
   assigneeIds?: string[];
   priority: TaskPriority;

@@ -507,7 +507,7 @@ export const TasksAPI = {
   create: (body: {
     title: string;
     description?: string;
-    groupId: string;
+    groupId?: string;
     eventId?: string;
     assigneeIds?: string[];
     priority: string;

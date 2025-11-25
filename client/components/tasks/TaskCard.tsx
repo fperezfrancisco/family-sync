@@ -213,7 +213,7 @@ export default function TaskCard({
           {showGroupInfo && (
             <div className="flex items-center mt-1 text-sm text-[var(--secondary-foreground)]">
               <Users className="h-4 w-4 mr-1" />
-              <span>{task.group.name}</span>
+              <span>{task.group?.name || "No Group"}</span>
               {task.event && (
                 <>
                   <span className="mx-2">•</span>

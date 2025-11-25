@@ -22,7 +22,7 @@ export default function EventsPage() {
   const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
   const [filters, setFilters] = useState<EventFiltersType>({});
   const { groups } = useGroups();
-  const { events, createEvent, deleteEvent } = useEvents();
+  const { events, createEvent, deleteEvent, rsvpToEvent } = useEvents();
 
   // for filters
   const today = new Date();
@@ -63,10 +63,8 @@ export default function EventsPage() {
     status: "attending" | "not_attending" | "maybe"
   ) => {
     try {
-      // TODO: Replace with actual API call
       console.log("RSVP update:", eventId, status);
-
-      alert(`RSVP updated to ${status}`);
+      await rsvpToEvent(eventId, status);
     } catch (error) {
       console.error("Error updating RSVP:", error);
       alert("Failed to update RSVP. Please try again.");

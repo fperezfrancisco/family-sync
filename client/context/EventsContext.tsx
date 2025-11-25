@@ -16,6 +16,14 @@ interface EventsContextType {
     eventId: string,
     eventData: UpdateEventData
   ) => Promise<void | { event?: Event; message?: string }>;
+  rsvpToEvent: (
+    eventId: string,
+    status: "attending" | "not_attending" | "maybe"
+  ) => Promise<void | {
+    rsvpStatus?: string;
+    attendeeCount?: number;
+    message?: string;
+  }>;
 }
 
 const EventsContext = createContext<EventsContextType | null>(null);
@@ -68,6 +76,37 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     return response;
   };
 
+  const rsvpToEvent = async (
+    eventId: string,
+    status: "attending" | "not_attending" | "maybe"
+  ) => {
+    // Implementation for RSVPing to an event
+    const response = await EventsAPI.rsvp(eventId, { status });
+    console.log("RSVP response: ", response);
+
+    // Update the local state to reflect the RSVP change
+    if (
+      response.rsvpStatus !== undefined &&
+      response.attendeeCount !== undefined
+    ) {
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === eventId
+            ? {
+                ...event,
+                userRSVPStatus: response.rsvpStatus as
+                  | "attending"
+                  | "not_attending"
+                  | "maybe",
+                attendeeCount: response.attendeeCount,
+              }
+            : event
+        )
+      );
+    }
+    return response;
+  };
+
   useEffect(() => {
     (async () => {
       if (user) {
@@ -93,7 +132,14 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <EventsContext.Provider
-      value={{ events, loading, createEvent, deleteEvent, editEvent }}
+      value={{
+        events,
+        loading,
+        createEvent,
+        deleteEvent,
+        editEvent,
+        rsvpToEvent,
+      }}
     >
       {children}
     </EventsContext.Provider>

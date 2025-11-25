@@ -226,7 +226,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
    * Get tasks filtered by group
    */
   const getTasksByGroup = (groupId: string): Task[] => {
-    return tasks.filter((task) => task.group.id === groupId);
+    return tasks.filter((task) => task.group?.id === groupId);
   };
 
   /**

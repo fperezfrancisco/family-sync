@@ -11,6 +11,10 @@ import {
   Globe,
   Clock,
   User,
+  Check,
+  X,
+  HelpCircle,
+  Clock1,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Event, UpdateEventData } from "@/types/events";
@@ -55,7 +59,8 @@ export default function EventHeader({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { deleteEvent, editEvent } = useEvents();
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+  const { deleteEvent, editEvent, rsvpToEvent } = useEvents();
 
   const canEdit = canEditEvent(event, currentUserId);
   const canDelete = canDeleteEvent(event, currentUserId);
@@ -210,6 +215,27 @@ export default function EventHeader({
     }
   };
 
+  // Handle RSVP
+  const handleRSVP = async (
+    status: "attending" | "not_attending" | "maybe"
+  ) => {
+    try {
+      setRsvpLoading(true);
+      console.log("RSVP to event:", event.id, "status:", status);
+      const response = await rsvpToEvent(event.id, status);
+
+      if (response) {
+        console.log("RSVP successful: ", response);
+        onEventUpdate?.(); // Refresh event data
+      }
+    } catch (error) {
+      console.error("Failed to RSVP:", error);
+      alert("Failed to update RSVP. Please try again.");
+    } finally {
+      setRsvpLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-6">
@@ -265,20 +291,6 @@ export default function EventHeader({
                   {event.status}
                 </span>
               </div>
-
-              {/* User's RSVP Status Badge */}
-              {event.userRSVPStatus && (
-                <span
-                  className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full capitalize ${getRSVPStatusColor(
-                    event.userRSVPStatus
-                  )}`}
-                >
-                  Your RSVP:{" "}
-                  {event.userRSVPStatus === "not_attending"
-                    ? "Not Attending"
-                    : event.userRSVPStatus}
-                </span>
-              )}
             </div>
           </div>
 
@@ -381,12 +393,6 @@ export default function EventHeader({
               <Users className="h-4 w-4" />
               <span>{event.attendeeCount} attending</span>
             </div>
-            {event.pendingInvites && event.pendingInvites > 0 && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{event.pendingInvites} pending invites</span>
-              </div>
-            )}
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <span>
@@ -426,6 +432,62 @@ export default function EventHeader({
               </div>
             </div>
           )}
+
+          {/* RSVP Section */}
+          <div className="border-t border-[var(--border)] pt-6 mt-6">
+            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+              Your Attendance
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => handleRSVP("attending")}
+                disabled={rsvpLoading}
+                className={`flex items-center px-4 py-2 rounded-md border transition-all duration-200 ${
+                  event.userRSVPStatus === "attending"
+                    ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                    : "bg-[var(--muted)] hover:bg-green-50 hover:border-green-300 hover:text-green-700 border-[var(--border)] text-[var(--foreground)]"
+                } ${rsvpLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Going
+                {event.userRSVPStatus === "attending" && " ✓"}
+              </button>
+
+              <button
+                onClick={() => handleRSVP("maybe")}
+                disabled={rsvpLoading}
+                className={`flex items-center px-4 py-2 rounded-md border transition-all duration-200 ${
+                  event.userRSVPStatus === "maybe"
+                    ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600"
+                    : "bg-[var(--muted)] hover:bg-yellow-50 hover:border-yellow-300 hover:text-yellow-700 border-[var(--border)] text-[var(--foreground)]"
+                } ${rsvpLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Maybe
+                {event.userRSVPStatus === "maybe" && " ✓"}
+              </button>
+
+              <button
+                onClick={() => handleRSVP("not_attending")}
+                disabled={rsvpLoading}
+                className={`flex items-center px-4 py-2 rounded-md border transition-all duration-200 ${
+                  event.userRSVPStatus === "not_attending"
+                    ? "bg-red-600 hover:bg-red-700 text-white border-red-600"
+                    : "bg-[var(--muted)] hover:bg-red-50 hover:border-red-300 hover:text-red-700 border-[var(--border)] text-[var(--foreground)]"
+                } ${rsvpLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Can&apos;t Go
+                {event.userRSVPStatus === "not_attending" && " ✓"}
+              </button>
+            </div>
+
+            {rsvpLoading && (
+              <p className="text-sm text-[var(--muted-foreground)] mt-2">
+                Updating attendance...
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

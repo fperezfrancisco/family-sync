@@ -301,7 +301,7 @@ function GroupEventsTab({
 }) {
   const router = useRouter();
   const {} = useAuth(); // Keep import available for future use
-  const { events, createEvent } = useEvents();
+  const { events, createEvent, rsvpToEvent } = useEvents();
 
   // Local state for the events tab
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -365,7 +365,7 @@ function GroupEventsTab({
   ) => {
     try {
       console.log("RSVP update:", eventId, status);
-      alert(`RSVP updated to ${status}`);
+      await rsvpToEvent(eventId, status);
     } catch (error) {
       console.error("Error updating RSVP:", error);
       alert("Failed to update RSVP. Please try again.");

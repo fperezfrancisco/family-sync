@@ -131,7 +131,8 @@ export default function CreateTaskModal({
       newErrors.title = "Task title is required";
     }
 
-    if (!formData.groupId) {
+    // Group is only required if not creating task for an event
+    if (!defaultEventId && !formData.groupId) {
       newErrors.groupId = "Please select a group";
     }
 
@@ -245,35 +246,56 @@ export default function CreateTaskModal({
             </div>
 
             {/* Group Selection */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-2">
-                <Users className="h-4 w-4 inline mr-1" />
-                Group *
-              </label>
-              <select
-                value={formData.groupId}
-                onChange={(e) => handleFieldChange("groupId", e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--border)] rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] disabled:bg-muted disabled:cursor-not-allowed"
-                disabled={isSubmitting || !!defaultGroupId}
-              >
-                <option value="">Select a group...</option>
-                {availableGroups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name} ({group.type})
-                  </option>
-                ))}
-              </select>
-              {defaultGroupId && availableGroups.length > 0 && (
-                <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                  Creating task for current group
-                </p>
-              )}
-              {errors.groupId && (
-                <p className="text-red-600 dark:text-red-400 text-sm mt-1">
-                  {errors.groupId}
-                </p>
-              )}
-            </div>
+            {!defaultEventId && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-2">
+                  <Users className="h-4 w-4 inline mr-1" />
+                  Group *
+                </label>
+                <select
+                  value={formData.groupId}
+                  onChange={(e) => handleFieldChange("groupId", e.target.value)}
+                  className="w-full px-3 py-2 border border-[var(--border)] rounded-md focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] disabled:bg-muted disabled:cursor-not-allowed"
+                  disabled={isSubmitting || !!defaultGroupId}
+                >
+                  <option value="">Select a group...</option>
+                  {availableGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.type})
+                    </option>
+                  ))}
+                </select>
+                {defaultGroupId && availableGroups.length > 0 && (
+                  <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                    Creating task for current group
+                  </p>
+                )}
+                {errors.groupId && (
+                  <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+                    {errors.groupId}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Event Context Info */}
+            {defaultEventId && availableEvents.length > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Creating task for event: {availableEvents[0].name}
+                    </p>
+                    {availableGroups.length > 0 && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Associated with group: {availableGroups[0].name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Event Selection */}
             {availableEvents.length > 0 && (

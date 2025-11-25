@@ -27,7 +27,7 @@ import { useSocket } from "@/context/SocketContext";
  * Shows overview of user's groups, events, tasks, and recent activity
  */
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { groups, refreshGroups } = useGroups();
   const { events, createEvent } = useEvents();
   const { tasks } = useTasks();
@@ -163,33 +163,37 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className="w-full relative flex flex-col gap-4 pb-4">
         <div className="w-full min-h-[120px] aspect-[20/9] md:aspect-[32/9] bg-neutral-400 rounded-2xl overflow-hidden object-bottom">
-          <Image
-            src={
-              user?.banner?.fullSize ||
-              user?.banner?.fullSize ||
-              user?.bannerUrl ||
-              "/wallpapers/default-lake.jpg"
-            }
-            alt="User Wallpaper"
-            width={2000}
-            height={1000}
-            className="object-cover object-bottom w-full h-auto"
-          />
+          {loading ? null : (
+            <Image
+              src={
+                user?.banner?.fullSize ||
+                user?.banner?.fullSize ||
+                user?.bannerUrl ||
+                "/wallpapers/default-lake.jpg"
+              }
+              alt="User Wallpaper"
+              width={2000}
+              height={1000}
+              className="object-cover object-bottom w-full h-auto"
+            />
+          )}
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-end sm:gap-4 mt-[-90px] md:mt-[-110px]">
           <div className="aspect-square bg-black dark:bg-white rounded-full border-4 border-[var(--background)] size-[180px] md:size-[220px]">
-            <Image
-              src={
-                user?.avatar?.fullSize ||
-                user?.avatar?.fullSize ||
-                user?.avatarUrl ||
-                "/avatars/ben-profile.jpg"
-              }
-              alt="User Avatar"
-              width={300}
-              height={300}
-              className="object-cover rounded-full w-full h-full"
-            />
+            {loading ? null : (
+              <Image
+                src={
+                  user?.avatar?.fullSize ||
+                  user?.avatar?.fullSize ||
+                  user?.avatarUrl ||
+                  "/avatars/ben-profile.jpg"
+                }
+                alt="User Avatar"
+                width={300}
+                height={300}
+                className="object-cover rounded-full w-full h-full"
+              />
+            )}
           </div>
           <div className="w-full flex flex-col items-start py-4">
             <h1 className="text-2xl md:text-3xl font-bold leading-none text-[var(--foreground)] font-inter">

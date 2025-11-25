@@ -73,7 +73,7 @@ export default function TasksPage() {
     }
 
     if (filters.groupId) {
-      filtered = filtered.filter((task) => task.group.id === filters.groupId);
+      filtered = filtered.filter((task) => task.group?.id === filters.groupId);
     }
 
     if (filters.assignedToMe && user) {
@@ -107,7 +107,7 @@ export default function TasksPage() {
           task.title.toLowerCase().includes(query) ||
           task.description?.toLowerCase().includes(query) ||
           task.creator.name.toLowerCase().includes(query) ||
-          task.group.name.toLowerCase().includes(query)
+          task.group?.name.toLowerCase().includes(query)
       );
     }
 

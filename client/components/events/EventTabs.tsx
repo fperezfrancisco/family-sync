@@ -435,6 +435,8 @@ function EventTasksTab({ eventId }: { eventId: string }) {
       const eventTaskData: CreateTaskData = {
         ...data,
         eventId: eventId,
+        // If event has a group, use it; otherwise don't set groupId
+        groupId: currentEvent?.group?.id || undefined,
       };
 
       console.log("Creating event task:", eventTaskData);
@@ -572,7 +574,18 @@ function EventTasksTab({ eventId }: { eventId: string }) {
         onClose={() => setIsCreateModalOpen(false)}
         onCreateTask={handleCreateTask}
         defaultEventId={eventId}
-        availableGroups={[]} // TODO: Get groups that the user belongs to
+        defaultGroupId={currentEvent?.group?.id}
+        availableGroups={
+          currentEvent?.group
+            ? [
+                {
+                  id: currentEvent.group.id,
+                  name: currentEvent.group.name,
+                  type: currentEvent.group.type,
+                },
+              ]
+            : []
+        }
         availableEvents={
           currentEvent
             ? [
@@ -584,7 +597,15 @@ function EventTasksTab({ eventId }: { eventId: string }) {
               ]
             : []
         }
-        availableUsers={[]} // TODO: Get event attendees for task assignment
+        availableUsers={
+          currentEvent?.attendees
+            ?.filter((attendee) => attendee.user.id)
+            .map((attendee) => ({
+              id: attendee.user.id!,
+              name: attendee.user.name,
+              email: attendee.user.email,
+            })) || []
+        }
       />
     </div>
   );

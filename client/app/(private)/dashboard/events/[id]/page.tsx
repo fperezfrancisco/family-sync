@@ -30,10 +30,9 @@ export default function EventPage() {
     try {
       setLoading(true);
       setError(null);
-
       // TODO: Uncomment when API is ready
       const eventData = await EventsAPI.getById(eventId);
-      //console.log("event object: ", eventData);
+      console.log("event object: ", eventData);
       setEvent(eventData.event);
 
       // Temporary dummy data for development

@@ -436,7 +436,8 @@ export default function EditTaskModal({
                 Associated Group:
               </span>
               <span className="text-sm text-muted-foreground">
-                {task.group.name} ({task.group.type})
+                {task.group?.name || "No Group"}{" "}
+                {task.group?.type ? `(${task.group.type})` : ""}
               </span>
             </div>
             {task.event && (

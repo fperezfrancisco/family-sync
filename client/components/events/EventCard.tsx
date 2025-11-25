@@ -251,7 +251,7 @@ export default function EventCard({
               {formatEventDate(event.startDate, event.endDate, event.isAllDay)}
             </span>
             {event.isAllDay && (
-              <span className="px-2 py-1 bg-[var(--muted)] rounded text-xs font-medium">
+              <span className="px-2 py-1 bg-[var(--muted)] text-white dark:text-[var(--muted-foreground)] rounded text-xs font-medium">
                 All Day
               </span>
             )}
@@ -309,7 +309,7 @@ export default function EventCard({
                   className={`px-3 py-1 text-xs rounded-md transition-colors ${
                     event.userRSVPStatus === "attending"
                       ? "bg-green-600 text-white"
-                      : "bg-[var(--muted)] hover:bg-green-50 dark:hover:bg-green-950/30 text-[var(--muted-foreground)] hover:text-green-600"
+                      : "bg-[var(--muted)] hover:bg-green-50 dark:hover:bg-green-950/30 text-white dark:text-[var(--muted-foreground)] hover:text-green-600"
                   }`}
                 >
                   Going
@@ -319,7 +319,7 @@ export default function EventCard({
                   className={`px-3 py-1 text-xs rounded-md transition-colors ${
                     event.userRSVPStatus === "maybe"
                       ? "bg-yellow-600 text-white"
-                      : "bg-[var(--muted)] hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-[var(--muted-foreground)] hover:text-yellow-600"
+                      : "bg-[var(--muted)] hover:bg-yellow-50 dark:hover:bg-yellow-950/30 text-white dark:text-[var(--muted-foreground)] hover:text-yellow-600"
                   }`}
                 >
                   Maybe
@@ -329,10 +329,10 @@ export default function EventCard({
                   className={`px-3 py-1 text-xs rounded-md transition-colors ${
                     event.userRSVPStatus === "not_attending"
                       ? "bg-red-600 text-white"
-                      : "bg-[var(--muted)] hover:bg-red-50 dark:hover:bg-red-950/30 text-[var(--muted-foreground)] hover:text-red-600"
+                      : "bg-[var(--muted)] hover:bg-red-50 dark:hover:bg-red-950/30 text-white dark:text-[var(--muted-foreground)] hover:text-red-600"
                   }`}
                 >
-                  Can&
+                  Can&apos;t Go
                 </button>
               </div>
             )}
