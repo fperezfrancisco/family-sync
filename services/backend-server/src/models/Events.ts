@@ -128,16 +128,22 @@ EventSchema.virtual("pendingInvites").get(function () {
 
 // Method to check if user is attendee
 EventSchema.methods.isUserAttendee = function (userId: string) {
-  return this.attendees?.some(
-    (attendee: any) => attendee.user.toString() === userId
-  );
+  return this.attendees?.some((attendee: any) => {
+    // Handle both populated and non-populated user references
+    const attendeeUserId =
+      typeof attendee.user === "object" ? attendee.user._id : attendee.user;
+    return attendeeUserId.toString() === userId;
+  });
 };
 
 // Method to get user's RSVP status
 EventSchema.methods.getUserRSVPStatus = function (userId: string) {
-  const attendee = this.attendees?.find(
-    (attendee: any) => attendee.user.toString() === userId
-  );
+  const attendee = this.attendees?.find((attendee: any) => {
+    // Handle both populated and non-populated user references
+    const attendeeUserId =
+      typeof attendee.user === "object" ? attendee.user._id : attendee.user;
+    return attendeeUserId.toString() === userId;
+  });
   return attendee?.status || null;
 };
 

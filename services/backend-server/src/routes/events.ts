@@ -269,6 +269,10 @@ router.get("/", async (req: AuthRequest, res: Response) => {
             }
           : undefined,
         isPrivate: event.isPrivate,
+        allowGuestInvites: event.allowGuestInvites,
+        requireRSVP: event.requireRSVP,
+        maxAttendees: event.maxAttendees,
+        attendees: event.attendees,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
         userRSVPStatus: (event as any).getUserRSVPStatus(userId),

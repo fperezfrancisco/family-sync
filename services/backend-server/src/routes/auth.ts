@@ -139,6 +139,11 @@ router.post("/register", async (req, res) => {
         gender: createdUser.gender,
         phone: createdUser.phone,
         groups: createdUser.groups,
+        pendingInvitations: createdUser.pendingInvitations,
+        avatar: createdUser.avatar || { fullSize: null, small: null },
+        banner: createdUser.banner || { fullSize: null, small: null },
+        avatarUrl: createdUser.avatarUrl,
+        bannerUrl: createdUser.bannerUrl,
       },
       accessToken: access,
     });
@@ -203,6 +208,11 @@ router.post("/login", async (req, res) => {
         gender: user.gender,
         phone: user.phone,
         groups: user.groups,
+        pendingInvitations: user.pendingInvitations,
+        avatar: user.avatar || { fullSize: null, small: null },
+        banner: user.banner || { fullSize: null, small: null },
+        avatarUrl: user.avatarUrl,
+        bannerUrl: user.bannerUrl,
       },
       accessToken: access,
     });
