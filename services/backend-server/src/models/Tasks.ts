@@ -99,12 +99,12 @@ const TaskSchema = new Schema(
       email: { type: String, required: true },
     },
     group: {
-      id: { type: Schema.Types.ObjectId, ref: "Group", required: true },
-      name: { type: String, required: true },
+      id: { type: Schema.Types.ObjectId, ref: "Group", required: false },
+      name: { type: String, required: false },
       type: {
         type: String,
         enum: ["family", "friends", "work", "other"],
-        required: true,
+        required: false,
       },
     },
 

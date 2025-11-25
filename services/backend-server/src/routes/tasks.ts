@@ -16,27 +16,41 @@ interface AuthRequest extends Request {
 }
 
 // Zod schemas for request validation
-const CreateTaskSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().max(2000).optional().or(z.literal("")),
-  groupId: z.string(),
-  eventId: z.string().optional().or(z.literal("")),
-  assigneeIds: z.array(z.string()).optional().default([]),
-  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
-  category: z
-    .enum([
-      "supplies",
-      "logistics",
-      "preparation",
-      "chores",
-      "coordination",
-      "other",
-    ])
-    .default("other"),
-  dueDate: z.string().datetime().optional().or(z.literal("")),
-  allowSelfAssign: z.boolean().default(true),
-  requiresVerification: z.boolean().default(false),
-});
+const CreateTaskSchema = z
+  .object({
+    title: z.string().min(1).max(200),
+    description: z.string().max(2000).optional().or(z.literal("")),
+    groupId: z.string().optional().or(z.literal("")),
+    eventId: z.string().optional().or(z.literal("")),
+    assigneeIds: z.array(z.string()).optional().default([]),
+    priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+    category: z
+      .enum([
+        "supplies",
+        "logistics",
+        "preparation",
+        "chores",
+        "coordination",
+        "other",
+      ])
+      .default("other"),
+    dueDate: z.string().datetime().optional().or(z.literal("")),
+    allowSelfAssign: z.boolean().default(true),
+    requiresVerification: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      // Either groupId or eventId must be provided
+      return (
+        (data.groupId && data.groupId.trim() !== "") ||
+        (data.eventId && data.eventId.trim() !== "")
+      );
+    },
+    {
+      message: "Either groupId or eventId must be provided",
+      path: ["groupId"], // This will show the error on groupId field
+    }
+  );
 
 const UpdateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -259,13 +273,66 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
     const validatedData = CreateTaskSchema.parse(req.body);
 
-    // Check group access and get group info
-    const { hasAccess, role, group } = await checkGroupPermission(
-      validatedData.groupId,
-      userId
-    );
-    if (!hasAccess) {
-      return res.status(403).json({ message: "Access denied to this group" });
+    // Handle group access based on whether we have groupId or eventId
+    let group = null;
+    let hasAccess = false;
+    let role = undefined;
+
+    if (validatedData.groupId && validatedData.groupId.trim() !== "") {
+      // Task directly associated with a group
+      const groupPermission = await checkGroupPermission(
+        validatedData.groupId,
+        userId
+      );
+      hasAccess = groupPermission.hasAccess;
+      role = groupPermission.role;
+      group = groupPermission.group;
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied to this group" });
+      }
+    } else if (validatedData.eventId && validatedData.eventId.trim() !== "") {
+      // Task associated with an event, get group from event
+      const event = await Event.findById(validatedData.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      if (event.group?.id) {
+        // Event has a group, check permission on that group
+        const groupPermission = await checkGroupPermission(
+          event.group.id.toString(),
+          userId
+        );
+        hasAccess = groupPermission.hasAccess;
+        role = groupPermission.role;
+        group = groupPermission.group;
+
+        if (!hasAccess) {
+          return res
+            .status(403)
+            .json({ message: "Access denied to event's group" });
+        }
+      } else {
+        // Event has no group (standalone event), check if user is event owner or attendee
+        const isOwner = event.owner?.id?.toString() === userId;
+        const isAttendee = event.attendees?.some(
+          (attendee: any) => attendee.user.toString() === userId
+        );
+
+        if (!isOwner && !isAttendee) {
+          return res
+            .status(403)
+            .json({ message: "Access denied to this event" });
+        }
+
+        hasAccess = true;
+        // For standalone events, we don't have a group
+      }
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Either groupId or eventId must be provided" });
     }
 
     // Get creator info
@@ -274,7 +341,7 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Validate event if provided
+    // Get event information if provided
     let eventInfo = undefined;
     if (validatedData.eventId && validatedData.eventId.trim() !== "") {
       const event = await Event.findById(validatedData.eventId);
@@ -282,14 +349,16 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ message: "Event not found" });
       }
 
-      // Ensure event belongs to the same group
-      if (
-        !event.group?.id ||
-        event.group.id.toString() !== validatedData.groupId
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Event does not belong to this group" });
+      // If both groupId and eventId are provided, ensure they match
+      if (validatedData.groupId && validatedData.groupId.trim() !== "") {
+        if (
+          !event.group?.id ||
+          event.group.id.toString() !== validatedData.groupId
+        ) {
+          return res
+            .status(400)
+            .json({ message: "Event does not belong to the specified group" });
+        }
       }
 
       eventInfo = {
@@ -303,15 +372,30 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
     const assignees = [];
     if (validatedData.assigneeIds && validatedData.assigneeIds.length > 0) {
       for (const assigneeId of validatedData.assigneeIds) {
-        // Verify assignee is a group member
-        const groupDoc = group as any;
-        const isMember =
-          groupDoc.members.some((m: any) => m.id.toString() === assigneeId) ||
-          groupDoc.owner.toString() === assigneeId;
+        // Verify assignee access based on context
+        let canAssign = false;
 
-        if (!isMember) {
+        if (group) {
+          // Task has a group, verify assignee is a group member
+          const groupDoc = group as any;
+          canAssign =
+            groupDoc.members.some((m: any) => m.id.toString() === assigneeId) ||
+            groupDoc.owner.toString() === assigneeId;
+        } else if (eventInfo) {
+          // Task is for standalone event, verify assignee is event attendee or creator
+          const event = await Event.findById(eventInfo.id);
+          canAssign =
+            event?.owner?.id?.toString() === assigneeId ||
+            event?.attendees?.some(
+              (attendee: any) => attendee.user.toString() === assigneeId
+            ) ||
+            false;
+        }
+
+        if (!canAssign) {
+          const context = group ? "this group" : "this event";
           return res.status(400).json({
-            message: `User ${assigneeId} is not a member of this group`,
+            message: `User ${assigneeId} does not have access to ${context}`,
           });
         }
 
@@ -347,11 +431,6 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
         name: creator.name,
         email: creator.email,
       },
-      group: {
-        id: (group as any)._id,
-        name: (group as any).name,
-        type: (group as any).type,
-      },
       assignees,
       priority: validatedData.priority,
       category: validatedData.category,
@@ -363,7 +442,16 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
       requiresVerification: validatedData.requiresVerification,
     };
 
-    // Only set event if provided
+    // Set group if available
+    if (group) {
+      taskData.group = {
+        id: (group as any)._id,
+        name: (group as any).name,
+        type: (group as any).type,
+      };
+    }
+
+    // Set event if provided
     if (eventInfo) {
       taskData.event = eventInfo;
     }
