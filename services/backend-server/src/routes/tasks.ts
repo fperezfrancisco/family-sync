@@ -271,7 +271,9 @@ router.get("/:taskId", requireAuth, async (req: AuthRequest, res: Response) => {
 router.post("/", requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
+    console.log("Task body: ", req.body);
     const validatedData = CreateTaskSchema.parse(req.body);
+    console.log("This task gets past data validation.");
 
     // Handle group access based on whether we have groupId or eventId
     let group = null;

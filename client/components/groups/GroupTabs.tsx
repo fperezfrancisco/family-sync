@@ -687,7 +687,6 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
             : []
         }
         availableEvents={[]} // TODO: Filter events for this group
-        availableUsers={[]} // TODO: Get group members
       />
     </div>
   );
