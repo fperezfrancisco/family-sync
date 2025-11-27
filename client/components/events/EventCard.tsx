@@ -291,7 +291,7 @@ export default function EventCard({
 
         {/* RSVP Status & Actions */}
         {event.requireRSVP && (
-          <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
+          <div className="flex gap-2 flex-wrap items-center justify-between pt-3 border-t border-[var(--border)]">
             <div
               className={`flex items-center gap-2 px-3 py-1 rounded-full ${rsvpStatus.bg}`}
             >

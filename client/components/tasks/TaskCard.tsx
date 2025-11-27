@@ -200,26 +200,28 @@ export default function TaskCard({
   const canClaim = task.allowSelfAssign && task.assignees.length === 0;
 
   return (
-    <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] p-6 hover:shadow-md transition-shadow">
+    <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] p-6 hover:shadow-md hover:dark:shadow-neutral-700 transition-shadow">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1 min-w-0">
+      <div className="flex items-start justify-between mb-4 w-full">
+        <div className="flex-1 min-w-0 w-full">
           <h3
-            className="text-lg font-semibold text-[var(--foreground)] cursor-pointer hover:text-[var(--accent)] truncate"
+            className="text-lg font-semibold text-[var(--foreground)] cursor-pointer hover:text-[var(--primary)] truncate"
             onClick={() => onViewDetails?.(task._id)}
           >
             {task.title}
           </h3>
           {showGroupInfo && (
-            <div className="flex items-center mt-1 text-sm text-[var(--secondary-foreground)]">
-              <Users className="h-4 w-4 mr-1" />
-              <span>{task.group?.name || "No Group"}</span>
+            <div className="flex flex-col gap-1 w-full items-start mt-1 text-sm text-[var(--secondary-foreground)]">
+              <div className="flex items-center">
+                <Users className="h-4 w-4 mr-1" />
+                <span>{task.group?.name || "No Group"}</span>
+              </div>
+
               {task.event && (
-                <>
-                  <span className="mx-2">•</span>
+                <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
                   <span>{task.event.name}</span>
-                </>
+                </div>
               )}
             </div>
           )}
@@ -309,14 +311,14 @@ export default function TaskCard({
                 {task.assignees.slice(0, 3).map((assignee) => (
                   <div
                     key={assignee.id}
-                    className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                    className="h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-[var(--secondary-foreground)] dark:border-white"
                     title={assignee.name}
                   >
                     {assignee.name.charAt(0).toUpperCase()}
                   </div>
                 ))}
                 {task.assignees.length > 3 && (
-                  <div className="h-6 w-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white">
+                  <div className="h-6 w-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-[var(--secondary-foreground)] dark:border-white">
                     +{task.assignees.length - 3}
                   </div>
                 )}
@@ -349,7 +351,7 @@ export default function TaskCard({
         <div className="mt-4 pt-4 border-t border-[var(--border)]">
           <button
             onClick={() => onClaim?.(task._id)}
-            className="w-full px-3 py-2 text-sm font-medium text-[var(--foreground)] bg-[var(--background)] border border-[var(--border)] rounded-md hover:bg-[var(--card)] transition-colors"
+            className="w-full px-3 py-2 text-xs font-medium text-[var(--foreground)] bg-[var(--background)] border border-[var(--border)] rounded-md hover:bg-blue-600 transition-colors"
           >
             Claim Task
           </button>
@@ -361,7 +363,7 @@ export default function TaskCard({
         task.status !== "completed" &&
         task.status !== "verified" &&
         task.status !== "cancelled" && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-[var(--border)] dark:border-neutral-200 ">
             <div className="flex gap-2">
               {task.status === "not_started" && (
                 <button
@@ -369,8 +371,8 @@ export default function TaskCard({
                   disabled={!canUserUpdateTask()}
                   className={`flex-1 px-3 py-2 text-xs font-medium border rounded-md transition-colors ${
                     canUserUpdateTask()
-                      ? "text-[var(--foreground)] bg-[var(--background)] border-[var(--border)] hover:bg-[var(--card)]"
-                      : "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                      ? "text-[var(--foreground)] bg-[var(--background)] border-[var(--border)] hover:bg-[var(--primary)]"
+                      : "text-neutral-400 bg-[var(--muted)] border-[var(--muted)] cursor-not-allowed"
                   }`}
                 >
                   Start Task
@@ -382,7 +384,7 @@ export default function TaskCard({
                   disabled={!canUserUpdateTask()}
                   className={`flex-1 px-3 py-2 text-xs font-medium border rounded-md transition-colors ${
                     canUserUpdateTask()
-                      ? "text-[var(--foreground)] bg-[var(--background)] border-[var(--border)] hover:bg-[var(--card)]"
+                      ? "text-[var(--foreground)] bg-[var(--background)] border-[var(--border)] hover:bg-green-600"
                       : "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                   }`}
                 >
@@ -395,7 +397,7 @@ export default function TaskCard({
                   disabled={!canUserUpdateTask()}
                   className={`flex-1 px-3 py-2 text-xs font-medium border rounded-md transition-colors ${
                     canUserUpdateTask()
-                      ? "text-[var(--foreground)] bg-[var(--background)] border-[var(--border)] hover:bg-[var(--card)]"
+                      ? "text-[var(--foreground)] bg-[var(--background)] border-[var(--border)] hover:bg-purple-600"
                       : "text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
                   }`}
                 >
