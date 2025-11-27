@@ -39,6 +39,8 @@ export default function TasksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  console.log("Tasks page, events array: ", events);
+
   /**
    * Refresh tasks manually
    */
@@ -167,6 +169,7 @@ export default function TasksPage() {
     id: group.id,
     name: group.name,
     type: group.type,
+    members: group.members,
   }));
 
   // Transform events data for modals
@@ -174,23 +177,13 @@ export default function TasksPage() {
     id: event.id,
     name: event.name,
     startDate: event.startDate,
+    attendees: event.attendees.map((attendee) => ({
+      id: attendee.user._id,
+      name: attendee.user.name || "",
+      email: attendee.user.email || "",
+      role: attendee.status,
+    })),
   }));
-
-  // Get available users from groups for task assignment
-  const availableUsers = groups
-    .flatMap(
-      (group) =>
-        group.members?.map((member) => ({
-          id: member.id,
-          name: member.name,
-          email: member.email,
-        })) || []
-    )
-    .filter(
-      (user, index, self) =>
-        // Remove duplicates based on user ID
-        index === self.findIndex((u) => u.id === user.id)
-    );
 
   return (
     <div className="min-h-screen ">
@@ -272,7 +265,6 @@ export default function TasksPage() {
           onCreateTask={handleCreateTask}
           availableGroups={availableGroups}
           availableEvents={availableEvents}
-          availableUsers={availableUsers}
         />
       </div>
     </div>

@@ -5,7 +5,11 @@ import { User } from "./auth";
  * Represents an attendee's RSVP status for an event
  */
 export interface EventAttendee {
-  user: User;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
   status: "pending" | "attending" | "not_attending" | "maybe";
   invitedAt: string;
   respondedAt?: string;

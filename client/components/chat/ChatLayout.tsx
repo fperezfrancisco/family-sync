@@ -28,8 +28,8 @@ export function ChatLayout() {
 
   //h-full min-h-[calc(100vh-64px)] lg:min-h-[calc(100vh-80px)]
   return (
-    <div className="h-full bg-[var(--background)] w-full ">
-      <div className="flex h-full min-h-[calc(100vh-64px)] lg:min-h-[calc(100vh-80px)] w-full">
+    <div className="h-[calc(100vh-32px)] md:h-[calc(100vh-64px)] bg-[var(--background)] w-full ">
+      <div className="flex h-[calc(100vh-32px)] lg:h-[calc(100vh-64px)] w-full">
         {/* Left Sidebar - Group List */}
         {/* Desktop: Always visible, Mobile: Only when no group selected */}
         <div
