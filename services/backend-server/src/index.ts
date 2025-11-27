@@ -19,6 +19,8 @@ import { Server } from "socket.io";
 import { socketService } from "./services/socketServices.js";
 // MESSAGE SYSTEM: Import cleanup utility
 import { scheduleMessageCleanup } from "./utils/messageCleanup.js";
+// RATE LIMITING: Import rate limiters
+import { generalLimiter, testLimiter } from "./middleware/rateLimiter.js";
 
 // Configure dotenv first
 dotenv.config();
@@ -52,8 +54,22 @@ const io = new Server(httpServer, {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
+// RATE LIMITING: Apply general rate limiting to all routes
+console.log("🛡️  Rate limiting enabled: 100 requests per 15 minutes");
+app.use(generalLimiter);
+
 app.get("/", (req, res) => {
   res.send("Hello from the Backend Server!");
+});
+
+// Test endpoint for rate limiting demonstration
+app.get("/test-rate-limit", testLimiter, (req, res) => {
+  res.json({
+    success: true,
+    message: "Rate limiting test endpoint - 3 requests per minute limit",
+    timestamp: new Date().toISOString(),
+    ip: req.ip,
+  });
 });
 
 app.use(express.json());
