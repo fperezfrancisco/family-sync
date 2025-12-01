@@ -28,15 +28,22 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const allowedOrigins = [
-  "http://localhost:4000",
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://192.168.0.6:3000", // Network IP for cross-device access
-  "http://192.168.0.6:4000", // Network IP for backend access
-  "http://127.0.0.1:5500", // For testing HTML files served locally
-  "file://", // For HTML files opened directly in browser
-];
+// Environment-based CORS configuration
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? [
+        process.env.CLIENT_URL || "https://your-app.vercel.app",
+        process.env.API_URL || "https://your-api.onrender.com",
+      ]
+    : [
+        "http://localhost:4000",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://192.168.0.6:3000", // Network IP for cross-device access
+        "http://192.168.0.6:4000", // Network IP for backend access
+        "http://127.0.0.1:5500", // For testing HTML files served locally
+        "file://", // For HTML files opened directly in browser
+      ];
 
 const corsOptions = {
   origin: allowedOrigins,
