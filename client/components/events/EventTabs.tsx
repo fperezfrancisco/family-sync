@@ -191,7 +191,7 @@ function OverviewTab({ event }: { event: Event }) {
                       <div className="space-y-2">
                         {attendees.map((attendee, index) => (
                           <div
-                            key={attendee.user.id || index}
+                            key={attendee.user._id || index}
                             className="flex items-center justify-between p-3 rounded-lg bg-[var(--muted)]/50"
                           >
                             <div className="flex items-center gap-3">
@@ -596,15 +596,6 @@ function EventTasksTab({ eventId }: { eventId: string }) {
                 },
               ]
             : []
-        }
-        availableUsers={
-          currentEvent?.attendees
-            ?.filter((attendee) => attendee.user.id)
-            .map((attendee) => ({
-              id: attendee.user.id!,
-              name: attendee.user.name,
-              email: attendee.user.email,
-            })) || []
         }
       />
     </div>

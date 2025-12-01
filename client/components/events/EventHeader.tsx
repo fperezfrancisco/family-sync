@@ -417,7 +417,7 @@ export default function EventHeader({
                   .slice(0, 5)
                   .map((attendee, index) => (
                     <div
-                      key={attendee.user.id || index}
+                      key={attendee.user._id || index}
                       className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white text-xs font-medium"
                       title={`${attendee.user.name} (${attendee.status})`}
                     >

@@ -28,10 +28,16 @@ function buildInit(path: string, init: RequestInit = {}): RequestInit {
   // Check if this is a login or register route that needs to accept cookies
   const isLoginOrRegister = path.match(/^\/auth\/(login|register)$/);
 
+  // Always include credentials for cross-origin requests (needed for network IP access)
+  const shouldIncludeCredentials =
+    isLoginOrRegister ||
+    path.match(/^\/auth\/refresh$/) ||
+    Boolean(accessToken); // Include credentials for all authenticated requests
+
   return {
     mode: "cors",
-    // Include credentials for login/register to store refresh token cookie
-    credentials: isLoginOrRegister ? "include" : undefined,
+    // Include credentials for cross-origin requests to support cookies
+    credentials: shouldIncludeCredentials ? "include" : undefined,
     ...init,
     headers,
   };
