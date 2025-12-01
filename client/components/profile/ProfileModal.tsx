@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/utils/cropImage";
 import {
   X,
   Edit3,
@@ -60,6 +61,34 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   //   setAvatarPreview(e.target?.result as string);
   //   setIsCropping(true);  
   // };
+
+  const applyCrop = async () => {
+    if (!croppedAreaPixels || !avatarPreview) return;
+
+    try {
+      const croppedImg = await getCroppedImg(avatarPreview, croppedAreaPixels);
+
+      // Update preview with cropped version
+      setAvatarPreview(croppedImg);
+
+      // Convert base64 → File so your backend can receive it
+      const file = await fetch(croppedImg)
+        .then((res) => res.blob())
+        .then(
+          (blob) =>
+            new File([blob], "avatar.jpg", {
+              type: "image/jpeg",
+            })
+        );
+
+      setAvatarFile(file);
+
+      // Close crop UI
+      setIsCropping(false);
+    } catch (err) {
+      console.error("Crop failed:", err);
+    }
+  };
 
   // Format date for date input (YYYY-MM-DD format, timezone safe)
   const formatDateForInput = (dateString: string | undefined) => {
