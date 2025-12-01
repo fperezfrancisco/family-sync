@@ -293,7 +293,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <button
               onClick={handleOpenCreateEventModal}
-              className="w-full flex items-center justify-between p-3 rounded-md 
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary)
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
               <span className="font-medium">Create New Event</span>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
             </button>
 
             <button
-              className="w-full flex items-center justify-between p-3 rounded-md 
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
               <span className="font-medium text-foreground">Add Task</span>
@@ -309,7 +309,7 @@ export default function DashboardPage() {
             </button>
 
             <button
-              className="w-full flex items-center justify-between p-3 rounded-md 
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
               <span className="font-medium text-foreground">
