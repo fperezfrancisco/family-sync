@@ -30,7 +30,7 @@ const allowedOrigins = [
   "http://localhost:4000",
   "http://localhost:3000",
   "http://localhost:3001",
-  "http://127.0.0.1:5500", // For testing HTML files served locally
+  "http://192.168.0.7:3000", // For testing HTML files served locally
   "file://", // For HTML files opened directly in browser
 ];
 

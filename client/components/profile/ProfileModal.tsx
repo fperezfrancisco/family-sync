@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Cropper from "react-easy-crop";
 import {
   X,
   Edit3,
@@ -48,6 +49,17 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // To crop profile picture 
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  // reader.onload = (e) => {
+  //   setAvatarPreview(e.target?.result as string);
+  //   setIsCropping(true);  
+  // };
 
   // Format date for date input (YYYY-MM-DD format, timezone safe)
   const formatDateForInput = (dateString: string | undefined) => {
@@ -129,6 +141,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const reader = new FileReader();
     reader.onload = (e) => {
       setAvatarPreview(e.target?.result as string);
+      setIsCropping(true);
     };
     reader.readAsDataURL(file);
   };
@@ -325,6 +338,42 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+
+      {isCropping && (
+        <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-6">
+          <div className="bg-white rounded-lg p-4 w-full max-w-md">
+            <div className="relative w-full h-64 bg-black/10">
+              <Cropper
+                image={avatarPreview!}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(croppedArea, croppedPixels) =>
+                  setCroppedAreaPixels(croppedPixels)
+                }
+              />
+            </div>
+
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => setIsCropping(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={applyCrop}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       <div className="relative w-full max-w-2xl max-h-[90vh] bg-[var(--card)] rounded-xl shadow-2xl flex flex-col">

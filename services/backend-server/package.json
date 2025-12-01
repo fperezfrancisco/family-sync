@@ -12,7 +12,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.937.0",
     "@aws-sdk/s3-request-presigner": "^3.937.0",
@@ -46,5 +45,7 @@
   },
   "ts-node": {
     "esm": true
-  }
+  },
+  "types": "./dist/index.d.ts",
+  "description": ""
 }
