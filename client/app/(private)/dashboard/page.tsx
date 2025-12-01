@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Calendar,
@@ -19,7 +19,6 @@ import PendingInvitations from "@/components/dashboard/PendingInvitations";
 import { CreateEventData } from "@/types/events";
 import Image from "next/image";
 import { useTasks } from "@/context/TasksContext";
-import { useSocket } from "@/context/SocketContext";
 
 /**
  * Dashboard Page Component
@@ -122,6 +121,47 @@ export default function DashboardPage() {
     refreshGroups(); // Refresh groups when user accepts/declines invitations
   };
 
+  /**
+   * Calculate pending tasks count for the current user
+   * Includes tasks that are not completed AND are either:
+   * - Assigned to the current user, OR
+   * - Not claimed yet and the user can claim them
+   */
+  const calculatePendingTasksCount = useCallback(() => {
+    if (!user || !tasks) return 0;
+
+    const userGroupIds = groups ? groups.map((group) => group.id) : [];
+    const userEventIds = events
+      ? events
+          .filter((event) =>
+            event.attendees.some((attendee) => attendee.user._id === user.id)
+          )
+          .map((event) => event.id)
+      : [];
+
+    return tasks.filter((task) => {
+      // Skip completed, verified, or cancelled tasks
+      if (["completed", "verified", "cancelled"].includes(task.status)) {
+        return false;
+      }
+
+      // Check if task is assigned to current user
+      const isAssignedToUser = task.assignees.some(
+        (assignee) => assignee.id === user.id
+      );
+
+      // Check if task is unclaimed and user can claim it
+      const isUnclaimed = task.assignees.length === 0;
+      const canClaimTask =
+        isUnclaimed &&
+        (task.allowSelfAssign ||
+          (task.group && userGroupIds.includes(task.group.id)) ||
+          (task.event && userEventIds.includes(task.event.id)));
+
+      return isAssignedToUser || canClaimTask;
+    }).length;
+  }, [user, tasks, groups, events]);
+
   useEffect(() => {
     // Update stats when groups or events change
     const updateStats = async () => {
@@ -148,7 +188,7 @@ export default function DashboardPage() {
           if (stat.title === "Pending Tasks") {
             return {
               ...stat,
-              value: tasks ? tasks.length.toString() : "0",
+              value: calculatePendingTasksCount().toString(),
             };
           }
           return stat;
@@ -156,7 +196,7 @@ export default function DashboardPage() {
       );
     };
     updateStats();
-  }, [groups, events, tasks]);
+  }, [groups, events, tasks, calculatePendingTasksCount]);
 
   return (
     <div className="space-y-8 h-fit">
