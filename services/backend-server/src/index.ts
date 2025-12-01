@@ -32,8 +32,8 @@ const PORT = process.env.PORT || 4000;
 const allowedOrigins =
   process.env.NODE_ENV === "production"
     ? [
-        process.env.CLIENT_URL || "https://your-app.vercel.app",
-        process.env.API_URL || "https://your-api.onrender.com",
+        process.env.CLIENT_URL || "https://better-together-client.vercel.app",
+        process.env.API_URL || "https://better-together-25jb.onrender.com",
       ]
     : [
         "http://localhost:4000",
