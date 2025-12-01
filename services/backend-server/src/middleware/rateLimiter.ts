@@ -2,12 +2,13 @@ import expressRateLimit from "express-rate-limit";
 import type { Request, Response } from "express";
 
 /**
- * General API Rate Limiter
- * Limits all API endpoints to 100 requests per 15 minutes per IP
+ * General API Rate Limiter - Environment Aware
+ * Development: Very high limit for smooth development
+ * Production: 100 requests per 15 minutes per IP
  */
 export const generalLimiter = expressRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 100 : 10000, // High limit in dev, normal in prod
   message: {
     success: false,
     error: "RATE_LIMIT_EXCEEDED",
@@ -30,38 +31,97 @@ export const generalLimiter = expressRateLimit({
 });
 
 /**
- * Authentication Rate Limiter
- * Limits authentication endpoints to 5 requests per 15 minutes per IP
- * More restrictive to prevent brute force attacks
+ * Authentication Rate Limiter - Environment Aware
+ * Development: Unlimited requests (no rate limiting for dev workflow)
+ * Production: 15 requests per 15 minutes (more lenient for profile updates)
  */
 export const authLimiter = expressRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: process.env.NODE_ENV === "production" ? 15 : 999999, // Unlimited in dev, 15 in prod
   message: {
     success: false,
     error: "AUTH_RATE_LIMIT_EXCEEDED",
     message:
-      "Too many authentication attempts from this IP, please try again later.",
+      process.env.NODE_ENV === "production"
+        ? "Too many authentication attempts from this IP, please try again later."
+        : "Development mode - rate limiting disabled for testing",
     retryAfter: "15 minutes",
   },
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req: Request, res: Response) => {
-    console.log(
-      `Auth rate limit exceeded for IP: ${
-        req.ip
-      } at ${new Date().toISOString()}`
-    );
-    res.status(429).json({
-      success: false,
-      error: "AUTH_RATE_LIMIT_EXCEEDED",
-      message:
-        "Too many authentication attempts from this IP, please try again later.",
-      retryAfter: "15 minutes",
-      limit: 5,
-      windowMs: 15 * 60 * 1000,
-      type: "authentication",
-    });
+    if (process.env.NODE_ENV === "production") {
+      console.log(
+        `🔒 Auth rate limit exceeded for IP: ${
+          req.ip
+        } at ${new Date().toISOString()}`
+      );
+      res.status(429).json({
+        success: false,
+        error: "AUTH_RATE_LIMIT_EXCEEDED",
+        message:
+          "Too many authentication attempts from this IP, please try again later.",
+        retryAfter: "15 minutes",
+        limit: 15,
+        windowMs: 15 * 60 * 1000,
+        type: "authentication",
+      });
+    } else {
+      // In development, this should never trigger due to high limit
+      console.log(`🧪 Dev mode - auth rate limit bypassed for IP: ${req.ip}`);
+      res.status(200).json({
+        success: true,
+        message: "Development mode - continuing request",
+      });
+    }
+  },
+});
+
+/**
+ * Strict Auth Limiter for Login/Register Only
+ * Production: 10 requests per 15 minutes for login/register
+ * Development: Still unlimited for ease of testing
+ */
+export const strictAuthLimiter = expressRateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === "production" ? 10 : 999999,
+  message: {
+    success: false,
+    error: "LOGIN_RATE_LIMIT_EXCEEDED",
+    message:
+      process.env.NODE_ENV === "production"
+        ? "Too many login attempts from this IP for security. Please try again later."
+        : "Development mode - rate limiting disabled",
+    retryAfter: "15 minutes",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req: Request, res: Response) => {
+    if (process.env.NODE_ENV === "production") {
+      console.log(
+        `🚨 Strict auth rate limit exceeded for IP: ${req.ip} on ${
+          req.path
+        } at ${new Date().toISOString()}`
+      );
+      res.status(429).json({
+        success: false,
+        error: "LOGIN_RATE_LIMIT_EXCEEDED",
+        message:
+          "Too many login attempts for security. Please try again later.",
+        retryAfter: "15 minutes",
+        limit: 10,
+        windowMs: 15 * 60 * 1000,
+        type: "strict_authentication",
+      });
+    } else {
+      console.log(
+        `🧪 Dev mode - strict auth rate limit bypassed for IP: ${req.ip} on ${req.path}`
+      );
+      res.status(200).json({
+        success: true,
+        message: "Development mode - continuing request",
+      });
+    }
   },
 });
 

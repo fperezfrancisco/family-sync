@@ -20,8 +20,8 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
 import sharp from "sharp";
-// RATE LIMITING: Import auth rate limiter
-import { authLimiter } from "../middleware/rateLimiter.js";
+// RATE LIMITING: Import auth rate limiters
+import { authLimiter, strictAuthLimiter } from "../middleware/rateLimiter.js";
 
 // Extend Express Request interface to include multer file
 declare global {
@@ -36,7 +36,7 @@ dotenv.config();
 
 const router = Router();
 
-// RATE LIMITING: Apply strict rate limiting to all auth endpoints
+// RATE LIMITING: Apply general auth limiting to all auth endpoints (lenient for profile updates)
 router.use(authLimiter);
 
 const BUCKET_NAME = process.env.BUCKET_NAME || "default-bucket-name";
@@ -87,7 +87,7 @@ const UpdateProfileSchema = z
 // ROUTES
 
 // Register route
-router.post("/register", async (req, res) => {
+router.post("/register", strictAuthLimiter, async (req, res) => {
   // Validate request body
   const { name, email, password } = RegisterSchema.parse(req.body);
   // check db if user exists and handle db registration logic
@@ -155,7 +155,7 @@ router.post("/register", async (req, res) => {
 });
 
 // Login Route
-router.post("/login", async (req, res) => {
+router.post("/login", strictAuthLimiter, async (req, res) => {
   // Validate request body
   const { email, password } = LoginSchema.parse(req.body);
   // check db for user and handle login logic

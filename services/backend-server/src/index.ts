@@ -62,7 +62,17 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 
 // RATE LIMITING: Apply general rate limiting to all routes
-console.log("🛡️  Rate limiting enabled: 100 requests per 15 minutes");
+if (process.env.NODE_ENV === "production") {
+  console.log(
+    "🛡️  Production rate limiting: 100 general requests, 15 auth requests per 15 minutes"
+  );
+  console.log("🔒 Strict login/register limiting: 10 attempts per 15 minutes");
+} else {
+  console.log("🧪 Development mode: Rate limiting relaxed for testing");
+  console.log("   • General API: 10,000 requests per 15 minutes");
+  console.log("   • Auth endpoints: Unlimited");
+  console.log("   • Login/Register: Unlimited");
+}
 app.use(generalLimiter);
 
 app.get("/", (req, res) => {
