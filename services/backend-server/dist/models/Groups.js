@@ -1,6 +1,8 @@
 import { Schema, model } from "mongoose";
 const GroupMemberSchema = new Schema({
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
     role: {
         type: String,
         enum: ["owner", "admin", "member", "guest"],
@@ -17,6 +19,14 @@ const GroupSchema = new Schema({
     },
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
     members: [{ type: GroupMemberSchema, required: true }],
+    // INVITATION SYSTEM: Track pending member invitations
+    pendingInvitations: [{ type: Schema.Types.ObjectId, ref: "GroupInvitation" }],
+    // INVITATION SYSTEM: Settings for invitation management
+    inviteSettings: {
+        allowMemberInvites: { type: Boolean, default: false }, // Can members invite others
+        requireApproval: { type: Boolean, default: false }, // Owner must approve invites
+        maxMembers: { type: Number, default: null }, // Null = no limit
+    },
     createdAt: { type: Date, default: Date.now },
 });
 GroupSchema.index({ owner: 1 });

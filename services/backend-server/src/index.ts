@@ -19,6 +19,8 @@ import { Server } from "socket.io";
 import { socketService } from "./services/socketServices.js";
 // MESSAGE SYSTEM: Import cleanup utility
 import { scheduleMessageCleanup } from "./utils/messageCleanup.js";
+// RATE LIMITING: Import rate limiters
+import { generalLimiter, testLimiter } from "./middleware/rateLimiter.js";
 
 // Configure dotenv first
 dotenv.config();
@@ -30,8 +32,8 @@ const allowedOrigins = [
   "http://localhost:4000",
   "http://localhost:3000",
   "http://localhost:3001",
-  "http://192.168.0.7:3000", // Network IP for cross-device access
-  "http://192.168.0.7:4000", // Network IP for backend access
+  "http://192.168.0.6:3000", // Network IP for cross-device access
+  "http://192.168.0.6:4000", // Network IP for backend access
   "http://127.0.0.1:5500", // For testing HTML files served locally
   "file://", // For HTML files opened directly in browser
 ];
@@ -52,8 +54,22 @@ const io = new Server(httpServer, {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
+// RATE LIMITING: Apply general rate limiting to all routes
+console.log("🛡️  Rate limiting enabled: 100 requests per 15 minutes");
+app.use(generalLimiter);
+
 app.get("/", (req, res) => {
   res.send("Hello from the Backend Server!");
+});
+
+// Test endpoint for rate limiting demonstration
+app.get("/test-rate-limit", testLimiter, (req, res) => {
+  res.json({
+    success: true,
+    message: "Rate limiting test endpoint - 3 requests per minute limit",
+    timestamp: new Date().toISOString(),
+    ip: req.ip,
+  });
 });
 
 app.use(express.json());
@@ -87,9 +103,10 @@ const startServer = async () => {
     // MESSAGE SYSTEM: Start automatic message cleanup (30-day retention)
     scheduleMessageCleanup(30);
 
-    // Start the server
-    httpServer.listen(PORT, () => {
+    // Start the server - bind to all interfaces (0.0.0.0) for network access
+    httpServer.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`API listening on http://localhost:${PORT}`);
+      console.log(`🌐 Network access: http://192.168.0.6:${PORT}`);
       console.log(`💬 Message persistence system initialized`);
       console.log(`🧹 Automatic cleanup: 30-day message retention`);
     });

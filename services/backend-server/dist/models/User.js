@@ -15,6 +15,22 @@ const UserSchema = new Schema({
     },
     phone: { type: PhoneSchema, required: false },
     groups: [{ type: Schema.Types.ObjectId, ref: "Group" }],
+    // INVITATION SYSTEM: Track pending invitations for this user
+    pendingInvitations: [
+        { type: Schema.Types.ObjectId, ref: "GroupInvitation" },
+    ],
+    // PROFILE IMAGES: Store URLs for profile avatar and banner images
+    avatar: {
+        fullSize: { type: String, required: false },
+        small: { type: String, required: false },
+    },
+    banner: {
+        fullSize: { type: String, required: false },
+        small: { type: String, required: false },
+    },
+    // Legacy fields for backward compatibility
+    avatarUrl: { type: String, required: false },
+    bannerUrl: { type: String, required: false },
 }, { timestamps: true });
 export default model("User", UserSchema);
 //# sourceMappingURL=User.js.map

@@ -7,22 +7,44 @@ declare const UserSchema: Schema<any, import("mongoose").Model<any, any, any, an
     passwordHash: string;
     gender: "" | "male" | "female" | "other";
     groups: import("mongoose").Types.ObjectId[];
+    pendingInvitations: import("mongoose").Types.ObjectId[];
     dob?: NativeDate | null;
     phone?: {
         number: string;
         countryCode: string;
     } | null;
+    avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
 } & import("mongoose").DefaultTimestampProps, import("mongoose").Document<unknown, {}, import("mongoose").FlatRecord<{
     name: string;
     email: string;
     passwordHash: string;
     gender: "" | "male" | "female" | "other";
     groups: import("mongoose").Types.ObjectId[];
+    pendingInvitations: import("mongoose").Types.ObjectId[];
     dob?: NativeDate | null;
     phone?: {
         number: string;
         countryCode: string;
     } | null;
+    avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
 } & import("mongoose").DefaultTimestampProps>, {}, import("mongoose").ResolveSchemaOptions<{
     timestamps: true;
 }>> & import("mongoose").FlatRecord<{
@@ -31,11 +53,22 @@ declare const UserSchema: Schema<any, import("mongoose").Model<any, any, any, an
     passwordHash: string;
     gender: "" | "male" | "female" | "other";
     groups: import("mongoose").Types.ObjectId[];
+    pendingInvitations: import("mongoose").Types.ObjectId[];
     dob?: NativeDate | null;
     phone?: {
         number: string;
         countryCode: string;
     } | null;
+    avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
 } & import("mongoose").DefaultTimestampProps> & {
     _id: import("mongoose").Types.ObjectId;
 } & {
@@ -48,33 +81,66 @@ declare const _default: import("mongoose").Model<{
     passwordHash: string;
     gender: "" | "male" | "female" | "other";
     groups: import("mongoose").Types.ObjectId[];
+    pendingInvitations: import("mongoose").Types.ObjectId[];
     dob?: NativeDate | null;
     phone?: {
         number: string;
         countryCode: string;
     } | null;
+    avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
 } & import("mongoose").DefaultTimestampProps, {}, {}, {}, import("mongoose").Document<unknown, {}, {
     name: string;
     email: string;
     passwordHash: string;
     gender: "" | "male" | "female" | "other";
     groups: import("mongoose").Types.ObjectId[];
+    pendingInvitations: import("mongoose").Types.ObjectId[];
     dob?: NativeDate | null;
     phone?: {
         number: string;
         countryCode: string;
     } | null;
+    avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
 } & import("mongoose").DefaultTimestampProps, {}, {}> & {
     name: string;
     email: string;
     passwordHash: string;
     gender: "" | "male" | "female" | "other";
     groups: import("mongoose").Types.ObjectId[];
+    pendingInvitations: import("mongoose").Types.ObjectId[];
     dob?: NativeDate | null;
     phone?: {
         number: string;
         countryCode: string;
     } | null;
+    avatar?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    banner?: {
+        fullSize?: string | null;
+        small?: string | null;
+    } | null;
+    avatarUrl?: string | null;
+    bannerUrl?: string | null;
 } & import("mongoose").DefaultTimestampProps & {
     _id: import("mongoose").Types.ObjectId;
 } & {

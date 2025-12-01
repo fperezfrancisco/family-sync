@@ -20,6 +20,8 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
 import sharp from "sharp";
+// RATE LIMITING: Import auth rate limiter
+import { authLimiter } from "../middleware/rateLimiter.js";
 
 // Extend Express Request interface to include multer file
 declare global {
@@ -33,6 +35,9 @@ declare global {
 dotenv.config();
 
 const router = Router();
+
+// RATE LIMITING: Apply strict rate limiting to all auth endpoints
+router.use(authLimiter);
 
 const BUCKET_NAME = process.env.BUCKET_NAME || "default-bucket-name";
 const BUCKET_REGION = process.env.BUCKET_REGION || "us-east-1";
