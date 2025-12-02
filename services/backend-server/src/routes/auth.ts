@@ -34,6 +34,15 @@ declare global {
 
 dotenv.config();
 
+// Standardized cookie configuration for refresh tokens
+const getRefreshCookieConfig = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // HTTPS only in production
+  sameSite: "lax" as const,
+  path: "/auth", // Covers /auth/refresh and /auth/logout while maintaining security
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+});
+
 const router = Router();
 
 // RATE LIMITING: Apply general auth limiting to all auth endpoints (lenient for profile updates)
@@ -126,13 +135,7 @@ router.post("/register", strictAuthLimiter, async (req, res) => {
   });
 
   return res
-    .cookie("refreshToken", refresh, {
-      httpOnly: true,
-      secure: false, //process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/auth/refresh",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    })
+    .cookie("refreshToken", refresh, getRefreshCookieConfig())
     .status(201)
     .json({
       message: "User registered",
@@ -195,13 +198,7 @@ router.post("/login", strictAuthLimiter, async (req, res) => {
   });
 
   return res
-    .cookie("refreshToken", refresh, {
-      httpOnly: true,
-      secure: false, //process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/auth/refresh",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    })
+    .cookie("refreshToken", refresh, getRefreshCookieConfig())
     .status(200)
     .json({
       message: "Login successful",
@@ -237,21 +234,11 @@ router.post("/logout", async (req, res) => {
       }
     } catch (error) {
       // token invalid or expired, nothing to do
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: false, //process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/auth/refresh",
-      });
+      res.clearCookie("refreshToken", getRefreshCookieConfig());
       return res.status(200).json({ message: "Logged out successfully" });
     }
   }
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: false, //process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/auth/refresh",
-  });
+  res.clearCookie("refreshToken", getRefreshCookieConfig());
   return res.status(200).json({ message: "Logged out successfully" });
 });
 
@@ -302,13 +289,7 @@ router.post("/refresh", async (req, res) => {
     });
 
     return res
-      .cookie("refreshToken", newRefresh, {
-        httpOnly: true,
-        secure: false, //process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/auth/refresh",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      })
+      .cookie("refreshToken", newRefresh, getRefreshCookieConfig())
       .status(200)
       .json({
         message: "Token refreshed",

@@ -60,6 +60,7 @@ interface SocketContextType {
   // Utility functions
   clearMessages: (groupId?: string) => void;
   getOnlineUsers: (groupId: string) => string[];
+  markGroupAsRead: (groupId: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -299,6 +300,30 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     return onlineUsers[groupId] || [];
   };
 
+  const markGroupAsRead = useCallback(
+    (groupId: string) => {
+      if (!user?.id) return;
+
+      const lastSeenKey = `lastSeen_${user.id}`;
+      try {
+        let lastSeenData: Record<string, string> = {};
+        const stored = localStorage.getItem(lastSeenKey);
+        if (stored) {
+          lastSeenData = JSON.parse(stored);
+        }
+
+        // Update the timestamp for this group
+        lastSeenData[groupId] = new Date().toISOString();
+
+        // Save back to localStorage
+        localStorage.setItem(lastSeenKey, JSON.stringify(lastSeenData));
+      } catch (error) {
+        console.error("Error updating last seen data:", error);
+      }
+    },
+    [user]
+  );
+
   // Auto-connect when user is available
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -342,6 +367,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     stopTyping,
     clearMessages,
     getOnlineUsers,
+    markGroupAsRead,
   };
 
   return (
