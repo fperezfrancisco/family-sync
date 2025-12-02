@@ -19,6 +19,7 @@ import PendingInvitations from "@/components/dashboard/PendingInvitations";
 import { CreateEventData } from "@/types/events";
 import Image from "next/image";
 import { useTasks } from "@/context/TasksContext";
+import { useSocket } from "@/context/SocketContext";
 
 /**
  * Dashboard Page Component
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const { groups, refreshGroups } = useGroups();
   const { events, createEvent } = useEvents();
   const { tasks } = useTasks();
+  const { messages } = useSocket();
 
   console.log("User: ", user);
 
@@ -162,6 +164,47 @@ export default function DashboardPage() {
     }).length;
   }, [user, tasks, groups, events]);
 
+  /**
+   * Calculate unread messages count for the current user
+   * Uses localStorage to track when user last viewed each group chat
+   * Counts messages newer than the last seen timestamp for each group
+   */
+  const calculateUnreadMessagesCount = useCallback(() => {
+    if (!user || !messages || !groups) return 0;
+
+    const lastSeenKey = `lastSeen_${user.id}`;
+    let lastSeenData: Record<string, string> = {};
+
+    try {
+      const stored = localStorage.getItem(lastSeenKey);
+      if (stored) {
+        lastSeenData = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Error reading last seen data:", error);
+    }
+
+    let unreadCount = 0;
+
+    // Check each group the user belongs to
+    groups.forEach((group) => {
+      const groupMessages = messages[group.id] || [];
+      const lastSeen = lastSeenData[group.id]
+        ? new Date(lastSeenData[group.id])
+        : new Date(0);
+
+      // Count messages from OTHER users that are newer than last seen
+      const unreadInGroup = groupMessages.filter((message) => {
+        const messageTime = new Date(message.timestamp);
+        return messageTime > lastSeen && message.senderId !== user.id;
+      }).length;
+
+      unreadCount += unreadInGroup;
+    });
+
+    return unreadCount;
+  }, [user, messages, groups]);
+
   useEffect(() => {
     // Update stats when groups or events change
     const updateStats = async () => {
@@ -191,12 +234,24 @@ export default function DashboardPage() {
               value: calculatePendingTasksCount().toString(),
             };
           }
+          if (stat.title === "Unread Messages") {
+            return {
+              ...stat,
+              value: calculateUnreadMessagesCount().toString(),
+            };
+          }
           return stat;
         })
       );
     };
     updateStats();
-  }, [groups, events, tasks, calculatePendingTasksCount]);
+  }, [
+    groups,
+    events,
+    tasks,
+    calculatePendingTasksCount,
+    calculateUnreadMessagesCount,
+  ]);
 
   return (
     <div className="space-y-8 h-fit">
