@@ -9,6 +9,19 @@ import {
 } from "react";
 import io from "socket.io-client";
 import { useAuth } from "./AuthContext";
+import { useConnectionMonitor } from "../hooks/useConnectionMonitor";
+import {
+  detectBrowser,
+  getOptimalSocketConfig,
+  getBrowserSpecificStrategy,
+  getBrowserDescription,
+} from "../utils/browserDetection";
+import {
+  logConnection,
+  logMessage,
+  logBrowser,
+  logError,
+} from "../utils/debugLogger";
 
 // Socket type alias to avoid import issues
 type SocketType = ReturnType<typeof io>;
@@ -31,6 +44,11 @@ interface SocketContextType {
   isConnected: boolean;
   isConnecting: boolean;
   connectionError: string | null;
+
+  // Enhanced debugging state
+  connectionQuality: "excellent" | "good" | "poor" | "unknown";
+  currentTransport: string;
+  browserInfo: string;
 
   // Messages state (grouped by groupId)
   messages: Record<string, ChatMessage[]>;
@@ -76,6 +94,18 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
+  // Browser detection and strategy
+  const browserInfo = detectBrowser();
+  const browserDescription = getBrowserDescription(browserInfo);
+  const socketConfig = getOptimalSocketConfig(browserInfo);
+  const messageStrategy = getBrowserSpecificStrategy(browserInfo);
+
+  // Connection monitoring
+  const connectionMonitor = useConnectionMonitor({
+    socket,
+    enabled: process.env.NODE_ENV === "development",
+  });
+
   // Messages state (groupId -> messages array)
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
 
@@ -92,6 +122,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     setIsConnecting(true);
     setConnectionError(null);
 
+    logBrowser(`Initializing Socket.IO connection for ${browserDescription}`, {
+      browser: browserDescription,
+      config: socketConfig,
+      strategy: messageStrategy,
+    });
+
     const newSocket = io(
       process.env.NEXT_PUBLIC_SOCKET_IO_URL || "http://localhost:4000",
       {
@@ -99,38 +135,64 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           // @ts-expect-error - Token property exists but may not be in User type
           token: user.token,
         },
+        // Use browser-optimized configuration
+        transports: socketConfig.transports,
+        upgrade: socketConfig.upgrade,
+        rememberUpgrade: socketConfig.rememberUpgrade,
+        timeout: socketConfig.timeout,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
+        reconnectionAttempts: socketConfig.maxReconnectionAttempts,
+        reconnectionDelay: socketConfig.reconnectionDelay,
+        reconnectionDelayMax: socketConfig.reconnectionDelayMax,
+        randomizationFactor: socketConfig.randomizationFactor,
       }
     );
 
-    // Connection event handlers
+    // Connection event handlers with enhanced logging
     newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
+      logConnection(`Socket connected: ${newSocket.id}`, {
+        socketId: newSocket.id,
+        browser: browserDescription,
+      });
+
       setIsConnected(true);
       setIsConnecting(false);
       setConnectionError(null);
     });
 
     newSocket.on("disconnect", (reason: string) => {
-      console.log("Socket disconnected:", reason);
+      logConnection(`Socket disconnected: ${reason}`, {
+        reason,
+        browser: browserDescription,
+        socketId: newSocket.id,
+      });
+
       setIsConnected(false);
       setIsConnecting(false);
     });
 
     newSocket.on("connect_error", (error: Error) => {
-      console.error("Socket connection error:", error);
+      logError(`Socket connection error: ${error.message}`, {
+        error: error.message,
+        browser: browserDescription,
+      });
+
       setConnectionError(error.message);
       setIsConnecting(false);
     });
 
     // Message events
     newSocket.on("message_received", (message: ChatMessage) => {
-      console.log(
-        `📨 RECEIVED: ${message.id} from ${message.senderName}:`,
-        message.content
-      );
+      logMessage(`Message received: ${message.id} from ${message.senderName}`, {
+        messageId: message.id,
+        senderId: message.senderId,
+        senderName: message.senderName,
+        content:
+          message.content.substring(0, 50) +
+          (message.content.length > 50 ? "..." : ""),
+        groupId: message.groupId,
+        browser: browserDescription,
+      });
 
       setMessages((prev) => {
         const groupMessages = prev[message.groupId] || [];
@@ -149,17 +211,39 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         );
 
         if (tempIndex !== -1) {
-          console.log(
-            `🔄 REPLACING temp message ${groupMessages[tempIndex].id} with ${message.id}`
+          logMessage(
+            `Replacing temp message ${groupMessages[tempIndex].id} with server message ${message.id}`,
+            {
+              tempId: groupMessages[tempIndex].id,
+              serverId: message.id,
+              content:
+                message.content.substring(0, 50) +
+                (message.content.length > 50 ? "..." : ""),
+              timeDiff: Math.abs(
+                new Date(groupMessages[tempIndex].timestamp).getTime() -
+                  new Date(message.timestamp).getTime()
+              ),
+              browser: browserDescription,
+            }
           );
+
           // Replace temp message with real server message
           const updatedMessages = [...groupMessages];
           updatedMessages[tempIndex] = message;
           return { ...prev, [message.groupId]: updatedMessages };
         } else {
-          console.log(
-            `➕ ADDING new message ${message.id} to group ${message.groupId}`
+          logMessage(
+            `Adding new message ${message.id} to group ${message.groupId}`,
+            {
+              messageId: message.id,
+              senderId: message.senderId,
+              senderName: message.senderName,
+              groupId: message.groupId,
+              isFromOtherUser: message.senderId !== user?.id,
+              browser: browserDescription,
+            }
           );
+
           // New message from someone else or temp not found
           return { ...prev, [message.groupId]: [...groupMessages, message] };
         }
@@ -168,7 +252,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Handle message history when joining a group
     newSocket.on("message_history", (messages: ChatMessage[]) => {
-      console.log(`📜 HISTORY REPLACE: ${messages.length} messages received`);
+      logMessage(`Message history received: ${messages.length} messages`, {
+        messageCount: messages.length,
+        browser: browserDescription,
+      });
 
       if (messages.length > 0) {
         const groupId = messages[0].groupId;
@@ -180,9 +267,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           );
 
           if (tempMessages.length > 0) {
-            console.log(
-              `⚠️ LOSING ${tempMessages.length} temp messages due to history replace:`,
-              tempMessages.map((m) => ({ id: m.id, content: m.content }))
+            logMessage(
+              `Warning: ${tempMessages.length} temp messages will be lost due to history replace`,
+              {
+                tempMessageCount: tempMessages.length,
+                tempMessages: tempMessages.map((m) => ({
+                  id: m.id,
+                  content:
+                    m.content.substring(0, 30) +
+                    (m.content.length > 30 ? "..." : ""),
+                })),
+                groupId,
+                browser: browserDescription,
+              }
             );
           }
 
@@ -246,7 +343,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     setSocket(newSocket);
-  }, [user, socket]);
+  }, [user, socket, browserDescription, socketConfig, messageStrategy]);
 
   // Disconnect function
   const disconnect = useCallback(() => {
@@ -298,10 +395,15 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
 
-      console.log(
-        `🚀 SENT (optimistic): ${tempMessage.id}:`,
-        tempMessage.content
-      );
+      logMessage(`Optimistic message sent: ${tempMessage.id}`, {
+        tempId: tempMessage.id,
+        content:
+          tempMessage.content.substring(0, 50) +
+          (tempMessage.content.length > 50 ? "..." : ""),
+        groupId,
+        strategy: messageStrategy,
+        browser: browserDescription,
+      });
 
       setMessages((prev) => ({
         ...prev,
@@ -311,7 +413,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       // Send to server (server will now echo back to sender with real ID)
       socket.emit("send_message", message);
     },
-    [socket, user]
+    [socket, user, browserDescription, messageStrategy]
   );
 
   const getGroupMessages = (groupId: string): ChatMessage[] => {
@@ -403,6 +505,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     isConnected,
     isConnecting,
     connectionError,
+
+    // Enhanced debugging state
+    connectionQuality: connectionMonitor.connectionMetrics.connectionQuality,
+    currentTransport: connectionMonitor.connectionMetrics.currentTransport,
+    browserInfo: browserDescription,
 
     // Data state
     messages,
