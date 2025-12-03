@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { ChatLayout } from "@/components/chat";
 import { useSocket } from "@/hooks/socket";
@@ -15,6 +16,16 @@ import { useGroups } from "@/context/GroupsContext";
 export default function ChatPage() {
   const { groups, loading: groupsLoading } = useGroups();
   const { connectionError } = useSocket();
+  const searchParams = useSearchParams();
+
+  // Get the groupId from URL parameters and find the corresponding group
+  const initialGroup = useMemo(() => {
+    const groupId = searchParams.get("groupId");
+    if (groupId && groups) {
+      return groups.find((group) => group.id === groupId) || null;
+    }
+    return null;
+  }, [searchParams, groups]);
 
   // Loading state while groups are being fetched
   if (groupsLoading) {
@@ -83,7 +94,7 @@ export default function ChatPage() {
   // h variables: h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)]
   return (
     <div className="h-full w-full">
-      <ChatLayout />
+      <ChatLayout initialGroup={initialGroup} />
     </div>
   );
 }
