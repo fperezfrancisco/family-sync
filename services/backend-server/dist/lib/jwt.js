@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 export function signAccess(payload) {
     return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-        expiresIn: parseInt(process.env.ACCESS_TOKEN_TTL, 10),
+        expiresIn: 15, //parseInt(process.env.ACCESS_TOKEN_TTL as string, 10),
     });
 }
 export function signRefresh(payload) {
