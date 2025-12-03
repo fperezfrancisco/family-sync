@@ -28,6 +28,8 @@ function buildInit(path: string, init: RequestInit = {}): RequestInit {
   // Check if this is a login or register route that needs to accept cookies
   const isLoginOrRegister = path.match(/^\/auth\/(login|register)$/);
 
+  console.log("Is Login or Register? ", isLoginOrRegister);
+
   // Always include credentials for cross-origin requests (needed for network IP access)
   const shouldIncludeCredentials =
     isLoginOrRegister ||

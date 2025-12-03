@@ -8,7 +8,7 @@ export type JwtRefresh = { sub: string; type: string; jti: string }; // refresh 
 
 export function signAccess(payload: JwtAccess) {
   return jwt.sign(payload, process.env.JWT_ACCESS_SECRET as string, {
-    expiresIn: parseInt(process.env.ACCESS_TOKEN_TTL as string, 10),
+    expiresIn: 15, //parseInt(process.env.ACCESS_TOKEN_TTL as string, 10),
   });
 }
 

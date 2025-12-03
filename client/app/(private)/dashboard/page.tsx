@@ -70,28 +70,183 @@ export default function DashboardPage() {
     },
   ]);
 
-  // Mock data for demonstration - replace with real data later
+  /**
+   * Generate recent activity from real data sources
+   * Combines recent events, task updates, and message activity
+   * Returns most recent 10 activities sorted by timestamp
+   */
+  const generateRecentActivity = useCallback(() => {
+    if (!user || !groups) return [];
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: "event",
-      message: 'New event "Family BBQ" was added to Smith Family group',
-      time: "2 hours ago",
-    },
-    {
-      id: 2,
-      type: "task",
-      message: 'Task "Buy groceries" was completed by John',
-      time: "4 hours ago",
-    },
-    {
-      id: 3,
-      type: "message",
-      message: "3 new messages in Friends group chat",
-      time: "6 hours ago",
-    },
-  ];
+    const activities: Array<{
+      id: string;
+      type: "event" | "task" | "message";
+      message: string;
+      time: string;
+      timestamp: Date;
+      groupName?: string;
+      eventName?: string;
+    }> = [];
+
+    // Add recent events (created in last 7 days)
+    if (events) {
+      const recentEvents = events
+        .filter((event) => {
+          const createdDate = new Date(event.createdAt);
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          return createdDate > sevenDaysAgo;
+        })
+        .slice(0, 5); // Limit to 5 most recent events
+
+      recentEvents.forEach((event) => {
+        activities.push({
+          id: `event-${event.id}`,
+          type: "event",
+          message: `New event "${event.name}"${
+            event.group ? ` in ${event.group.name}` : ""
+          }`,
+          time: formatRelativeTime(event.createdAt),
+          timestamp: new Date(event.createdAt),
+          groupName: event.group?.name,
+          eventName: event.name,
+        });
+      });
+    }
+
+    // Add recent task activities (created or completed in last 7 days)
+    if (tasks) {
+      const recentTasks = tasks
+        .filter((task) => {
+          const createdDate = new Date(task.createdAt);
+          const completedDate = task.completedAt
+            ? new Date(task.completedAt)
+            : null;
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+          return (
+            createdDate > sevenDaysAgo ||
+            (completedDate && completedDate > sevenDaysAgo)
+          );
+        })
+        .slice(0, 5); // Limit to 5 most recent tasks
+
+      recentTasks.forEach((task) => {
+        // Task completed activity
+        if (task.completedAt && task.completedBy) {
+          activities.push({
+            id: `task-completed-${task._id}`,
+            type: "task",
+            message: `Task "${task.title}" was completed by ${
+              task.completedBy.name
+            }${task.group ? ` in ${task.group.name}` : ""}`,
+            time: formatRelativeTime(task.completedAt),
+            timestamp: new Date(task.completedAt),
+            groupName: task.group?.name,
+          });
+        }
+        // Task created activity (only if not completed, to avoid duplicates)
+        else {
+          activities.push({
+            id: `task-created-${task._id}`,
+            type: "task",
+            message: `New task "${task.title}" was created${
+              task.group ? ` in ${task.group.name}` : ""
+            }${task.event ? ` for ${task.event.name}` : ""}`,
+            time: formatRelativeTime(task.createdAt),
+            timestamp: new Date(task.createdAt),
+            groupName: task.group?.name,
+            eventName: task.event?.name,
+          });
+        }
+      });
+    }
+
+    // Add recent message activities (groups with recent messages)
+    if (messages && groups) {
+      const messageActivities: Array<{
+        groupId: string;
+        groupName: string;
+        messageCount: number;
+        latestMessageTime: Date;
+        latestSenderName: string;
+      }> = [];
+
+      groups.forEach((group) => {
+        const groupMessages = messages[group.id] || [];
+        if (groupMessages.length > 0) {
+          // Get messages from last 24 hours, excluding current user's messages
+          const oneDayAgo = new Date();
+          oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+          const recentMessages = groupMessages.filter((message) => {
+            const messageTime = new Date(message.timestamp);
+            return messageTime > oneDayAgo && message.senderId !== user.id;
+          });
+
+          if (recentMessages.length > 0) {
+            const latestMessage = recentMessages[recentMessages.length - 1];
+            messageActivities.push({
+              groupId: group.id,
+              groupName: group.name,
+              messageCount: recentMessages.length,
+              latestMessageTime: new Date(latestMessage.timestamp),
+              latestSenderName: latestMessage.senderName,
+            });
+          }
+        }
+      });
+
+      // Add message activities (limit to 3 most recent groups)
+      messageActivities
+        .sort(
+          (a, b) =>
+            b.latestMessageTime.getTime() - a.latestMessageTime.getTime()
+        )
+        .slice(0, 3)
+        .forEach((msgActivity) => {
+          activities.push({
+            id: `message-${msgActivity.groupId}`,
+            type: "message",
+            message: `${msgActivity.messageCount} new message${
+              msgActivity.messageCount > 1 ? "s" : ""
+            } from ${msgActivity.latestSenderName} in ${msgActivity.groupName}`,
+            time: formatRelativeTime(
+              msgActivity.latestMessageTime.toISOString()
+            ),
+            timestamp: msgActivity.latestMessageTime,
+            groupName: msgActivity.groupName,
+          });
+        });
+    }
+
+    // Sort all activities by timestamp (most recent first) and return top 10
+    return activities
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 10);
+  }, [user, events, tasks, messages, groups]);
+
+  /**
+   * Format relative time (e.g., "2 hours ago", "3 days ago")
+   */
+  const formatRelativeTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
+  };
+
+  // Generate recent activity data
+  const recentActivity = generateRecentActivity();
 
   /**
    * Handle creating a new event
@@ -249,6 +404,7 @@ export default function DashboardPage() {
     groups,
     events,
     tasks,
+    messages,
     calculatePendingTasksCount,
     calculateUnreadMessagesCount,
   ]);
