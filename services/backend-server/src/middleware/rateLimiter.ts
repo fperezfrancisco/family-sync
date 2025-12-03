@@ -31,19 +31,19 @@ export const generalLimiter = expressRateLimit({
 });
 
 /**
- * Authentication Rate Limiter - Environment Aware
+ * Authentication Rate Limiter - Family-Friendly
  * Development: Unlimited requests (no rate limiting for dev workflow)
- * Production: 15 requests per 15 minutes (more lenient for profile updates)
+ * Production: 50 requests per 15 minutes (allows for family households)
  */
 export const authLimiter = expressRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
-  max: process.env.NODE_ENV === "production" ? 15 : 999999, // Unlimited in dev, 15 in prod
+  max: process.env.NODE_ENV === "production" ? 50 : 999999, // Unlimited in dev, family-friendly in prod
   message: {
     success: false,
     error: "AUTH_RATE_LIMIT_EXCEEDED",
     message:
       process.env.NODE_ENV === "production"
-        ? "Too many authentication attempts from this IP, please try again later."
+        ? "Too many authentication attempts from this household, please try again later."
         : "Development mode - rate limiting disabled for testing",
     retryAfter: "15 minutes",
   },
@@ -60,9 +60,9 @@ export const authLimiter = expressRateLimit({
         success: false,
         error: "AUTH_RATE_LIMIT_EXCEEDED",
         message:
-          "Too many authentication attempts from this IP, please try again later.",
+          "Too many authentication attempts from this household, please try again later.",
         retryAfter: "15 minutes",
-        limit: 15,
+        limit: 50,
         windowMs: 15 * 60 * 1000,
         type: "authentication",
       });
@@ -78,13 +78,13 @@ export const authLimiter = expressRateLimit({
 });
 
 /**
- * Strict Auth Limiter for Login/Register Only
- * Production: 10 requests per 15 minutes for login/register
+ * Strict Auth Limiter for Login/Register Only - Family-Friendly
+ * Production: 30 requests per 15 minutes for login/register (family households)
  * Development: Still unlimited for ease of testing
  */
 export const strictAuthLimiter = expressRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === "production" ? 10 : 999999,
+  max: process.env.NODE_ENV === "production" ? 30 : 999999,
   message: {
     success: false,
     error: "LOGIN_RATE_LIMIT_EXCEEDED",
@@ -109,7 +109,7 @@ export const strictAuthLimiter = expressRateLimit({
         message:
           "Too many login attempts for security. Please try again later.",
         retryAfter: "15 minutes",
-        limit: 10,
+        limit: 30,
         windowMs: 15 * 60 * 1000,
         type: "strict_authentication",
       });

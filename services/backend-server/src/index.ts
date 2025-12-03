@@ -64,9 +64,12 @@ app.use(cookieParser());
 // RATE LIMITING: Apply general rate limiting to all routes
 if (process.env.NODE_ENV === "production") {
   console.log(
-    "🛡️  Production rate limiting: 100 general requests, 15 auth requests per 15 minutes"
+    "🛡️  Production rate limiting: 100 general requests, 50 auth requests per 15 minutes"
   );
-  console.log("🔒 Strict login/register limiting: 10 attempts per 15 minutes");
+  console.log(
+    "🔒 Family-friendly login/register limiting: 30 attempts per 15 minutes"
+  );
+  console.log("👨‍👩‍👧‍👦 Optimized for family households on shared networks");
 } else {
   console.log("🧪 Development mode: Rate limiting relaxed for testing");
   console.log("   • General API: 10,000 requests per 15 minutes");
