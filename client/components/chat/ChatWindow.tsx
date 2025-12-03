@@ -207,7 +207,7 @@ export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
                   : "Disconnected - reconnecting..."
               }
               disabled={!isConnected}
-              className="w-full px-4 py-3 bg-[var(--muted)] border border-[var(--border)] rounded-full 
+              className="w-full px-4 py-3 bg-[var(--muted)]/20 dark:bg-[var(--muted)] border border-[var(--border)] rounded-full 
                          text-[var(--foreground)] placeholder-[var(--muted-foreground)]
                          focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent
                          disabled:opacity-50 disabled:cursor-not-allowed"
@@ -287,7 +287,7 @@ function MessageBubble({
           className={`px-4 py-2 rounded-2xl ${
             isOwnMessage
               ? "bg-[var(--primary)] text-[var(--primary-foreground)] rounded-br-md"
-              : "bg-[var(--muted)] text-[var(--foreground)] rounded-bl-md"
+              : "bg-(--muted)/20 dark:bg-[var(--muted)] text-[var(--foreground)] rounded-bl-md"
           }`}
         >
           <p className="text-sm">{message.content}</p>
@@ -314,7 +314,7 @@ function ChatWindowEmpty() {
     <div className="flex-1 flex items-center justify-center bg-[var(--muted)]/20">
       <div className="text-center">
         <div className="w-24 h-24 bg-[var(--muted)] rounded-full flex items-center justify-center mx-auto mb-6">
-          <Users className="h-12 w-12 text-[var(--muted-foreground)]" />
+          <Users className="h-12 w-12 text-white dark:text-[var(--muted-foreground)]" />
         </div>
         <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
           Choose a group to start chatting

@@ -124,7 +124,7 @@ function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
       className={`w-full p-3 rounded-lg text-left transition-colors ${
         isSelected
           ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-          : "hover:bg-[var(--muted)] text-[var(--foreground)]"
+          : "hover:bg-(--muted)/20 dark:hover:bg-[var(--muted)] text-[var(--foreground)]"
       }`}
     >
       <div className="flex items-start space-x-3">
