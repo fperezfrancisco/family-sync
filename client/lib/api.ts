@@ -113,7 +113,23 @@ async function request(path: string, init: RequestInit = {}, retryCount = 0) {
     console.warn("API base URL may be misconfigured:", BASE, "full path:", url);
   }
 
+  // Mobile debugging - log request details
+  console.log("📡 API Request:", {
+    url,
+    method: init.method || "GET",
+    mobile: /iPhone|iPad|Android/i.test(navigator.userAgent),
+    timestamp: new Date().toISOString(),
+  });
+
   const res = await fetch(url, buildInit(path, init));
+
+  // Mobile debugging - log response details
+  console.log("📡 API Response:", {
+    url,
+    status: res.status,
+    ok: res.ok,
+    headers: Object.fromEntries(res.headers.entries()),
+  });
 
   // Handle 401 (Unauthorized) - attempt token refresh
   if (

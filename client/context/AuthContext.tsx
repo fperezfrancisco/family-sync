@@ -50,16 +50,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("🔐 Starting login attempt...");
+      console.log("📱 User agent:", navigator.userAgent);
+      console.log("🌐 API URL:", process.env.NEXT_PUBLIC_API_URL);
+
       const response = await AuthAPI.login({ email, password });
-      console.log("Response after login: ", response);
+      console.log("✅ Login response received:", response);
+
       setUser(response.user);
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshExists", "true");
       setLoading(false);
+
+      console.log("✅ Login successful, user set");
       return { ok: true, message: response.message };
     } catch (error) {
-      console.error("Login failed", error);
-      return { ok: false, message: "Login failed" };
+      // Enhanced error logging for mobile debugging
+      console.error("❌ Login failed - Full error:", error);
+      console.error(
+        "❌ Error message:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      console.error(
+        "❌ Error stack:",
+        error instanceof Error ? error.stack : "No stack trace"
+      );
+
+      // Log network-specific errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        console.error("🌐 Network error - Check internet connection and CORS");
+      }
+
+      // Return more specific error message
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
+      return { ok: false, message: `Login failed: ${errorMessage}` };
     }
   };
 

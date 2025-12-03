@@ -78,21 +78,36 @@ export default function LoginPage() {
 
     try {
       const res = await login(formData.email, formData.password);
-      console.log(res);
+      console.log("📱 Login result:", res);
+
       if (res && !res.ok) {
-        alert(`Login failed: ${res.message}`);
+        // Show detailed error message for mobile debugging
+        const detailedError = `Login failed: ${res.message}\nAPI: ${
+          process.env.NEXT_PUBLIC_API_URL
+        }\nUser Agent: ${navigator.userAgent.substring(0, 50)}...`;
+        alert(detailedError);
+        setErrors({ general: res.message });
         return;
       }
+
       if (res && res.ok) {
-        // Redirect or handle success
-        //alert(`Login successful: ${res.message}`);
-        //navigate to dashboard page
+        console.log("✅ Login successful, redirecting...");
         router.push("/dashboard");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      alert(`Login failed: ${error}`);
-      setErrors({ general: "Login failed. Please try again." });
+      console.error("❌ Login page error:", error);
+
+      // Detailed mobile-friendly error display
+      const errorDetails = `
+Login Error Details:
+Message: ${error instanceof Error ? error.message : "Unknown error"}
+API URL: ${process.env.NEXT_PUBLIC_API_URL}
+Time: ${new Date().toISOString()}
+Mobile: ${/iPhone|iPad|Android/i.test(navigator.userAgent)}
+      `.trim();
+
+      alert(errorDetails);
+      setErrors({ general: "Login failed. Check console for details." });
     } finally {
       setIsLoading(false);
     }
