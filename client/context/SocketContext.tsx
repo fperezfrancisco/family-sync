@@ -60,6 +60,7 @@ interface SocketContextType {
   // Utility functions
   clearMessages: (groupId?: string) => void;
   getOnlineUsers: (groupId: string) => string[];
+  markGroupAsRead: (groupId: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -126,22 +127,70 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Message events
     newSocket.on("message_received", (message: ChatMessage) => {
-      setMessages((prev) => ({
-        ...prev,
-        [message.groupId]: [...(prev[message.groupId] || []), message],
-      }));
+      console.log(
+        `📨 RECEIVED: ${message.id} from ${message.senderName}:`,
+        message.content
+      );
+
+      setMessages((prev) => {
+        const groupMessages = prev[message.groupId] || [];
+
+        // Check if this is our own message coming back (replace temp message)
+        const tempIndex = groupMessages.findIndex(
+          (msg) =>
+            msg.senderId === message.senderId &&
+            msg.id.startsWith("temp-") &&
+            msg.content === message.content &&
+            // Match messages within 10 seconds (generous window for network delays)
+            Math.abs(
+              new Date(msg.timestamp).getTime() -
+                new Date(message.timestamp).getTime()
+            ) < 10000
+        );
+
+        if (tempIndex !== -1) {
+          console.log(
+            `🔄 REPLACING temp message ${groupMessages[tempIndex].id} with ${message.id}`
+          );
+          // Replace temp message with real server message
+          const updatedMessages = [...groupMessages];
+          updatedMessages[tempIndex] = message;
+          return { ...prev, [message.groupId]: updatedMessages };
+        } else {
+          console.log(
+            `➕ ADDING new message ${message.id} to group ${message.groupId}`
+          );
+          // New message from someone else or temp not found
+          return { ...prev, [message.groupId]: [...groupMessages, message] };
+        }
+      });
     });
 
     // Handle message history when joining a group
     newSocket.on("message_history", (messages: ChatMessage[]) => {
-      console.log(`📜 Received message history: ${messages.length} messages`);
+      console.log(`📜 HISTORY REPLACE: ${messages.length} messages received`);
 
       if (messages.length > 0) {
         const groupId = messages[0].groupId;
-        setMessages((prev) => ({
-          ...prev,
-          [groupId]: messages, // Replace with historical messages
-        }));
+
+        setMessages((prev) => {
+          const currentMessages = prev[groupId] || [];
+          const tempMessages = currentMessages.filter((msg) =>
+            msg.id.startsWith("temp-")
+          );
+
+          if (tempMessages.length > 0) {
+            console.log(
+              `⚠️ LOSING ${tempMessages.length} temp messages due to history replace:`,
+              tempMessages.map((m) => ({ id: m.id, content: m.content }))
+            );
+          }
+
+          return {
+            ...prev,
+            [groupId]: messages, // Replace with historical messages
+          };
+        });
       }
     });
 
@@ -249,12 +298,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
 
+      console.log(
+        `🚀 SENT (optimistic): ${tempMessage.id}:`,
+        tempMessage.content
+      );
+
       setMessages((prev) => ({
         ...prev,
         [groupId]: [...(prev[groupId] || []), tempMessage],
       }));
 
-      // Send to server (server will broadcast to others, not back to sender)
+      // Send to server (server will now echo back to sender with real ID)
       socket.emit("send_message", message);
     },
     [socket, user]
@@ -299,6 +353,30 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     return onlineUsers[groupId] || [];
   };
 
+  const markGroupAsRead = useCallback(
+    (groupId: string) => {
+      if (!user?.id) return;
+
+      const lastSeenKey = `lastSeen_${user.id}`;
+      try {
+        let lastSeenData: Record<string, string> = {};
+        const stored = localStorage.getItem(lastSeenKey);
+        if (stored) {
+          lastSeenData = JSON.parse(stored);
+        }
+
+        // Update the timestamp for this group
+        lastSeenData[groupId] = new Date().toISOString();
+
+        // Save back to localStorage
+        localStorage.setItem(lastSeenKey, JSON.stringify(lastSeenData));
+      } catch (error) {
+        console.error("Error updating last seen data:", error);
+      }
+    },
+    [user]
+  );
+
   // Auto-connect when user is available
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -342,6 +420,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     stopTyping,
     clearMessages,
     getOnlineUsers,
+    markGroupAsRead,
   };
 
   return (

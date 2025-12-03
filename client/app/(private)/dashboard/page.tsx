@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Calendar,
@@ -16,9 +17,14 @@ import CreateEventModal from "@/components/events/CreateEventModal";
 import UpcomingEventsCard from "@/components/dashboard/UpcomingEventsCard";
 // INVITATION SYSTEM: Import pending invitations component
 import PendingInvitations from "@/components/dashboard/PendingInvitations";
+import RecentActivityModal from "@/components/dashboard/RecentActivityModal";
 import { CreateEventData } from "@/types/events";
+import { RecentActivity } from "@/hooks/useRecentActivity";
 import Image from "next/image";
 import { useTasks } from "@/context/TasksContext";
+import { useSocket } from "@/context/SocketContext";
+import { useTotalUnreadMessages } from "@/hooks/useTotalUnreadMessages";
+import { useRecentActivity } from "@/hooks/useRecentActivity";
 
 /**
  * Dashboard Page Component
@@ -30,12 +36,34 @@ export default function DashboardPage() {
   const { groups, refreshGroups } = useGroups();
   const { events, createEvent } = useEvents();
   const { tasks } = useTasks();
+  const { messages } = useSocket();
+  const totalUnreadMessages = useTotalUnreadMessages();
+  const recentActivity = useRecentActivity({ limit: 10 }); // Get 10 for modal, display 3 on dashboard
+  const router = useRouter();
 
   console.log("User: ", user);
 
   // Modal states
   const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [isRecentActivityModalOpen, setIsRecentActivityModalOpen] =
+    useState(false);
+
+  // Navigation handler for activity items
+  const handleActivityNavigation = useCallback(
+    (activity: RecentActivity) => {
+      // For messages, we need to navigate to chat and optionally select the group
+      if (activity.type === "message" && activity.navigationData?.groupId) {
+        // Navigate to chat with group selection
+        const chatPath = `/dashboard/chat?groupId=${activity.navigationData.groupId}`;
+        router.push(chatPath);
+      } else {
+        // For tasks, events, and groups, navigate directly to the path
+        router.push(activity.navigationPath);
+      }
+    },
+    [router]
+  );
 
   const [stats, setStats] = useState([
     {
@@ -67,29 +95,6 @@ export default function DashboardPage() {
       bgColor: "bg-purple-100",
     },
   ]);
-
-  // Mock data for demonstration - replace with real data later
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: "event",
-      message: 'New event "Family BBQ" was added to Smith Family group',
-      time: "2 hours ago",
-    },
-    {
-      id: 2,
-      type: "task",
-      message: 'Task "Buy groceries" was completed by John',
-      time: "4 hours ago",
-    },
-    {
-      id: 3,
-      type: "message",
-      message: "3 new messages in Friends group chat",
-      time: "6 hours ago",
-    },
-  ];
 
   /**
    * Handle creating a new event
@@ -191,12 +196,25 @@ export default function DashboardPage() {
               value: calculatePendingTasksCount().toString(),
             };
           }
+          if (stat.title === "Unread Messages") {
+            return {
+              ...stat,
+              value: totalUnreadMessages.toString(),
+            };
+          }
           return stat;
         })
       );
     };
     updateStats();
-  }, [groups, events, tasks, calculatePendingTasksCount]);
+  }, [
+    groups,
+    events,
+    tasks,
+    messages,
+    calculatePendingTasksCount,
+    totalUnreadMessages,
+  ]);
 
   return (
     <div className="space-y-8 h-fit">
@@ -285,10 +303,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="space-y-4">
-            {recentActivity.map((activity) => (
+            {recentActivity.slice(0, 3).map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-start space-x-3 py-2 rounded-md hover:bg-accent transition-colors duration-150"
+                onClick={() => handleActivityNavigation(activity)}
+                className="flex items-start space-x-3 py-2 rounded-md hover:bg-[var(--accent)] transition-colors duration-150 cursor-pointer"
               >
                 <div
                   className={`size-12 rounded-full shrink-0
@@ -319,7 +338,10 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <button className="w-full mt-4 text-sm text-primary hover:text-primary/80 font-medium font-inter">
+          <button
+            onClick={() => setIsRecentActivityModalOpen(true)}
+            className="w-full mt-4 text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium font-inter"
+          >
             View all activity
           </button>
         </div>
@@ -396,6 +418,12 @@ export default function DashboardPage() {
         onSubmit={handleCreateEvent}
         isLoading={isCreatingEvent}
         availableGroups={groups || []}
+      />
+
+      {/* Recent Activity Modal */}
+      <RecentActivityModal
+        isOpen={isRecentActivityModalOpen}
+        onClose={() => setIsRecentActivityModalOpen(false)}
       />
     </div>
   );

@@ -11,6 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useChat } from "@/hooks/socket";
+import { useSocket } from "@/context/SocketContext";
 import { useAuth } from "@/context/AuthContext";
 import type { Group } from "@/types/groups";
 import type { ChatMessage } from "@/context/SocketContext";
@@ -29,6 +30,7 @@ interface ChatWindowProps {
 
 export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
   const { user } = useAuth();
+  const { markGroupAsRead } = useSocket();
   const [messageInput, setMessageInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -49,12 +51,21 @@ export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Mark group as read when user views the chat
+  useEffect(() => {
+    if (group?.id) {
+      markGroupAsRead(group.id);
+    }
+  }, [group?.id, markGroupAsRead]);
+
   // Handle message sending
   const handleSendMessage = () => {
     if (messageInput.trim() && group) {
       sendMessage(messageInput.trim());
       setMessageInput("");
       stopTyping();
+      // Mark as read when user sends a message
+      markGroupAsRead(group.id);
     }
   };
 

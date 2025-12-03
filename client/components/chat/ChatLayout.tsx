@@ -5,6 +5,10 @@ import { ChatSidebar } from "./ChatSidebar";
 import { ChatWindow } from "./ChatWindow";
 import type { Group } from "@/types/groups";
 
+interface ChatLayoutProps {
+  initialGroup?: Group | null;
+}
+
 /**
  * Main Chat Layout - Instagram/iMessage style split view
  *
@@ -13,8 +17,10 @@ import type { Group } from "@/types/groups";
  * - No group selected: Shows sidebar (group list)
  * - Group selected: Shows chat window with back button
  */
-export function ChatLayout() {
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+export function ChatLayout({ initialGroup = null }: ChatLayoutProps) {
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(
+    initialGroup
+  );
 
   // Mobile view handler - clears selection to return to sidebar
   const handleBackToSidebar = () => {

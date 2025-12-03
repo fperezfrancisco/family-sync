@@ -32,15 +32,15 @@ const PORT = process.env.PORT || 4000;
 const allowedOrigins =
   process.env.NODE_ENV === "production"
     ? [
-        process.env.CLIENT_URL || "https://better-together-client.vercel.app",
-        process.env.API_URL || "https://better-together-25jb.onrender.com",
+        process.env.CLIENT_URL || "https://thebettertogher.app",
+        process.env.API_URL || "https://api.thebettertogether.app",
       ]
     : [
         "http://localhost:4000",
         "http://localhost:3000",
         "http://localhost:3001",
-        "http://192.168.0.6:3000", // Network IP for cross-device access
-        "http://192.168.0.6:4000", // Network IP for backend access
+        "http://192.168.0.5:3000", // Network IP for cross-device access
+        "http://192.168.0.5:4000", // Network IP for backend access
         "http://127.0.0.1:5500", // For testing HTML files served locally
         "file://", // For HTML files opened directly in browser
       ];
@@ -64,9 +64,12 @@ app.use(cookieParser());
 // RATE LIMITING: Apply general rate limiting to all routes
 if (process.env.NODE_ENV === "production") {
   console.log(
-    "🛡️  Production rate limiting: 100 general requests, 15 auth requests per 15 minutes"
+    "🛡️  Production rate limiting: 100 general requests, 50 auth requests per 15 minutes"
   );
-  console.log("🔒 Strict login/register limiting: 10 attempts per 15 minutes");
+  console.log(
+    "🔒 Family-friendly login/register limiting: 30 attempts per 15 minutes"
+  );
+  console.log("👨‍👩‍👧‍👦 Optimized for family households on shared networks");
 } else {
   console.log("🧪 Development mode: Rate limiting relaxed for testing");
   console.log("   • General API: 10,000 requests per 15 minutes");
@@ -123,7 +126,7 @@ const startServer = async () => {
     // Start the server - bind to all interfaces (0.0.0.0) for network access
     httpServer.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`API listening on http://localhost:${PORT}`);
-      console.log(`🌐 Network access: http://192.168.0.6:${PORT}`);
+      console.log(`🌐 Network access: http://192.168.0.5:${PORT}`);
       console.log(`💬 Message persistence system initialized`);
       console.log(`🧹 Automatic cleanup: 30-day message retention`);
     });

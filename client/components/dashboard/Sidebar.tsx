@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import ProfileModal from "@/components/profile/ProfileModal";
+import { useTotalUnreadMessages } from "@/hooks/useTotalUnreadMessages";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const totalUnreadMessages = useTotalUnreadMessages();
 
   // Navigation items with icons and routes (private routes)
   const navigationItems = [
@@ -148,6 +150,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const isChatItem = item.name === "Chat";
+            const showUnreadBadge = isChatItem && totalUnreadMessages > 0;
 
             return (
               <Link
@@ -155,7 +159,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 href={item.href}
                 onClick={onClose} // Close sidebar on mobile when item is clicked
                 className={`
-                  flex items-center px-3 py-2 rounded-md text-sm font-medium
+                  flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium
                   transition-colors duration-150 ease-in-out font-inter
                   ${
                     isActive
@@ -164,8 +168,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   }
                 `}
               >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.name}
+                <div className="flex items-center">
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </div>
+
+                {/* Unread messages badge - only show for Chat item */}
+                {showUnreadBadge && (
+                  <div className="flex items-center justify-center bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] px-1 font-semibold">
+                    {totalUnreadMessages > 99 ? "99+" : totalUnreadMessages}
+                  </div>
+                )}
               </Link>
             );
           })}

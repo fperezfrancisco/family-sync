@@ -136,12 +136,12 @@ class SocketService {
             replyToMessageId: null,
           };
 
-          // Broadcast to all users in the group EXCEPT the sender
-          // (sender already has optimistic update on frontend)
-          socket.to(data.groupId).emit("message_received", broadcastMessage);
+          // Broadcast to all users in the group INCLUDING the sender
+          // (sender needs server confirmation to replace optimistic update)
+          this.io!.to(data.groupId).emit("message_received", broadcastMessage);
 
           console.log(
-            `📤 Message broadcasted to group ${data.groupId} (excluding sender): "${data.content}"`
+            `📤 Message broadcasted to group ${data.groupId} (including sender): "${data.content}"`
           );
         } catch (error) {
           console.error("❌ Error handling message:", error);

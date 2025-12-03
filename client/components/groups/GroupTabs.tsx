@@ -10,6 +10,7 @@ import {
   Users,
   Plus,
   Send,
+  Bell,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Group } from "@/types/groups";
@@ -24,9 +25,12 @@ import { useTasks } from "@/context/TasksContext";
 import { useAuth } from "@/context/AuthContext";
 import { useGroups } from "@/context/GroupsContext";
 import { useChat, ChatMessage } from "@/hooks/socket";
+import { useGroupRecentActivity } from "@/hooks/useGroupRecentActivity";
+import { RecentActivity } from "@/hooks/useRecentActivity";
 import { EventGrid, EventFilters, CreateEventModal } from "@/components/events";
 import { TaskGrid, TaskFilters, CreateTaskModal } from "@/components/tasks";
 import { EventFilters as EventFiltersType } from "@/components/events/EventFilters";
+import GroupRecentActivityModal from "./GroupRecentActivityModal";
 
 interface GroupTabsProps {
   groupId: string;
@@ -146,13 +150,37 @@ export default function GroupTabs({
 function OverviewTab({ group }: { group: Group }) {
   const { events } = useEvents();
   const { tasks } = useTasks();
+  const router = useRouter();
+  const [isRecentActivityModalOpen, setIsRecentActivityModalOpen] =
+    useState(false);
+
   const groupEvents = events.filter((event) => event.group?.id === group.id);
   const groupTasks = tasks.filter((task) => task.group?.id === group.id);
+  const groupRecentActivity = useGroupRecentActivity({
+    groupId: group.id,
+    limit: 10,
+  });
+
+  // Navigation handler for activity items
+  const handleActivityNavigation = React.useCallback(
+    (activity: RecentActivity) => {
+      // For messages, we need to navigate to chat and optionally select the group
+      if (activity.type === "message" && activity.navigationData?.groupId) {
+        // Navigate to chat with group selection
+        const chatPath = `/dashboard/chat?groupId=${activity.navigationData.groupId}`;
+        router.push(chatPath);
+      } else {
+        // For tasks, events, and groups, navigate directly to the path
+        router.push(activity.navigationPath);
+      }
+    },
+    [router]
+  );
   return (
     <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Members Section */}
-        <div className="bg-card border border-[var(--border)] rounded-lg p-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-5 w-5 text-[var(--primary)]" />
             <h3 className="text-lg font-semibold text-[var(--foreground)]">
@@ -200,20 +228,72 @@ function OverviewTab({ group }: { group: Group }) {
           </div>
         </div>
 
-        {/* Recent Activity Section - Placeholder */}
-        <div className="bg-card border border-[var(--border)] rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
-            Recent Activity
-          </h3>
-          <div className="space-y-3">
-            <div className="text-center py-8">
-              <p className="text-[var(--muted-foreground)]">
-                No recent activity to display
-              </p>
-              <p className="text-sm text-[var(--muted-foreground)] mt-2">
-                Activity will appear here when members interact with the group
-              </p>
-            </div>
+        {/* Recent Activity Section */}
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Recent Activity
+            </h3>
+            <Bell className="h-5 w-5 text-[var(--muted-foreground)]" />
+          </div>
+
+          <div className="space-y-4">
+            {groupRecentActivity.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageCircle className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-3" />
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  No recent activity to display
+                </p>
+                <p className="text-xs text-[var(--muted-foreground)] mt-2">
+                  Activity will appear here when members interact with the group
+                </p>
+              </div>
+            ) : (
+              <>
+                {groupRecentActivity.slice(0, 3).map((activity) => (
+                  <div
+                    key={activity.id}
+                    onClick={() => handleActivityNavigation(activity)}
+                    className="flex items-start space-x-3 py-2 rounded-md hover:bg-[var(--accent)] transition-colors duration-150 cursor-pointer"
+                  >
+                    <div
+                      className={`size-12 rounded-full shrink-0
+                      ${activity.type === "event" ? "bg-blue-100" : ""}
+                      ${activity.type === "task" ? "bg-green-100" : ""}
+                      ${activity.type === "message" ? "bg-purple-100" : ""}
+                      `}
+                    >
+                      {activity.type === "event" && (
+                        <Calendar className="h-6 w-6 text-blue-600 m-3" />
+                      )}
+                      {activity.type === "task" && (
+                        <CheckSquare className="h-6 w-6 text-green-600 m-3" />
+                      )}
+                      {activity.type === "message" && (
+                        <MessageCircle className="h-6 w-6 text-purple-600 m-3" />
+                      )}
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <p className="text-sm font-medium text-[var(--foreground)] font-inter">
+                        {activity.message}
+                      </p>
+                      <p className="text-xs text-[var(--muted-foreground)] mt-1 font-inter">
+                        {activity.time}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {groupRecentActivity.length > 3 && (
+                  <button
+                    onClick={() => setIsRecentActivityModalOpen(true)}
+                    className="w-full mt-4 text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium font-inter"
+                  >
+                    View all activity
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -252,6 +332,14 @@ function OverviewTab({ group }: { group: Group }) {
           </div>
         </div>
       </div>
+
+      {/* Group Recent Activity Modal */}
+      <GroupRecentActivityModal
+        isOpen={isRecentActivityModalOpen}
+        onClose={() => setIsRecentActivityModalOpen(false)}
+        groupId={group.id}
+        groupName={group.name}
+      />
     </div>
   );
 }
