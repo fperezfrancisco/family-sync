@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MessageCircle, Users, Search, Plus } from "lucide-react";
 import { useGroups } from "@/context/GroupsContext";
 import { useChat, useSocket } from "@/hooks/socket";
+import { useAuth } from "@/context/AuthContext";
 import type { Group } from "@/types/groups";
 
 /**
@@ -116,7 +117,68 @@ interface ChatSidebarItemProps {
 
 function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
   const { onlineUserCount, messages } = useChat(group.id);
-  const lastMessage = messages[messages.length - 1];
+  const { messages: globalMessages } = useSocket();
+  const { user } = useAuth();
+
+  // Use global messages if available (for real-time updates), otherwise fall back to useChat messages
+  const currentMessages =
+    globalMessages[group.id]?.length > 0 ? globalMessages[group.id] : messages;
+  const lastMessage = currentMessages[currentMessages.length - 1];
+
+  /**
+   * Calculate unread messages for this group
+   * Returns count of unread messages and the display content
+   */
+  const unreadInfo = useMemo(() => {
+    if (!user || currentMessages.length === 0) {
+      return {
+        count: 0,
+        displayContent: lastMessage?.content || "No messages yet",
+        hasUnread: false,
+      };
+    }
+
+    // Get last seen timestamp for this group
+    const lastSeenKey = `lastSeen_${user.id}`;
+    let lastSeenData: Record<string, string> = {};
+
+    try {
+      const stored = localStorage.getItem(lastSeenKey);
+      if (stored) {
+        lastSeenData = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Error reading last seen data:", error);
+    }
+
+    const lastSeen = lastSeenData[group.id]
+      ? new Date(lastSeenData[group.id])
+      : new Date(0); // If no last seen, consider all messages as unread
+
+    // Count unread messages (from other users, newer than last seen)
+    const unreadMessages = currentMessages.filter((message) => {
+      const messageTime = new Date(message.timestamp);
+      return messageTime > lastSeen && message.senderId !== user.id;
+    });
+
+    const unreadCount = unreadMessages.length;
+    const hasUnread = unreadCount > 0;
+
+    // Determine display content
+    let displayContent = lastMessage?.content || "No messages yet";
+
+    if (hasUnread) {
+      if (unreadCount === 1) {
+        // Show the actual message content for single unread message
+        displayContent = unreadMessages[0].content;
+      } else {
+        // Show "X new messages" for multiple unread messages
+        displayContent = `${unreadCount} new messages`;
+      }
+    }
+
+    return { count: unreadCount, displayContent, hasUnread };
+  }, [currentMessages, user, group.id, lastMessage]);
 
   return (
     <button
@@ -140,6 +202,15 @@ function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-medium truncate">{group.name}</h3>
             <div className="flex items-center space-x-2">
+              {/* Unread message count badge */}
+              {unreadInfo.hasUnread && (
+                <div className="flex items-center space-x-1">
+                  <div className="bg-blue-500 text-white text-xs rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
+                    {unreadInfo.count}
+                  </div>
+                </div>
+              )}
+
               {/* Online indicator */}
               {onlineUserCount > 0 && (
                 <div className="flex items-center space-x-1">
@@ -150,9 +221,23 @@ function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
             </div>
           </div>
 
-          <p className="text-sm opacity-70 truncate">
-            {lastMessage ? lastMessage.content : "No messages yet"}
-          </p>
+          <div className="flex items-center space-x-2">
+            {/* Unread indicator dot */}
+            {unreadInfo.hasUnread && (
+              <div className="w-2 h-2 bg-white rounded-full flex-shrink-0" />
+            )}
+
+            {/* Message content - styled based on read status */}
+            <p
+              className={`text-sm truncate ${
+                unreadInfo.hasUnread
+                  ? "text-[var(--foreground)] font-medium"
+                  : "opacity-70"
+              }`}
+            >
+              {unreadInfo.displayContent}
+            </p>
+          </div>
 
           {/* Last message time */}
           {lastMessage && (
