@@ -94,11 +94,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
-  // Browser detection and strategy
-  const browserInfo = detectBrowser();
-  const browserDescription = getBrowserDescription(browserInfo);
-  const socketConfig = getOptimalSocketConfig(browserInfo);
-  const messageStrategy = getBrowserSpecificStrategy(browserInfo);
+  // Browser detection and strategy (only in browser environment)
+  const [browserInfo] = useState(() => detectBrowser());
+  const [browserDescription] = useState(() => getBrowserDescription(browserInfo));
+  const [socketConfig] = useState(() => getOptimalSocketConfig(browserInfo));
+  const [messageStrategy] = useState(() => getBrowserSpecificStrategy(browserInfo));
 
   // Connection monitoring
   const connectionMonitor = useConnectionMonitor({
@@ -457,7 +457,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   const markGroupAsRead = useCallback(
     (groupId: string) => {
-      if (!user?.id) return;
+      if (!user?.id || typeof window === "undefined") return;
 
       const lastSeenKey = `lastSeen_${user.id}`;
       try {

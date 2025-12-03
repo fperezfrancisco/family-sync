@@ -32,42 +32,46 @@ class DebugLogger {
   private browserInfo: string = "";
 
   constructor() {
-    // Check if debugging is enabled via localStorage
-    this.enabled = localStorage.getItem("family-sync-debug") === "true";
+    // Only access localStorage in browser environment
+    if (typeof window !== "undefined") {
+      // Check if debugging is enabled via localStorage
+      this.enabled = localStorage.getItem("family-sync-debug") === "true";
 
-    // Load enabled categories from localStorage
-    const savedCategories = localStorage.getItem(
-      "family-sync-debug-categories"
-    );
-    if (savedCategories) {
-      try {
-        const categories = JSON.parse(savedCategories);
-        this.categories = new Set(categories);
-      } catch {
-        // Default to all categories if parsing fails
-        this.categories = new Set([
-          "connection",
-          "message",
-          "browser",
-          "persistence",
-          "performance",
-          "error",
-        ]);
+      // Load enabled categories from localStorage
+      const savedCategories = localStorage.getItem(
+        "family-sync-debug-categories"
+      );
+      if (savedCategories) {
+        try {
+          const categories = JSON.parse(savedCategories);
+          this.categories = new Set(categories);
+        } catch {
+          // Default to all categories if parsing fails
+          this.categories = new Set([
+            "connection",
+            "message",
+            "browser",
+            "persistence",
+            "performance",
+            "error",
+          ]);
+        }
+      } else {
+        // Default categories when debug is enabled
+        this.categories = new Set(["connection", "message", "error"]);
       }
-    } else {
-      // Default categories when debug is enabled
-      this.categories = new Set(["connection", "message", "error"]);
-    }
 
-    // Set browser info for all logs
-    if (typeof window !== "undefined") {
+      // Set browser info for all logs
       this.browserInfo = navigator.userAgent;
-    }
 
-    // Expose logger to window for easy debugging
-    if (typeof window !== "undefined") {
+      // Expose logger to window for easy debugging
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).familySyncDebugger = this;
+    } else {
+      // Server-side defaults
+      this.enabled = false;
+      this.categories = new Set();
+      this.browserInfo = "server-side";
     }
   }
 
@@ -76,7 +80,9 @@ class DebugLogger {
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
-    localStorage.setItem("family-sync-debug", enabled.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("family-sync-debug", enabled.toString());
+    }
 
     if (enabled) {
       console.log("🐛 Family Sync Debug Logger: ENABLED");
@@ -113,10 +119,12 @@ class DebugLogger {
    * Save enabled categories to localStorage
    */
   private saveCategories(): void {
-    localStorage.setItem(
-      "family-sync-debug-categories",
-      JSON.stringify([...this.categories])
-    );
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "family-sync-debug-categories",
+        JSON.stringify([...this.categories])
+      );
+    }
   }
 
   /**
@@ -253,8 +261,8 @@ class DebugLogger {
 
     const jsonStr = JSON.stringify(exportData, null, 2);
 
-    // Also copy to clipboard if possible
-    if (navigator.clipboard) {
+    // Also copy to clipboard if possible (browser only)
+    if (typeof window !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(jsonStr).then(() => {
         console.log("🐛 Debug logs exported and copied to clipboard");
       });

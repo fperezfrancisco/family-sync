@@ -38,6 +38,18 @@ export interface MessageStrategy {
  * Detect browser information from User Agent
  */
 export function detectBrowser(): BrowserInfo {
+  // Return default values during server-side rendering
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return {
+      name: "unknown",
+      isMobile: false,
+      isChromeMobile: false,
+      isSafariMobile: false,
+      version: "unknown",
+      platform: "unknown",
+    };
+  }
+
   const userAgent = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
   const isAndroid = /Android/.test(userAgent);
