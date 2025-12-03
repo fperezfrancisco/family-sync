@@ -39,17 +39,19 @@ export function useTotalUnreadMessages(): number {
 
     let totalCount = 0;
 
-    // Get last seen data once for efficiency
+    // Get last seen data once for efficiency (browser only)
     const lastSeenKey = `lastSeen_${user.id}`;
     let lastSeenData: Record<string, string> = {};
 
-    try {
-      const stored = localStorage.getItem(lastSeenKey);
-      if (stored) {
-        lastSeenData = JSON.parse(stored);
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(lastSeenKey);
+        if (stored) {
+          lastSeenData = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error("Error reading last seen data:", error);
       }
-    } catch (error) {
-      console.error("Error reading last seen data:", error);
     }
 
     // Calculate unread messages for each group
