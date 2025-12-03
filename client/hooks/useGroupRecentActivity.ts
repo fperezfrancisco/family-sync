@@ -293,7 +293,11 @@ export function useGroupRecentActivity(options: UseGroupRecentActivityOptions) {
               id: `message-${groupId}-${dayKey}`,
               type: "message",
               message,
-              time: formatRelativeTime(latestMessage.timestamp),
+              time: formatRelativeTime(
+                latestMessage.timestamp instanceof Date
+                  ? latestMessage.timestamp.toISOString()
+                  : String(latestMessage.timestamp)
+              ),
               timestamp: new Date(latestMessage.timestamp),
               groupName: targetGroup.name,
               priority: "high",
