@@ -196,7 +196,7 @@ export default function EventsPage() {
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors font-inter"
+          className="flex items-center px-4 py-2 bg-(--primary) text-white rounded-md hover:bg-(--primary)/80 transition-colors font-inter"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Event

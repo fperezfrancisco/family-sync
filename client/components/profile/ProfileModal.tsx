@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/lib/utils/cropImage";
 import {
   X,
   Edit3,
@@ -48,6 +50,45 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // To crop profile picture 
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+
+  // reader.onload = (e) => {
+  //   setAvatarPreview(e.target?.result as string);
+  //   setIsCropping(true);  
+  // };
+
+  const applyCrop = async () => {
+    if (!croppedAreaPixels || !avatarPreview) return;
+
+    try {
+      const croppedImg = await getCroppedImg(avatarPreview, croppedAreaPixels);
+
+      // Update preview with the cropped version
+      setAvatarPreview(croppedImg);
+
+      // Convert base64 → File so backend receives the cropped image
+      const file = await fetch(croppedImg)
+        .then((res) => res.blob())
+        .then(
+          (blob) =>
+            new File([blob], "avatar.jpg", {
+              type: "image/jpeg",
+            })
+        );
+
+      setAvatarFile(file);
+
+      // Close cropping UI
+      setIsCropping(false);
+    } catch (err) {
+      console.error("Crop failed:", err);
+    }
+  };
 
   // Format date for date input (YYYY-MM-DD format, timezone safe)
   const formatDateForInput = (dateString: string | undefined) => {
@@ -129,6 +170,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const reader = new FileReader();
     reader.onload = (e) => {
       setAvatarPreview(e.target?.result as string);
+      setIsCropping(true);
     };
     reader.readAsDataURL(file);
   };
@@ -174,7 +216,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       // Clear upload state after a short delay
       setTimeout(() => {
         setAvatarFile(null);
-        setAvatarPreview(null);
+        // setAvatarPreview(null);
         setUploadSuccess(false);
       }, 2000);
     } catch (error) {
@@ -326,6 +368,54 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
+      {isCropping && (
+        <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-6">
+          <div className="bg-white rounded-lg p-4 w-full max-w-md">
+            <div className="relative w-full h-64 bg-black/10">
+              <Cropper
+                image={avatarPreview!}
+                crop={crop}
+                zoom={zoom}
+                aspect={4 / 4}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                restrictPosition={false}
+                onCropComplete={(croppedArea, croppedPixels) =>
+                  setCroppedAreaPixels(croppedPixels)
+                }
+              />
+              <div className="mt-4">
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => setIsCropping(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={applyCrop}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal */}
       <div className="relative w-full max-w-2xl max-h-[90vh] bg-[var(--card)] rounded-xl shadow-2xl flex flex-col">
         {/* Header */}
@@ -443,7 +533,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   placeholder="Enter your full name"
                 />
               ) : (
-                <div className="px-3 py-2 text-[var(--foreground)] bg-[var(--muted)]/50 rounded-lg">
+                <div className="px-3 py-2 text-[var(--foreground)] bg-(--muted)/20 dark:bg-[var(--muted)]/50 rounded-lg">
                   {user?.name || "Not provided"}
                 </div>
               )}
@@ -477,7 +567,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   className="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
                 />
               ) : (
-                <div className="px-3 py-2 text-[var(--foreground)] bg-[var(--muted)]/50 rounded-lg">
+                <div className="px-3 py-2 text-[var(--foreground)] bg-(--muted)/20 dark:bg-[var(--muted)]/50 rounded-lg">
                   {formatDate(user?.dob || "")}
                 </div>
               )}
@@ -500,7 +590,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   <option value="other">Other</option>
                 </select>
               ) : (
-                <div className="px-3 py-2 text-[var(--foreground)] bg-[var(--muted)]/50 rounded-lg">
+                <div className="px-3 py-2 text-[var(--foreground)] bg-(--muted)/20 dark:bg-[var(--muted)]/50 rounded-lg">
                   {user?.gender
                     ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1)
                     : "Not provided"}
@@ -536,7 +626,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   />
                 </div>
               ) : (
-                <div className="px-3 py-2 text-[var(--foreground)] bg-[var(--muted)]/50 rounded-lg">
+                <div className="px-3 py-2 text-[var(--foreground)] bg-(--muted)/20 dark:bg-[var(--muted)]/50 rounded-lg">
                   {user?.phone?.countryCode && user?.phone?.number
                     ? `${user.phone.countryCode} ${user.phone.number}`
                     : "Not provided"}

@@ -59,7 +59,7 @@ export function ChatSidebar({
             placeholder="Search groups..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-[var(--muted)] border border-[var(--border)] rounded-lg 
+            className="w-full pl-9 pr-3 py-2 border border-[var(--border)] rounded-lg 
                        text-[var(--foreground)] placeholder-[var(--muted-foreground)] 
                        focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           />
@@ -186,7 +186,7 @@ function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
       className={`w-full p-3 rounded-lg text-left transition-colors ${
         isSelected
           ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-          : "hover:bg-[var(--muted)] text-[var(--foreground)]"
+          : "hover:bg-(--muted)/20 dark:hover:bg-[var(--muted)] text-[var(--foreground)]"
       }`}
     >
       <div className="flex items-start space-x-3">

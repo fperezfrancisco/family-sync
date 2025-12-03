@@ -304,7 +304,7 @@ function OverviewTab({ group }: { group: Group }) {
           Group Statistics
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+          <div className="text-center p-4 bg-(--muted)/10 dark:bg-[var(--muted)]/50 rounded-lg">
             <div className="text-2xl font-bold text-[var(--foreground)]">
               {group.members.length}
             </div>
@@ -312,19 +312,19 @@ function OverviewTab({ group }: { group: Group }) {
               Members
             </div>
           </div>
-          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+          <div className="text-center p-4 bg-(--muted)/10 dark:bg-[var(--muted)]/50 rounded-lg">
             <div className="text-2xl font-bold text-[var(--foreground)]">
               {groupTasks.length}
             </div>
             <div className="text-sm text-[var(--muted-foreground)]">Tasks</div>
           </div>
-          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+          <div className="text-center p-4 bg-(--muted)/10 dark:bg-[var(--muted)]/50 rounded-lg">
             <div className="text-2xl font-bold text-[var(--foreground)]">
               {groupEvents.length}
             </div>
             <div className="text-sm text-[var(--muted-foreground)]">Events</div>
           </div>
-          <div className="text-center p-4 bg-[var(--muted)]/50 rounded-lg">
+          <div className="text-center p-4 bg-(--muted)/10 dark:bg-[var(--muted)]/50 rounded-lg">
             <div className="text-2xl font-bold text-[var(--foreground)]">0</div>
             <div className="text-sm text-[var(--muted-foreground)]">
               Media Files
@@ -960,7 +960,7 @@ function GroupChatTab({ groupId }: { groupId: string }) {
                   : "Disconnected - reconnecting..."
               }
               disabled={!isConnected}
-              className="w-full px-3 py-2 bg-[var(--muted)] border border-[var(--border)] rounded-full 
+              className="w-full px-3 py-2 bg-[var(--muted)]/20 dark:bg-(--muted) border border-[var(--border)] rounded-full 
                          text-[var(--foreground)] placeholder-[var(--muted-foreground)] text-sm
                          focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent
                          disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1033,7 +1033,7 @@ function GroupMessageBubble({
         className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
           isOwnMessage
             ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-            : "bg-[var(--muted)] text-[var(--foreground)]"
+            : "bg-[var(--muted)]/20 text-[var(--foreground)]"
         }`}
       >
         {/* Sender name (for other users) */}

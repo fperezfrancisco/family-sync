@@ -355,16 +355,15 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <button
               onClick={handleOpenCreateEventModal}
-              className="w-full flex items-center justify-between p-3 rounded-md 
-                             bg-[var(--border)] dark:bg-[var(--secondary)] text-[var(--secondary)] dark:text-[var(--foreground)] hover:bg-[var(--primary)]/90 
-                             transition-colors duration-150 font-inter"
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary)
+                             border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
               <span className="font-medium">Create New Event</span>
               <Calendar className="h-5 w-5" />
             </button>
 
             <button
-              className="w-full flex items-center justify-between p-3 rounded-md 
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
               <span className="font-medium text-foreground">Add Task</span>
@@ -372,7 +371,7 @@ export default function DashboardPage() {
             </button>
 
             <button
-              className="w-full flex items-center justify-between p-3 rounded-md 
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
               <span className="font-medium text-foreground">
