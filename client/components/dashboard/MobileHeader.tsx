@@ -15,7 +15,7 @@ interface MobileHeaderProps {
  */
 export default function MobileHeader({ onMenuToggle }: MobileHeaderProps) {
   return (
-    <header className="lg:hidden bg-[var(--card)] border-b border-[var(--border)] px-4 py-3 flex items-center w-full">
+    <header className="lg:hidden bg-[var(--card)] border-b border-[var(--border)] px-4 py-3 flex items-center w-full fixed top-0 z-20 opacity-85">
       {/* Burger menu button */}
       <button
         onClick={onMenuToggle}

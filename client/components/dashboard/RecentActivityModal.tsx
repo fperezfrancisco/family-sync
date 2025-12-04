@@ -154,7 +154,7 @@ export default function RecentActivityModal({
                 onChange={(e) =>
                   setFilterType(e.target.value as typeof filterType)
                 }
-                className="px-3 py-2 bg-[var(--muted)] border border-[var(--border)] rounded-lg 
+                className="px-3 py-2 bg-[var(--muted)]/20 dark:bg-(--muted) border border-[var(--border)] rounded-lg 
                            text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
               >
                 <option value="all">All Activity</option>
@@ -171,7 +171,7 @@ export default function RecentActivityModal({
                   placeholder="Search activities..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[var(--muted)] border border-[var(--border)] rounded-lg 
+                  className="w-full pl-9 pr-3 py-2 bg-[var(--muted)]/20 dark:bg-[var(--muted)] border border-[var(--border)] rounded-lg 
                              text-[var(--foreground)] placeholder-[var(--muted-foreground)] text-sm
                              focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                 />
@@ -207,7 +207,7 @@ export default function RecentActivityModal({
                           <div
                             key={activity.id}
                             onClick={() => handleActivityNavigation(activity)}
-                            className="flex items-start space-x-3 p-3 rounded-lg hover:bg-[var(--muted)] transition-colors cursor-pointer"
+                            className="flex items-start space-x-3 p-3 rounded-lg hover:bg-[var(--muted)]/20 hover:dark:bg-(--muted) transition-colors cursor-pointer"
                           >
                             {/* Activity Icon */}
                             <div

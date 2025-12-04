@@ -225,7 +225,7 @@ export default function CreateEventModal({
             name="name"
             value={formData.name || ""}
             onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent placeholder-(--muted) ${
               errors.name ? "border-red-500" : "border-border"
             }`}
             placeholder="Enter event name"
@@ -246,7 +246,7 @@ export default function CreateEventModal({
             value={formData.description || ""}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent resize-none placeholder-(--muted)"
             placeholder="Describe your event..."
             maxLength={2000}
           />
@@ -267,7 +267,7 @@ export default function CreateEventModal({
               value={formData.startDate || ""}
               onChange={handleInputChange}
               min={getTodayDate()}
-              className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent ${
                 errors.startDate ? "border-red-500" : "border-border"
               }`}
             />
@@ -286,7 +286,7 @@ export default function CreateEventModal({
               value={formData.endDate || ""}
               onChange={handleInputChange}
               min={formData.startDate || getTodayDate()}
-              className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent ${
                 errors.endDate ? "border-red-500" : "border-border"
               }`}
             />
@@ -336,7 +336,7 @@ export default function CreateEventModal({
                 name="location"
                 value={formData.location || ""}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent placeholder-(--muted)"
                 placeholder="Enter event location"
                 maxLength={500}
               />
@@ -353,7 +353,7 @@ export default function CreateEventModal({
               name="locationUrl"
               value={formData.locationUrl || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent placeholder-(--muted)"
               placeholder={
                 formData.isVirtual
                   ? "https://zoom.us/j/..."
@@ -374,7 +374,7 @@ export default function CreateEventModal({
               name="group"
               value={formData.group?.id || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent"
             >
               <option value="">Standalone Event</option>
               {availableGroups.map((group) => (
@@ -445,7 +445,7 @@ export default function CreateEventModal({
                 value={formData.maxAttendees || ""}
                 onChange={handleInputChange}
                 min="1"
-                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent placeholder-(--muted) ${
                   errors.maxAttendees ? "border-red-500" : "border-border"
                 }`}
                 placeholder="No limit"
@@ -472,7 +472,7 @@ export default function CreateEventModal({
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-(--primary) rounded-md hover:bg-(--primary)/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300 ease-in-out"
           >
             {isLoading ? (
               <>

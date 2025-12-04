@@ -122,7 +122,7 @@ export default function GroupCard({
   return (
     <div
       onClick={handleCardClick}
-      className="group bg-[var(--card)] border border-[var(--border)] rounded-lg hover:shadow-md hover:dark:shadow-neutral-700 transition-all duration-200 overflow-hidden"
+      className="group bg-[var(--card)] border border-[var(--border)] rounded-lg hover:shadow-md hover:dark:shadow-neutral-700 transition-all duration-200 overflow-hidden hover:cursor-pointer"
     >
       {/* Card Image */}
       <div className="w-full aspect-[5/3] bg-neutral-400 overflow-hidden">
@@ -165,7 +165,7 @@ export default function GroupCard({
           </div>
 
           {/* More actions dropdown trigger */}
-          <button className="p-2 rounded-md hover:bg-[var(--muted)] transition-colors opacity-0 group-hover:opacity-100">
+          <button className="p-2 rounded-md hover:bg-[var(--muted)]/20 dark:hover:bg-[var(--muted)] transition-colors opacity-0 group-hover:opacity-100">
             <MoreHorizontal className="h-4 w-4 text-[var(--muted-foreground)]" />
           </button>
         </div>

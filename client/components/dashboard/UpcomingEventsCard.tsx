@@ -117,7 +117,7 @@ export default function UpcomingEventsCard({
           </p>
           <button
             onClick={onCreateEvent}
-            className="text-sm text-primary hover:text-primary/80 font-medium font-inter"
+            className="text-sm text-(--primary) hover:text-primary/80 font-medium font-inter"
           >
             Create your first event
           </button>

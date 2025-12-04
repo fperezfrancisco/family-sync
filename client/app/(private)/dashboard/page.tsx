@@ -307,7 +307,7 @@ export default function DashboardPage() {
               <div
                 key={activity.id}
                 onClick={() => handleActivityNavigation(activity)}
-                className="flex items-start space-x-3 py-2 rounded-md hover:bg-[var(--accent)] transition-colors duration-150 cursor-pointer"
+                className="flex items-start space-x-3 py-2 px-2 rounded-md hover:bg-[var(--accent)] transition-colors duration-150 cursor-pointer"
               >
                 <div
                   className={`size-12 rounded-full shrink-0
