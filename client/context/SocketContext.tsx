@@ -236,6 +236,25 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           updatedMessages[tempIndex] = message;
           return { ...prev, [message.groupId]: updatedMessages };
         } else {
+          // Check if this message already exists (came from history)
+          const existingIndex = groupMessages.findIndex(
+            (msg) => msg.id === message.id
+          );
+
+          if (existingIndex !== -1) {
+            logMessage(
+              `Ignoring duplicate message ${message.id} - already exists from history`,
+              {
+                messageId: message.id,
+                existingMessageTimestamp:
+                  groupMessages[existingIndex].timestamp,
+                newMessageTimestamp: message.timestamp,
+                browser: browserDescription,
+              }
+            );
+            return prev; // No change needed
+          }
+
           logMessage(
             `Adding new message ${message.id} to group ${message.groupId}`,
             {
@@ -270,12 +289,56 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
             msg.id.startsWith("temp-")
           );
 
-          if (tempMessages.length > 0) {
+          // Check if any temp messages are already in history (by content/timing match)
+          const tempMessagesInHistory: Array<{
+            temp: ChatMessage;
+            hist: ChatMessage;
+          }> = [];
+
+          tempMessages.forEach((tempMsg) => {
+            const histMatch = messages.find(
+              (histMsg) =>
+                histMsg.content === tempMsg.content &&
+                histMsg.senderId === tempMsg.senderId &&
+                Math.abs(
+                  new Date(histMsg.timestamp).getTime() -
+                    new Date(tempMsg.timestamp).getTime()
+                ) < 10000
+            );
+
+            if (histMatch) {
+              tempMessagesInHistory.push({ temp: tempMsg, hist: histMatch });
+            }
+          });
+
+          if (tempMessagesInHistory.length > 0) {
             logMessage(
-              `Warning: ${tempMessages.length} temp messages will be lost due to history replace`,
+              `Found ${tempMessagesInHistory.length} temp messages already in history - preventing duplicates`,
               {
-                tempMessageCount: tempMessages.length,
-                tempMessages: tempMessages.map((m) => ({
+                matches: tempMessagesInHistory.map(({ temp, hist }) => ({
+                  tempId: temp.id,
+                  histId: hist.id,
+                  content:
+                    temp.content.substring(0, 30) +
+                    (temp.content.length > 30 ? "..." : ""),
+                })),
+                groupId,
+                browser: browserDescription,
+              }
+            );
+          }
+
+          const remainingTempMessages = tempMessages.filter(
+            (tempMsg) =>
+              !tempMessagesInHistory.some(({ temp }) => temp.id === tempMsg.id)
+          );
+
+          if (remainingTempMessages.length > 0) {
+            logMessage(
+              `Warning: ${remainingTempMessages.length} temp messages will be lost due to history replace`,
+              {
+                tempMessageCount: remainingTempMessages.length,
+                tempMessages: remainingTempMessages.map((m) => ({
                   id: m.id,
                   content:
                     m.content.substring(0, 30) +
@@ -294,17 +357,22 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
               !messages.some((histMsg) => histMsg.id === msg.id)
           );
 
-          // Combine historical messages with recent confirmed messages
-          const mergedMessages = [...messages, ...recentConfirmedMessages].sort(
+          // Combine historical messages with recent confirmed messages and remaining temp messages
+          const mergedMessages = [
+            ...messages,
+            ...recentConfirmedMessages,
+            ...remainingTempMessages,
+          ].sort(
             (a, b) =>
               new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
           );
 
           logMessage(
-            `Smart merge completed: ${messages.length} historical + ${recentConfirmedMessages.length} recent = ${mergedMessages.length} total`,
+            `Smart merge completed: ${messages.length} historical + ${recentConfirmedMessages.length} recent + ${remainingTempMessages.length} temp = ${mergedMessages.length} total`,
             {
               historical: messages.length,
               recentConfirmed: recentConfirmedMessages.length,
+              remainingTemp: remainingTempMessages.length,
               total: mergedMessages.length,
               groupId,
               browser: browserDescription,
