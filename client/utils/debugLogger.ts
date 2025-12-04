@@ -313,6 +313,8 @@ export const logError = (message: string, data?: Record<string, unknown>) =>
 // Enable debugging by default in development
 if (process.env.NODE_ENV === "development") {
   debugLogger.setEnabled(true);
+} else {
+  debugLogger.setEnabled(true);
 }
 
 export default debugLogger;

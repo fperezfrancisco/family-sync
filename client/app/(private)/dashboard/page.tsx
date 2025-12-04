@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const recentActivity = useRecentActivity({ limit: 10 }); // Get 10 for modal, display 3 on dashboard
   const router = useRouter();
 
-  console.log("User: ", user);
+  //console.log("User: ", user);
 
   // Modal states
   const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
