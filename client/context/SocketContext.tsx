@@ -96,9 +96,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   // Browser detection and strategy (only in browser environment)
   const [browserInfo] = useState(() => detectBrowser());
-  const [browserDescription] = useState(() => getBrowserDescription(browserInfo));
+  const [browserDescription] = useState(() =>
+    getBrowserDescription(browserInfo)
+  );
   const [socketConfig] = useState(() => getOptimalSocketConfig(browserInfo));
-  const [messageStrategy] = useState(() => getBrowserSpecificStrategy(browserInfo));
+  const [messageStrategy] = useState(() =>
+    getBrowserSpecificStrategy(browserInfo)
+  );
 
   // Connection monitoring
   const connectionMonitor = useConnectionMonitor({
@@ -283,9 +287,33 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
             );
           }
 
+          // Smart merge: preserve recent confirmed messages, add missing historical ones
+          const recentConfirmedMessages = currentMessages.filter(
+            (msg) =>
+              !msg.id.startsWith("temp-") &&
+              !messages.some((histMsg) => histMsg.id === msg.id)
+          );
+
+          // Combine historical messages with recent confirmed messages
+          const mergedMessages = [...messages, ...recentConfirmedMessages].sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+
+          logMessage(
+            `Smart merge completed: ${messages.length} historical + ${recentConfirmedMessages.length} recent = ${mergedMessages.length} total`,
+            {
+              historical: messages.length,
+              recentConfirmed: recentConfirmedMessages.length,
+              total: mergedMessages.length,
+              groupId,
+              browser: browserDescription,
+            }
+          );
+
           return {
             ...prev,
-            [groupId]: messages, // Replace with historical messages
+            [groupId]: mergedMessages,
           };
         });
       }
