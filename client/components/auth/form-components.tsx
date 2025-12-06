@@ -38,14 +38,14 @@ export function Input({
     <div className="space-y-2">
       <label
         htmlFor={props.id}
-        className="block text-sm font-medium text-foreground font-inter"
+        className="block text-sm font-medium text-[var(--foreground)] font-inter"
       >
         {label}
       </label>
       <div className="relative">
         {IconComponent && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <IconComponent className="h-4 w-4 text-muted-foreground" />
+            <IconComponent className="h-4 w-4 text-[var(--muted-foreground)]" />
           </div>
         )}
         <input
@@ -55,10 +55,10 @@ export function Input({
             w-full ${IconComponent ? "pl-10" : "pl-3"} ${
             isPassword ? "pr-10" : "pr-3"
           } py-2 
-            border border-input rounded-md
-            bg-background text-foreground
-            focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
-            placeholder:text-muted-foreground
+            border border-[var(--input)] rounded-md
+            bg-[var(--background)] text-[var(--foreground)]
+            focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent
+            placeholder:text-[var(--muted-foreground)]
             transition-colors font-inter
             ${error ? "border-red-500 focus:ring-red-500" : ""}
             ${className}
@@ -71,9 +71,9 @@ export function Input({
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
-              <EyeOff className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+              <EyeOff className="h-4 w-4 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors" />
             ) : (
-              <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+              <Eye className="h-4 w-4 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors" />
             )}
           </button>
         )}
@@ -143,7 +143,7 @@ export function LinkButton({
   return (
     <a
       href={href}
-      className={`text-primary hover:text-primary/80 text-sm font-medium transition-colors font-inter ${className}`}
+      className={`text-[var(--primary)] hover:text-[var(--primary)]/80 text-sm font-medium transition-colors font-inter ${className}`}
     >
       {children}
     </a>

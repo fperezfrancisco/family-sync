@@ -105,6 +105,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Connection monitoring
+
   const connectionMonitor = useConnectionMonitor({
     socket,
     enabled: process.env.NODE_ENV === "development",
@@ -154,10 +155,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Connection event handlers with enhanced logging
     newSocket.on("connect", () => {
+      /*
       logConnection(`Socket connected: ${newSocket.id}`, {
         socketId: newSocket.id,
         browser: browserDescription,
       });
+      */
 
       setIsConnected(true);
       setIsConnecting(false);
@@ -176,10 +179,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     newSocket.on("connect_error", (error: Error) => {
+      /*
       logError(`Socket connection error: ${error.message}`, {
         error: error.message,
         browser: browserDescription,
       });
+      */
 
       setConnectionError(error.message);
       setIsConnecting(false);
@@ -187,6 +192,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Message events
     newSocket.on("message_received", (message: ChatMessage) => {
+      /*
       logMessage(`Message received: ${message.id} from ${message.senderName}`, {
         messageId: message.id,
         senderId: message.senderId,
@@ -197,6 +203,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         groupId: message.groupId,
         browser: browserDescription,
       });
+      */
 
       setMessages((prev) => {
         const groupMessages = prev[message.groupId] || [];
@@ -215,6 +222,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         );
 
         if (tempIndex !== -1) {
+          /*
           logMessage(
             `Replacing temp message ${groupMessages[tempIndex].id} with server message ${message.id}`,
             {
@@ -230,6 +238,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
               browser: browserDescription,
             }
           );
+          */
 
           // Replace temp message with real server message
           const updatedMessages = [...groupMessages];
@@ -242,6 +251,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           );
 
           if (existingIndex !== -1) {
+            /*
             logMessage(
               `Ignoring duplicate message ${message.id} - already exists from history`,
               {
@@ -252,9 +262,11 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
                 browser: browserDescription,
               }
             );
+            */
             return prev; // No change needed
           }
 
+          /*
           logMessage(
             `Adding new message ${message.id} to group ${message.groupId}`,
             {
@@ -265,7 +277,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
               isFromOtherUser: message.senderId !== user?.id,
               browser: browserDescription,
             }
-          );
+          );*/
 
           // New message from someone else or temp not found
           return { ...prev, [message.groupId]: [...groupMessages, message] };
@@ -275,10 +287,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // Handle message history when joining a group
     newSocket.on("message_history", (messages: ChatMessage[]) => {
+      /*
       logMessage(`Message history received: ${messages.length} messages`, {
         messageCount: messages.length,
         browser: browserDescription,
       });
+      */
 
       if (messages.length > 0) {
         const groupId = messages[0].groupId;
@@ -312,6 +326,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           });
 
           if (tempMessagesInHistory.length > 0) {
+            /*
             logMessage(
               `Found ${tempMessagesInHistory.length} temp messages already in history - preventing duplicates`,
               {
@@ -326,6 +341,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
                 browser: browserDescription,
               }
             );
+            */
           }
 
           const remainingTempMessages = tempMessages.filter(
@@ -334,6 +350,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           );
 
           if (remainingTempMessages.length > 0) {
+            /*
             logMessage(
               `Warning: ${remainingTempMessages.length} temp messages will be lost due to history replace`,
               {
@@ -347,7 +364,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
                 groupId,
                 browser: browserDescription,
               }
-            );
+            );*/
           }
 
           // Smart merge: preserve recent confirmed messages, add missing historical ones
