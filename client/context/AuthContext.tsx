@@ -50,12 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("🔐 Starting login attempt...");
+      //console.log("🔐 Starting login attempt...");
       console.log("📱 User agent:", navigator.userAgent);
-      console.log("🌐 API URL:", process.env.NEXT_PUBLIC_API_URL);
+      //console.log("🌐 API URL:", process.env.NEXT_PUBLIC_API_URL);
 
       const response = await AuthAPI.login({ email, password });
-      console.log("✅ Login response received:", response);
+      //console.log("✅ Login response received:", response);
 
       setUser(response.user);
       localStorage.setItem("accessToken", response.accessToken);

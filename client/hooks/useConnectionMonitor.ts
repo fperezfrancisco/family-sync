@@ -108,7 +108,224 @@ export function useConnectionMonitor({
   }, []);
 
   // Update connection metrics
-  const updateMetrics = useCallback(() => {
+
+  // Removed updateMetrics function to avoid circular dependency
+
+  // Monitor disconnection duration
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (connectionState.lastDisconnectTime && !connectionState.isConnected) {
+      interval = setInterval(() => {
+        const duration = Date.now() - connectionState.lastDisconnectTime!;
+        setConnectionState((prev) => ({
+          ...prev,
+          currentDisconnectionDuration: duration,
+        }));
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [connectionState.lastDisconnectTime, connectionState.isConnected]);
+
+  // Set up socket event listeners
+  useEffect(() => {
+    if (!socket || !enabled) return;
+
+    logConnection("Setting up connection monitor", {
+      browser: getBrowserDescription(browserInfo),
+      socketId: socket.id,
+    });
+
+    // Connection established
+    const handleConnect = () => {
+      const now = Date.now();
+      const connectionId = socket.id || "unknown";
+
+      setConnectionState((prev) => ({
+        ...prev,
+        isConnected: true,
+        isReconnecting: false,
+        connectionId,
+        lastConnectTime: now,
+        reconnectAttempt: 0,
+      }));
+
+      // Check if this was a reconnection
+      setConnectionState((prevState) => {
+        const wasReconnecting =
+          prevState.isReconnecting ||
+          (disconnectStartTime.current &&
+            now - disconnectStartTime.current > 1000);
+
+        if (wasReconnecting && disconnectStartTime.current) {
+          const reconnectTime = now - disconnectStartTime.current;
+          reconnectTimes.current.push(reconnectTime);
+          // Keep only last 20 reconnect times
+          reconnectTimes.current = reconnectTimes.current.slice(-20);
+
+          addConnectionEvent({
+            type: "reconnect",
+            timestamp: now,
+            duration: reconnectTime,
+            data: { connectionId, reconnectTime },
+          });
+
+          logConnection(`Reconnected after ${reconnectTime}ms`, {
+            connectionId,
+            reconnectTime,
+            browser: getBrowserDescription(browserInfo),
+          });
+        } else {
+          addConnectionEvent({
+            type: "connect",
+            timestamp: now,
+            data: { connectionId },
+          });
+
+          logConnection("Initial connection established", {
+            connectionId,
+            browser: getBrowserDescription(browserInfo),
+          });
+        }
+
+        return {
+          ...prevState,
+          isConnected: true,
+          isReconnecting: false,
+          connectionId,
+          lastConnectTime: now,
+          reconnectAttempt: 0,
+        };
+      });
+
+      disconnectStartTime.current = null;
+    };
+
+    // Connection lost
+    const handleDisconnect = (reason: string) => {
+      const now = Date.now();
+
+      setConnectionState((prev) => ({
+        ...prev,
+        isConnected: false,
+        isReconnecting: reason === "io server disconnect" ? false : true,
+        lastDisconnectTime: now,
+      }));
+
+      disconnectStartTime.current = now;
+
+      setConnectionState((prevState) => {
+        addConnectionEvent({
+          type: "disconnect",
+          timestamp: now,
+          data: { reason, connectionId: prevState.connectionId },
+        });
+
+        logConnection(`Disconnected: ${reason}`, {
+          reason,
+          connectionId: prevState.connectionId,
+          browser: getBrowserDescription(browserInfo),
+        });
+
+        return {
+          ...prevState,
+          isConnected: false,
+          isReconnecting: reason === "io server disconnect" ? false : true,
+          lastDisconnectTime: now,
+        };
+      });
+    };
+
+    // Connection error
+    const handleConnectError = (error: Error) => {
+      const now = Date.now();
+
+      setConnectionState((prev) => {
+        const newAttempt = prev.reconnectAttempt + 1;
+
+        addConnectionEvent({
+          type: "connect_error",
+          timestamp: now,
+          data: {
+            error: error.message,
+            attempt: newAttempt,
+          },
+        });
+
+        logError(`Connection error (attempt ${newAttempt})`, {
+          error: error.message,
+          browser: getBrowserDescription(browserInfo),
+        });
+
+        return {
+          ...prev,
+          reconnectAttempt: newAttempt,
+        };
+      });
+    };
+
+    // Transport change (WebSocket vs Polling)
+    const handleTransportChange = (transport: string) => {
+      setConnectionState((prev) => ({
+        ...prev,
+        transport,
+      }));
+
+      setConnectionMetrics((prev) => ({
+        ...prev,
+        currentTransport: transport,
+        transportHistory: [...prev.transportHistory.slice(-9), transport], // Keep last 10
+      }));
+
+      addConnectionEvent({
+        type: "transport_change",
+        timestamp: Date.now(),
+        data: { transport },
+      });
+
+      logConnection(`Transport changed to: ${transport}`, {
+        transport,
+        browser: getBrowserDescription(browserInfo),
+      });
+    };
+
+    // Attach listeners
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
+
+    // Monitor transport changes
+    if (socket.io && socket.io.engine) {
+      socket.io.engine.on("upgrade", () => {
+        handleTransportChange(socket.io?.engine?.transport?.name || "unknown");
+      });
+
+      socket.io.engine.on("upgradeError", () => {
+        logConnection("Transport upgrade failed, staying on polling", {
+          browser: getBrowserDescription(browserInfo),
+        });
+      });
+    }
+
+    // Initial transport detection
+    const initialTransport = socket.io?.engine?.transport?.name || "unknown";
+    if (initialTransport !== "unknown") {
+      handleTransportChange(initialTransport);
+    }
+
+    // Cleanup
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
+    };
+  }, [socket, enabled, browserInfo, addConnectionEvent]);
+
+  // Update metrics when events change
+  useEffect(() => {
     setConnectionMetrics((prev) => {
       const events = connectionEvents;
       const connections = events.filter((e) => e.type === "connect").length;
@@ -167,203 +384,6 @@ export function useConnectionMonitor({
       };
     });
   }, [connectionEvents]);
-
-  // Monitor disconnection duration
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (connectionState.lastDisconnectTime && !connectionState.isConnected) {
-      interval = setInterval(() => {
-        const duration = Date.now() - connectionState.lastDisconnectTime!;
-        setConnectionState((prev) => ({
-          ...prev,
-          currentDisconnectionDuration: duration,
-        }));
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [connectionState.lastDisconnectTime, connectionState.isConnected]);
-
-  // Set up socket event listeners
-  useEffect(() => {
-    if (!socket || !enabled) return;
-
-    logConnection("Setting up connection monitor", {
-      browser: getBrowserDescription(browserInfo),
-      socketId: socket.id,
-    });
-
-    // Connection established
-    const handleConnect = () => {
-      const now = Date.now();
-      const connectionId = socket.id || "unknown";
-
-      setConnectionState((prev) => ({
-        ...prev,
-        isConnected: true,
-        isReconnecting: false,
-        connectionId,
-        lastConnectTime: now,
-        reconnectAttempt: 0,
-      }));
-
-      // Check if this was a reconnection
-      const wasReconnecting =
-        connectionState.isReconnecting ||
-        (disconnectStartTime.current &&
-          now - disconnectStartTime.current > 1000);
-
-      if (wasReconnecting && disconnectStartTime.current) {
-        const reconnectTime = now - disconnectStartTime.current;
-        reconnectTimes.current.push(reconnectTime);
-        // Keep only last 20 reconnect times
-        reconnectTimes.current = reconnectTimes.current.slice(-20);
-
-        addConnectionEvent({
-          type: "reconnect",
-          timestamp: now,
-          duration: reconnectTime,
-          data: { connectionId, reconnectTime },
-        });
-
-        logConnection(`Reconnected after ${reconnectTime}ms`, {
-          connectionId,
-          reconnectTime,
-          browser: getBrowserDescription(browserInfo),
-        });
-      } else {
-        addConnectionEvent({
-          type: "connect",
-          timestamp: now,
-          data: { connectionId },
-        });
-
-        logConnection("Initial connection established", {
-          connectionId,
-          browser: getBrowserDescription(browserInfo),
-        });
-      }
-
-      disconnectStartTime.current = null;
-    };
-
-    // Connection lost
-    const handleDisconnect = (reason: string) => {
-      const now = Date.now();
-
-      setConnectionState((prev) => ({
-        ...prev,
-        isConnected: false,
-        isReconnecting: reason === "io server disconnect" ? false : true,
-        lastDisconnectTime: now,
-      }));
-
-      disconnectStartTime.current = now;
-
-      addConnectionEvent({
-        type: "disconnect",
-        timestamp: now,
-        data: { reason, connectionId: connectionState.connectionId },
-      });
-
-      logConnection(`Disconnected: ${reason}`, {
-        reason,
-        connectionId: connectionState.connectionId,
-        browser: getBrowserDescription(browserInfo),
-      });
-    };
-
-    // Connection error
-    const handleConnectError = (error: Error) => {
-      const now = Date.now();
-
-      setConnectionState((prev) => ({
-        ...prev,
-        reconnectAttempt: prev.reconnectAttempt + 1,
-      }));
-
-      addConnectionEvent({
-        type: "connect_error",
-        timestamp: now,
-        data: {
-          error: error.message,
-          attempt: connectionState.reconnectAttempt + 1,
-        },
-      });
-
-      logError(
-        `Connection error (attempt ${connectionState.reconnectAttempt + 1})`,
-        {
-          error: error.message,
-          browser: getBrowserDescription(browserInfo),
-        }
-      );
-    };
-
-    // Transport change (WebSocket vs Polling)
-    const handleTransportChange = (transport: string) => {
-      setConnectionState((prev) => ({
-        ...prev,
-        transport,
-      }));
-
-      setConnectionMetrics((prev) => ({
-        ...prev,
-        currentTransport: transport,
-        transportHistory: [...prev.transportHistory.slice(-9), transport], // Keep last 10
-      }));
-
-      addConnectionEvent({
-        type: "transport_change",
-        timestamp: Date.now(),
-        data: { transport },
-      });
-
-      logConnection(`Transport changed to: ${transport}`, {
-        transport,
-        browser: getBrowserDescription(browserInfo),
-      });
-    };
-
-    // Attach listeners
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("connect_error", handleConnectError);
-
-    // Monitor transport changes
-    if (socket.io && socket.io.engine) {
-      socket.io.engine.on("upgrade", () => {
-        handleTransportChange(socket.io?.engine?.transport?.name || "unknown");
-      });
-
-      socket.io.engine.on("upgradeError", () => {
-        logConnection("Transport upgrade failed, staying on polling", {
-          browser: getBrowserDescription(browserInfo),
-        });
-      });
-    }
-
-    // Initial transport detection
-    const initialTransport = socket.io?.engine?.transport?.name || "unknown";
-    if (initialTransport !== "unknown") {
-      handleTransportChange(initialTransport);
-    }
-
-    // Cleanup
-    return () => {
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-      socket.off("connect_error", handleConnectError);
-    };
-  }, [socket, enabled, browserInfo, addConnectionEvent, connectionState]);
-
-  // Update metrics when events change
-  useEffect(() => {
-    updateMetrics();
-  }, [connectionEvents, updateMetrics]);
 
   // Performance monitoring - log slow operations
   const logSlowOperation = useCallback(

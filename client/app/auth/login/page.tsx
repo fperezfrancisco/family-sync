@@ -128,7 +128,7 @@ Mobile: ${/iPhone|iPad|Android/i.test(navigator.userAgent)}
           Welcome Back
         </h2>
         <p className="text-muted-foreground mt-2 font-inter">
-          Sign in to your FamilySync account
+          Sign in to your Better Together Account
         </p>
       </div>
 
