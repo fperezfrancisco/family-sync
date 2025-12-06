@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         {/* App branding section */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2 font-inter">
-            FamilySync
+            Better Together App
           </h1>
           <p className="text-muted-foreground font-inter">
             Connect, plan, and share with your loved ones
@@ -30,7 +30,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         {/* Footer section */}
         <div className="text-center mt-6">
           <p className="text-sm text-muted-foreground font-inter">
-            © 2025 FamilySync. All rights reserved.
+            © 2025 Better Together App. All rights reserved.
           </p>
         </div>
       </div>

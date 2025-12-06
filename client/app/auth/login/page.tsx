@@ -78,7 +78,7 @@ export default function LoginPage() {
 
     try {
       const res = await login(formData.email, formData.password);
-      console.log("📱 Login result:", res);
+      console.log("Login result:", res);
 
       if (res && !res.ok) {
         // Show detailed error message for mobile debugging
@@ -91,11 +91,11 @@ export default function LoginPage() {
       }
 
       if (res && res.ok) {
-        console.log("✅ Login successful, redirecting...");
+        console.log("Login successful, redirecting...");
         router.push("/dashboard");
       }
     } catch (error) {
-      console.error("❌ Login page error:", error);
+      console.error("Login page error:", error);
 
       // Detailed mobile-friendly error display
       const errorDetails = `
