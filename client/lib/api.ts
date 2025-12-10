@@ -28,7 +28,7 @@ function buildInit(path: string, init: RequestInit = {}): RequestInit {
   // Check if this is a login or register route that needs to accept cookies
   const isLoginOrRegister = path.match(/^\/auth\/(login|register)$/);
 
-  console.log("Is Login or Register? ", isLoginOrRegister);
+  //console.log("Is Login or Register? ", isLoginOrRegister);
 
   // Always include credentials for cross-origin requests (needed for network IP access)
   const shouldIncludeCredentials =
@@ -114,22 +114,24 @@ async function request(path: string, init: RequestInit = {}, retryCount = 0) {
   }
 
   // Mobile debugging - log request details
+  /*
   console.log("📡 API Request:", {
     url,
     method: init.method || "GET",
     mobile: /iPhone|iPad|Android/i.test(navigator.userAgent),
     timestamp: new Date().toISOString(),
-  });
+  });*/
 
   const res = await fetch(url, buildInit(path, init));
 
   // Mobile debugging - log response details
+  /*
   console.log("📡 API Response:", {
     url,
     status: res.status,
     ok: res.ok,
     headers: Object.fromEntries(res.headers.entries()),
-  });
+  });*/
 
   // Handle 401 (Unauthorized) - attempt token refresh
   if (

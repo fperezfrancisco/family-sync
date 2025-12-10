@@ -6,22 +6,10 @@ import {
   useEffect,
   useContext,
   useCallback,
+  useMemo,
 } from "react";
 import io from "socket.io-client";
 import { useAuth } from "./AuthContext";
-import { useConnectionMonitor } from "../hooks/useConnectionMonitor";
-import {
-  detectBrowser,
-  getOptimalSocketConfig,
-  getBrowserSpecificStrategy,
-  getBrowserDescription,
-} from "../utils/browserDetection";
-import {
-  logConnection,
-  logMessage,
-  logBrowser,
-  logError,
-} from "../utils/debugLogger";
 
 // Socket type alias to avoid import issues
 type SocketType = ReturnType<typeof io>;
@@ -35,6 +23,28 @@ export interface ChatMessage {
   groupId: string;
   timestamp: Date;
   type: "text" | "image" | "file";
+}
+
+// Read state management interfaces
+export interface ReadState {
+  groupId: string;
+  lastReadTimestamp: Date;
+  updatedAt: Date;
+}
+
+export interface UnreadCount {
+  groupId: string;
+  unreadCount: number;
+  lastMessageTimestamp?: Date | null;
+}
+
+export interface ReadStateUpdate {
+  groupId: string;
+  timestamp: Date;
+  deviceInfo?: {
+    userAgent?: string;
+    platform?: string;
+  };
 }
 
 // Socket context interface
@@ -59,12 +69,19 @@ interface SocketContextType {
   // Typing indicators (grouped by groupId)
   typingUsers: Record<string, string[]>;
 
+  // Read state management (server-backed)
+  readStates: Record<string, Date>; // groupId -> lastReadTimestamp
+  unreadCounts: Record<string, number>; // groupId -> unreadCount
+  isLoadingReadStates: boolean;
+
   // Core socket functions
   connect: () => void;
   disconnect: () => void;
 
   // Group management
-  joinGroup: (groupId: string) => void;
+  viewGroup: (groupId: string) => void; // Passive viewing - no read state changes
+  viewGroups: (groupIds: string[]) => void; // Batch passive viewing - no read state changes
+  joinGroup: (groupId: string) => void; // Active joining - marks as read
   leaveGroup: (groupId: string) => void;
 
   // Message functions
@@ -78,7 +95,12 @@ interface SocketContextType {
   // Utility functions
   clearMessages: (groupId?: string) => void;
   getOnlineUsers: (groupId: string) => string[];
+
+  // Read state management functions (server-backed)
   markGroupAsRead: (groupId: string) => void;
+  getUnreadCount: (groupId: string) => number;
+  syncReadStates: () => void;
+  updateReadState: (groupId: string, timestamp?: Date) => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -94,25 +116,31 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
-  // Browser detection and strategy (only in browser environment)
-  const [browserInfo] = useState(() => detectBrowser());
-  const [browserDescription] = useState(() =>
-    getBrowserDescription(browserInfo)
+  // Simplified socket configuration
+  const socketConfig = useMemo(
+    () => ({
+      transports: ["websocket", "polling"],
+      upgrade: true,
+      rememberUpgrade: true,
+      timeout: 20000,
+      maxReconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      randomizationFactor: 0.5,
+    }),
+    []
   );
-  const [socketConfig] = useState(() => getOptimalSocketConfig(browserInfo));
-  const [messageStrategy] = useState(() =>
-    getBrowserSpecificStrategy(browserInfo)
-  );
-
-  // Connection monitoring
-
-  const connectionMonitor = useConnectionMonitor({
-    socket,
-    enabled: process.env.NODE_ENV === "development",
-  });
 
   // Messages state (groupId -> messages array)
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
+
+  // Read state management (server-backed)
+  const [readStates, setReadStates] = useState<Record<string, Date>>({});
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [isLoadingReadStates, setIsLoadingReadStates] = useState(false);
+  const [offlineReadStates, setOfflineReadStates] = useState<ReadStateUpdate[]>(
+    []
+  );
 
   // Online users (groupId -> userId array)
   const [onlineUsers, setOnlineUsers] = useState<Record<string, string[]>>({});
@@ -127,20 +155,35 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     setIsConnecting(true);
     setConnectionError(null);
 
-    logBrowser(`Initializing Socket.IO connection for ${browserDescription}`, {
-      browser: browserDescription,
-      config: socketConfig,
-      strategy: messageStrategy,
+    // Get access token for authentication
+    const accessToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+
+    console.log("🔐 Socket.IO Authentication Debug:", {
+      hasUser: !!user,
+      hasAccessToken: !!accessToken,
+      accessTokenPreview: accessToken
+        ? `${accessToken.substring(0, 20)}...`
+        : null,
+      userId: user?.id,
     });
+
+    if (!accessToken) {
+      console.error("❌ No access token found for Socket.IO authentication");
+      setConnectionError("No access token available");
+      setIsConnecting(false);
+      return;
+    }
 
     const newSocket = io(
       process.env.NEXT_PUBLIC_SOCKET_IO_URL || "http://localhost:4000",
       {
         auth: {
-          // @ts-expect-error - Token property exists but may not be in User type
-          token: user.token,
+          token: accessToken,
         },
-        // Use browser-optimized configuration
+        // Socket.IO configuration
         transports: socketConfig.transports,
         upgrade: socketConfig.upgrade,
         rememberUpgrade: socketConfig.rememberUpgrade,
@@ -161,19 +204,29 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         browser: browserDescription,
       });
       */
+      console.log("Socket connected: ", newSocket.id);
 
       setIsConnected(true);
       setIsConnecting(false);
       setConnectionError(null);
+
+      // Request fresh unread counts from server
+      //console.log("📊 Requesting unread counts for all groups...");
+      //newSocket.emit("get_unread_counts", {});
+
+      // Sync offline read states when reconnecting
+      if (offlineReadStates.length > 0) {
+        console.log(
+          "🔄 Syncing offline read states:",
+          offlineReadStates.length
+        );
+        newSocket.emit("sync_offline_read_states", offlineReadStates);
+        setOfflineReadStates([]);
+      }
     });
 
     newSocket.on("disconnect", (reason: string) => {
-      logConnection(`Socket disconnected: ${reason}`, {
-        reason,
-        browser: browserDescription,
-        socketId: newSocket.id,
-      });
-
+      console.log(`Socket disconnected: ${reason}`);
       setIsConnected(false);
       setIsConnecting(false);
     });
@@ -190,6 +243,100 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setIsConnecting(false);
     });
 
+    // Read state management events
+    newSocket.on("read_states", (serverReadStates: Record<string, string>) => {
+      console.log(
+        "📚 Received initial read states from server:",
+        Object.keys(serverReadStates).length
+      );
+
+      // Convert string timestamps to Date objects
+      const readStatesMap: Record<string, Date> = {};
+      Object.entries(serverReadStates).forEach(([groupId, timestamp]) => {
+        readStatesMap[groupId] = new Date(timestamp);
+      });
+
+      setReadStates(readStatesMap);
+      setIsLoadingReadStates(false);
+
+      // NOW request unread counts after read states are received
+      console.log("📊 Read states received, now requesting unread counts...");
+      newSocket.emit("get_unread_counts", {});
+
+      // Clear any stale localStorage data
+      if (user?.id && typeof window !== "undefined") {
+        const lastSeenKey = `lastSeen_${user.id}`;
+        localStorage.removeItem(lastSeenKey);
+      }
+    });
+
+    newSocket.on(
+      "read_state_updated",
+      ({
+        groupId,
+        lastReadTimestamp,
+        userId,
+      }: {
+        groupId: string;
+        lastReadTimestamp: string;
+        userId: string;
+      }) => {
+        // Only update if this is from another device (same user, different socket)
+        if (userId === user?.id && newSocket.id !== userId) {
+          console.log("📖 Read state updated from another device:", {
+            groupId,
+            lastReadTimestamp,
+          });
+          setReadStates((prev) => ({
+            ...prev,
+            [groupId]: new Date(lastReadTimestamp),
+          }));
+        }
+      }
+    );
+
+    newSocket.on("unread_counts", (unreadData: UnreadCount[]) => {
+      console.log("🔢 Received unread counts:", unreadData.length);
+      const countsMap: Record<string, number> = {};
+      unreadData.forEach(({ groupId, unreadCount }) => {
+        countsMap[groupId] = unreadCount;
+      });
+
+      // Merge with existing counts instead of replacing them
+      setUnreadCounts((prev) => ({
+        ...prev,
+        ...countsMap,
+      }));
+    });
+
+    // Listen for user-specific unread count updates (real-time dashboard updates)
+    newSocket.on(
+      "unread_counts_for_user",
+      ({
+        userId,
+        unreadCounts,
+      }: {
+        userId: string;
+        unreadCounts: UnreadCount[];
+      }) => {
+        // Only update if this is for the current user
+        if (userId === user?.id) {
+          console.log(
+            "🔔 Received real-time unread count update:",
+            unreadCounts.length
+          );
+          const countsMap: Record<string, number> = {};
+          unreadCounts.forEach(({ groupId, unreadCount }) => {
+            countsMap[groupId] = unreadCount;
+          });
+
+          // For real-time updates from global broadcasting, replace entire object
+          // This ensures we have the complete, up-to-date state from server
+          setUnreadCounts(countsMap);
+        }
+      }
+    );
+
     // Message events
     newSocket.on("message_received", (message: ChatMessage) => {
       /*
@@ -204,6 +351,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         browser: browserDescription,
       });
       */
+      console.log("New message received from: ", message.senderName);
 
       setMessages((prev) => {
         const groupMessages = prev[message.groupId] || [];
@@ -293,6 +441,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         browser: browserDescription,
       });
       */
+      console.log("Got message history emitted!!", messages.length);
 
       if (messages.length > 0) {
         const groupId = messages[0].groupId;
@@ -383,18 +532,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
             (a, b) =>
               new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
           );
-
-          logMessage(
-            `Smart merge completed: ${messages.length} historical + ${recentConfirmedMessages.length} recent + ${remainingTempMessages.length} temp = ${mergedMessages.length} total`,
-            {
-              historical: messages.length,
-              recentConfirmed: recentConfirmedMessages.length,
-              remainingTemp: remainingTempMessages.length,
-              total: mergedMessages.length,
-              groupId,
-              browser: browserDescription,
-            }
-          );
+          /*
+          console.log(
+            `Smart merge completed: ${messages.length} historical + ${recentConfirmedMessages.length} recent + ${remainingTempMessages.length} temp = ${mergedMessages.length} total`
+          );*/
 
           return {
             ...prev,
@@ -403,6 +544,43 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         });
       }
     });
+
+    // Handle batch message history from multiple groups
+    newSocket.on(
+      "batch_message_history",
+      (allMessages: Record<string, ChatMessage[]>) => {
+        console.log(
+          "Got batch message history:",
+          Object.keys(allMessages).length,
+          "groups"
+        );
+
+        setMessages((prev) => {
+          const updatedMessages = { ...prev };
+
+          // Process each group's messages
+          Object.entries(allMessages).forEach(([groupId, messages]) => {
+            if (messages.length > 0) {
+              const currentMessages = prev[groupId] || [];
+              const tempMessages = currentMessages.filter((msg) =>
+                msg.id.startsWith("temp-")
+              );
+
+              // Simple merge: use batch history + any temp messages
+              const mergedMessages = [...messages, ...tempMessages].sort(
+                (a, b) =>
+                  new Date(a.timestamp).getTime() -
+                  new Date(b.timestamp).getTime()
+              );
+
+              updatedMessages[groupId] = mergedMessages;
+            }
+          });
+
+          return updatedMessages;
+        });
+      }
+    );
 
     // User join/leave events
     newSocket.on(
@@ -456,7 +634,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     });
 
     setSocket(newSocket);
-  }, [user, socket, browserDescription, socketConfig, messageStrategy]);
+  }, [user, socket, socketConfig, offlineReadStates, setOfflineReadStates]);
 
   // Disconnect function
   const disconnect = useCallback(() => {
@@ -470,9 +648,34 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   }, [socket]);
 
   // Group management functions
+  const viewGroup = useCallback(
+    (groupId: string) => {
+      if (socket?.connected) {
+        console.log(
+          `👁️ Viewing group: ${groupId} (passive - no read state changes)`
+        );
+        socket.emit("view_group", groupId);
+      }
+    },
+    [socket]
+  );
+
+  const viewGroups = useCallback(
+    (groupIds: string[]) => {
+      if (socket?.connected && groupIds.length > 0) {
+        console.log(
+          `👁️ Batch viewing ${groupIds.length} groups: (passive - no read state changes)`
+        );
+        socket.emit("view_groups", groupIds);
+      }
+    },
+    [socket]
+  );
+
   const joinGroup = useCallback(
     (groupId: string) => {
       if (socket?.connected) {
+        console.log(`💬 Actively joining group: ${groupId} (marks as read)`);
         socket.emit("join_group", groupId);
       }
     },
@@ -508,15 +711,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
 
-      logMessage(`Optimistic message sent: ${tempMessage.id}`, {
-        tempId: tempMessage.id,
-        content:
-          tempMessage.content.substring(0, 50) +
-          (tempMessage.content.length > 50 ? "..." : ""),
-        groupId,
-        strategy: messageStrategy,
-        browser: browserDescription,
-      });
+      console.log(`Optimistic message sent: ${tempMessage.id}`);
 
       setMessages((prev) => ({
         ...prev,
@@ -526,7 +721,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       // Send to server (server will now echo back to sender with real ID)
       socket.emit("send_message", message);
     },
-    [socket, user, browserDescription, messageStrategy]
+    [socket, user]
   );
 
   const getGroupMessages = (groupId: string): ChatMessage[] => {
@@ -568,29 +763,116 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     return onlineUsers[groupId] || [];
   };
 
-  const markGroupAsRead = useCallback(
-    (groupId: string) => {
-      if (!user?.id || typeof window === "undefined") return;
+  // Read state management functions (server-backed)
+  const updateReadState = useCallback(
+    (groupId: string, timestamp?: Date) => {
+      if (!user?.id) return;
 
-      const lastSeenKey = `lastSeen_${user.id}`;
-      try {
-        let lastSeenData: Record<string, string> = {};
-        const stored = localStorage.getItem(lastSeenKey);
-        if (stored) {
-          lastSeenData = JSON.parse(stored);
-        }
+      const readTimestamp = timestamp || new Date();
 
-        // Update the timestamp for this group
-        lastSeenData[groupId] = new Date().toISOString();
+      // Optimistically update local state
+      setReadStates((prev) => ({ ...prev, [groupId]: readTimestamp }));
 
-        // Save back to localStorage
-        localStorage.setItem(lastSeenKey, JSON.stringify(lastSeenData));
-      } catch (error) {
-        console.error("Error updating last seen data:", error);
+      if (socket?.connected) {
+        // Send to server if connected
+        const deviceInfo = {
+          platform:
+            typeof window !== "undefined"
+              ? /Mobi|Android/i.test(navigator.userAgent)
+                ? "mobile"
+                : "desktop"
+              : "unknown",
+          userAgent:
+            typeof window !== "undefined" ? navigator.userAgent : undefined,
+        };
+
+        socket.emit("mark_messages_read", {
+          groupId,
+          lastReadTimestamp: readTimestamp.toISOString(),
+          deviceInfo,
+        });
+
+        // Request fresh unread counts after marking as read
+        socket.emit("get_unread_counts", {});
+
+        console.log("📖 Updated read state for group:", {
+          groupId,
+          timestamp: readTimestamp,
+        });
+      } else {
+        // Queue for offline sync
+        setOfflineReadStates((prev) => [
+          ...prev,
+          { groupId, timestamp: readTimestamp },
+        ]);
+        console.log("⏸️ Queued offline read state:", {
+          groupId,
+          timestamp: readTimestamp,
+        });
       }
     },
-    [user]
+    [user?.id, socket, setOfflineReadStates]
   );
+
+  const markGroupAsRead = useCallback(
+    (groupId: string) => {
+      updateReadState(groupId, new Date());
+    },
+    [updateReadState]
+  );
+
+  const getUnreadCount = useCallback(
+    (groupId: string): number => {
+      return unreadCounts[groupId] || 0;
+    },
+    [unreadCounts]
+  );
+
+  const syncReadStates = useCallback(() => {
+    console.log("Syncing read states for user");
+    if (!socket?.connected || !user?.id) return;
+
+    setIsLoadingReadStates(true);
+    socket.emit("get_read_states");
+    console.log("🔄 Requesting read states from server");
+  }, [socket, user?.id]);
+
+  // Manual function to request unread counts (used for debugging/manual refresh)
+  const getUnreadCounts = useCallback(() => {
+    console.log("🔍 DEBUG: getUnreadCounts called with state:", {
+      socketConnected: socket?.connected,
+      socketExists: !!socket,
+      userId: user?.id,
+      socketId: socket?.id,
+    });
+
+    if (!socket?.connected || !user?.id) {
+      console.log(
+        "❌ DEBUG: Cannot emit get_unread_counts - missing requirements"
+      );
+      return;
+    }
+
+    console.log("📊 DEBUG: About to emit get_unread_counts...");
+    socket.emit("get_unread_counts", {});
+    console.log("✅ DEBUG: get_unread_counts emitted successfully");
+  }, [socket, user?.id]);
+
+  // Note: Offline read state queueing is handled in updateReadState function
+
+  // Auto-sync read states when connected and user is available
+  useEffect(() => {
+    if (isConnected && user?.id && socket) {
+      // Use timeout to avoid direct setState in effect
+      const timeoutId = setTimeout(() => {
+        syncReadStates();
+        //getUnreadCounts();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isConnected, user?.id, socket, syncReadStates]);
+  // ✅ Unread counts now come from server events only (no local calculation)
+  // Real-time updates via "unread_counts_for_user" events when messages are sent
 
   // Auto-connect when user is available
   useEffect(() => {
@@ -620,18 +902,25 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     connectionError,
 
     // Enhanced debugging state
-    connectionQuality: connectionMonitor.connectionMetrics.connectionQuality,
-    currentTransport: connectionMonitor.connectionMetrics.currentTransport,
-    browserInfo: browserDescription,
+    connectionQuality: "unknown" as const,
+    currentTransport: "unknown",
+    browserInfo: "unknown",
 
     // Data state
     messages,
     onlineUsers,
     typingUsers,
 
+    // Read state management (server-backed)
+    readStates,
+    unreadCounts,
+    isLoadingReadStates,
+
     // Functions
     connect,
     disconnect,
+    viewGroup,
+    viewGroups,
     joinGroup,
     leaveGroup,
     sendMessage,
@@ -640,7 +929,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     stopTyping,
     clearMessages,
     getOnlineUsers,
+
+    // Read state management functions
     markGroupAsRead,
+    getUnreadCount,
+    syncReadStates,
+    updateReadState,
   };
 
   return (

@@ -11,7 +11,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useChat } from "@/hooks/socket";
-import { useSocket } from "@/context/SocketContext";
 import { useAuth } from "@/context/AuthContext";
 import type { Group } from "@/types/groups";
 import type { ChatMessage } from "@/context/SocketContext";
@@ -30,7 +29,6 @@ interface ChatWindowProps {
 
 export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
   const { user } = useAuth();
-  const { markGroupAsRead } = useSocket();
   const [messageInput, setMessageInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +42,8 @@ export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
     startTyping,
     stopTyping,
     isTyping,
+    activelyJoinGroup,
+    activelyLeaveGroup,
   } = useChat(group?.id || "");
 
   // Auto-scroll to bottom when new messages arrive
@@ -51,12 +51,23 @@ export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Mark group as read when user views the chat
+  // Actively join group when user opens the chat (marks messages as read)
   useEffect(() => {
     if (group?.id) {
-      markGroupAsRead(group.id);
+      console.log(
+        `[ChatWindow] User opened chat for group ${group.id} - actively joining`
+      );
+      activelyJoinGroup();
     }
-  }, [group?.id, markGroupAsRead]);
+
+    // Leave group when component unmounts or group changes
+    return () => {
+      if (group?.id) {
+        console.log(`[ChatWindow] User left chat for group ${group.id}`);
+        activelyLeaveGroup();
+      }
+    };
+  }, [group?.id, activelyJoinGroup, activelyLeaveGroup]);
 
   // Handle message sending
   const handleSendMessage = () => {
@@ -64,8 +75,7 @@ export function ChatWindow({ group, onBackToSidebar }: ChatWindowProps) {
       sendMessage(messageInput.trim());
       setMessageInput("");
       stopTyping();
-      // Mark as read when user sends a message
-      markGroupAsRead(group.id);
+      // No need to markGroupAsRead here - user is already actively joined
     }
   };
 

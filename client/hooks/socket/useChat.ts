@@ -46,6 +46,7 @@ export const useChat = (groupId: string) => {
   const {
     socket,
     isConnected,
+    viewGroup,
     joinGroup,
     leaveGroup,
     sendMessage: socketSendMessage,
@@ -140,24 +141,45 @@ export const useChat = (groupId: string) => {
    */
   const typingUserCount = typingUsers.length;
 
-  // Auto-join group when component mounts or groupId changes
+  /**
+   * Actively join the group (marks messages as read)
+   * Call this when user explicitly clicks to enter/view the chat
+   */
+  const activelyJoinGroup = useCallback(() => {
+    if (isConnected && groupId) {
+      console.log(
+        `[useChat] Actively joining group: ${groupId} (marks as read)`
+      );
+      joinGroup(groupId);
+    }
+  }, [isConnected, groupId, joinGroup]);
+
+  /**
+   * Leave the group
+   * Call this when user explicitly leaves the chat
+   */
+  const activelyLeaveGroup = useCallback(() => {
+    if (isConnected && groupId) {
+      console.log(`[useChat] Actively leaving group: ${groupId}`);
+      leaveGroup(groupId);
+    }
+  }, [isConnected, groupId, leaveGroup]);
+
+  // Auto-view group when component mounts or groupId changes (passive - no read state changes)
   useEffect(() => {
     if (isConnected && groupId) {
-      console.log(`[useChat] Joining group: ${groupId}`);
-      joinGroup(groupId);
+      console.log(`[useChat] Viewing group: ${groupId} (passive)`);
+      viewGroup(groupId);
 
-      // Cleanup: Leave group when component unmounts or groupId changes
+      // No cleanup needed for viewing - we're not actually joining the socket room
+      // Clear typing timeout on cleanup
       return () => {
-        console.log(`[useChat] Leaving group: ${groupId}`);
-        leaveGroup(groupId);
-
-        // Clear typing timeout on cleanup
         if (typingTimeout) {
           clearTimeout(typingTimeout);
         }
       };
     }
-  }, [isConnected, groupId, joinGroup, leaveGroup, typingTimeout]);
+  }, [isConnected, groupId, viewGroup, typingTimeout]);
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
@@ -186,6 +208,10 @@ export const useChat = (groupId: string) => {
     startTyping,
     stopTyping,
     isTyping,
+
+    // Group management (explicit actions)
+    activelyJoinGroup,
+    activelyLeaveGroup,
 
     // Socket instance (for advanced usage)
     socket,

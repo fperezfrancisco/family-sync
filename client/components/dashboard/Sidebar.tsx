@@ -19,6 +19,7 @@ import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import ProfileModal from "@/components/profile/ProfileModal";
 import { useTotalUnreadMessages } from "@/hooks/useTotalUnreadMessages";
+import { useSocket } from "@/context/SocketContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ interface SidebarProps {
  */
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  //const { getUnreadCount } = useSocket();
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);

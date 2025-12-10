@@ -13,19 +13,32 @@ import { useAuth } from "@/context/AuthContext";
  */
 export function useTotalUnreadMessages(): number {
   const { groups } = useGroups();
-  const { messages: globalMessages, joinGroup, isConnected } = useSocket();
+  const { joinGroup, isConnected, getUnreadCount, unreadCounts } = useSocket();
   const { user } = useAuth();
+
+  /*
+  console.log("📊 useTotalUnreadMessages - Current state:", {
+    groupCount: groups?.length || 0,
+    isConnected,
+    hasUser: !!user,
+    unreadCounts: Object.keys(unreadCounts || {}).length,
+  });
+  */
 
   // Ensure all groups are joined for real-time message updates
   useEffect(() => {
     if (!isConnected || !groups || groups.length === 0) {
+      console.log("Not connected or no groups available");
       return;
     }
+    //console.log("Joining all groups for real-time updates");
 
     // Join all user groups to ensure we receive real-time updates
+    /*
     groups.forEach((group) => {
       joinGroup(group.id);
     });
+    */
 
     // Note: We don't leave groups on cleanup since we want persistent global updates
     // Groups will be left when the socket disconnects
@@ -40,6 +53,7 @@ export function useTotalUnreadMessages(): number {
     let totalCount = 0;
 
     // Get last seen data once for efficiency (browser only)
+    /* 
     const lastSeenKey = `lastSeen_${user.id}`;
     let lastSeenData: Record<string, string> = {};
 
@@ -53,12 +67,14 @@ export function useTotalUnreadMessages(): number {
         console.error("Error reading last seen data:", error);
       }
     }
+    */
 
     // Calculate unread messages for each group
     groups.forEach((group) => {
       // Get messages for this group from global state
-      const groupMessages = globalMessages[group.id] || [];
+      //const groupMessages = globalMessages[group.id] || [];
 
+      /*
       if (groupMessages.length === 0) {
         return; // No messages in this group
       }
@@ -75,10 +91,22 @@ export function useTotalUnreadMessages(): number {
       });
 
       totalCount += unreadMessages.length;
+    });*/
+
+      // Use getUnreadCount from socket context for accurate count
+      const groupUnreadCount = getUnreadCount(group.id);
+      totalCount += groupUnreadCount;
+
+      /*
+      console.log(
+        `📊 Group ${group.name}: ${groupUnreadCount} unread messages`
+      );
+      */
     });
 
+    // console.log(`📊 Total unread messages: ${totalCount}`);
     return totalCount;
-  }, [groups, globalMessages, user]);
+  }, [groups, user, getUnreadCount, unreadCounts]);
 
   return totalUnreadCount;
 }
