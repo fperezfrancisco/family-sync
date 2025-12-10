@@ -150,10 +150,11 @@ class ReadStateService {
 
         if (!lastReadTimestamp) {
           // No read state = all messages are unread
-          // Count all messages in the group
+          // Count all messages in the group EXCEPT user's own messages
           const totalCount = await Message.countDocuments({
             groupId,
             isDeleted: false,
+            senderId: { $ne: userId }, // Exclude user's own messages
           });
 
           // Get latest message timestamp
@@ -169,11 +170,12 @@ class ReadStateService {
             lastMessageTimestamp: latestMessage?.createdAt || null,
           });
         } else {
-          // Count messages after last read timestamp
+          // Count messages after last read timestamp EXCEPT user's own messages
           const unreadCount = await Message.countDocuments({
             groupId,
             isDeleted: false,
             createdAt: { $gt: lastReadTimestamp },
+            senderId: { $ne: userId }, // Exclude user's own messages
           });
 
           // Get latest message timestamp for this group
