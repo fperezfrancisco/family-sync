@@ -36,10 +36,13 @@ export default function DashboardPage() {
   const { groups, refreshGroups } = useGroups();
   const { events, createEvent } = useEvents();
   const { tasks } = useTasks();
-  const { messages } = useSocket();
+  const { messages, isLoadingReadStates, getUnreadCount, unreadCounts } =
+    useSocket();
   const totalUnreadMessages = useTotalUnreadMessages();
   const recentActivity = useRecentActivity({ limit: 10 }); // Get 10 for modal, display 3 on dashboard
   const router = useRouter();
+
+  //console.log("Unread counts: ", unreadCounts);
 
   //console.log("User: ", user);
 
@@ -89,7 +92,7 @@ export default function DashboardPage() {
     },
     {
       title: "Unread Messages",
-      value: "12",
+      value: totalUnreadMessages ? totalUnreadMessages.toString() : "0",
       icon: MessageCircle,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
@@ -266,29 +269,31 @@ export default function DashboardPage() {
 
       {/* Statistics cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={index}
-              className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground font-inter">
-                    {stat.title}
-                  </p>
-                  <p className="text-3xl font-bold text-foreground mt-2 font-inter">
-                    {stat.value}
-                  </p>
-                </div>
-                <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
+        {isLoadingReadStates && <>Loading...</>}
+        {!isLoadingReadStates &&
+          stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={index}
+                className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground font-inter">
+                      {stat.title}
+                    </p>
+                    <p className="text-3xl font-bold text-foreground mt-2 font-inter">
+                      {stat.value}
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded-full ${stat.bgColor}`}>
+                    <Icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Main content grid */}

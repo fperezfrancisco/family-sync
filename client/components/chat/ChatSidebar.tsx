@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MessageCircle, Users, Search, Plus } from "lucide-react";
 import { useGroups } from "@/context/GroupsContext";
-import { useChat, useSocket } from "@/hooks/socket";
+import { useSocket } from "@/hooks/socket";
 import { useAuth } from "@/context/AuthContext";
 import type { Group } from "@/types/groups";
 
@@ -23,13 +23,22 @@ export function ChatSidebar({
   onSelectGroup,
 }: ChatSidebarProps) {
   const { groups } = useGroups();
-  const { isConnected } = useSocket();
+  const { isConnected, viewGroups } = useSocket();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter groups based on search term
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Centralized batch viewing - view all groups when connected and groups are available
+  useEffect(() => {
+    if (isConnected && groups.length > 0) {
+      const groupIds = groups.map((group) => group.id);
+      console.log(`[ChatSidebar] Batch viewing ${groupIds.length} groups`);
+      viewGroups(groupIds);
+    }
+  }, [isConnected, groups, viewGroups]);
 
   return (
     <div className="w-full md:w-80 md:border-r border-[var(--border)] bg-[var(--background)] flex flex-col">
@@ -116,17 +125,26 @@ interface ChatSidebarItemProps {
 }
 
 function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
-  const { onlineUserCount, messages } = useChat(group.id);
-  const { messages: globalMessages } = useSocket();
+  const {
+    messages: globalMessages,
+    getUnreadCount,
+    readStates,
+    onlineUsers,
+  } = useSocket();
   const { user } = useAuth();
 
-  // Use global messages if available (for real-time updates), otherwise fall back to useChat messages
-  const currentMessages =
-    globalMessages[group.id]?.length > 0 ? globalMessages[group.id] : messages;
+  // Use only global messages from centralized batch viewing
+  const currentMessages = useMemo(() => {
+    return globalMessages[group.id] || [];
+  }, [globalMessages, group.id]);
+
   const lastMessage = currentMessages[currentMessages.length - 1];
 
+  // Get online user count for this group from global state
+  const onlineUserCount = onlineUsers[group.id]?.length || 0;
+
   /**
-   * Calculate unread messages for this group
+   * Calculate unread messages for this group using server-backed read states
    * Returns count of unread messages and the display content
    */
   const unreadInfo = useMemo(() => {
@@ -138,36 +156,23 @@ function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
       };
     }
 
-    // Get last seen timestamp for this group
-    const lastSeenKey = `lastSeen_${user.id}`;
-    let lastSeenData: Record<string, string> = {};
+    // Get server-backed unread count
+    const unreadCount = getUnreadCount(group.id);
+    const hasUnread = unreadCount > 0;
 
-    try {
-      const stored = localStorage.getItem(lastSeenKey);
-      if (stored) {
-        lastSeenData = JSON.parse(stored);
-      }
-    } catch (error) {
-      console.error("Error reading last seen data:", error);
-    }
+    // Get last read timestamp from server
+    const lastRead = readStates[group.id] || new Date(0);
 
-    const lastSeen = lastSeenData[group.id]
-      ? new Date(lastSeenData[group.id])
-      : new Date(0); // If no last seen, consider all messages as unread
-
-    // Count unread messages (from other users, newer than last seen)
+    // Find unread messages for display purposes
     const unreadMessages = currentMessages.filter((message) => {
       const messageTime = new Date(message.timestamp);
-      return messageTime > lastSeen && message.senderId !== user.id;
+      return messageTime > lastRead && message.senderId !== user.id;
     });
-
-    const unreadCount = unreadMessages.length;
-    const hasUnread = unreadCount > 0;
 
     // Determine display content
     let displayContent = lastMessage?.content || "No messages yet";
 
-    if (hasUnread) {
+    if (hasUnread && unreadMessages.length > 0) {
       if (unreadCount === 1) {
         // Show the actual message content for single unread message
         displayContent = unreadMessages[0].content;
@@ -178,7 +183,14 @@ function ChatSidebarItem({ group, isSelected, onClick }: ChatSidebarItemProps) {
     }
 
     return { count: unreadCount, displayContent, hasUnread };
-  }, [currentMessages, user, group.id, lastMessage]);
+  }, [
+    currentMessages,
+    user,
+    group.id,
+    lastMessage,
+    getUnreadCount,
+    readStates,
+  ]);
 
   return (
     <button

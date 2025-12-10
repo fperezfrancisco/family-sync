@@ -47,16 +47,19 @@ class SocketService {
     return /^[0-9a-fA-F]{24}$/.test(userId);
   }
 
-  // Helper method to safely get user ID and check if read states are supported
+  // Helper method to safely get user ID from authenticated socket
   private getUserIdForReadState(socket: any): string | null {
-    // When auth is enabled, this would come from JWT token
-    const userId = (socket as any).userId || socket.id;
+    // Get user ID from JWT token (set by auth middleware)
+    const userId = (socket as any).userId;
 
-    // Skip read state operations for temporary socket.id users
+    if (!userId) {
+      console.log("⚠️ No authenticated user ID found in socket");
+      return null;
+    }
+
+    // Verify it's a valid ObjectId
     if (!this.isValidObjectId(userId)) {
-      console.log(
-        `⚠️ Skipping read state operations for temporary user ID: ${userId} (auth not enabled)`
-      );
+      console.log(`⚠️ Invalid user ID format: ${userId}`);
       return null;
     }
 
@@ -66,26 +69,56 @@ class SocketService {
   private setupEventHandlers() {
     if (!this.io) return;
 
-    // Auth middleware - temporarily disabled for basic setup
-    // this.io.use((socket, next) => {
-    //   const token = socket.handshake.auth.token;
-    //   if (!token) {
-    //     return next(new Error("Authentication error: No token provided"));
-    //   }
-    //   try {
-    //     const decoded = jwt.verify(
-    //       token,
-    //       process.env.JWT_SECRET || "default_secret"
-    //     ) as { userId: string };
-    //     (socket as any).userId = decoded.userId;
-    //     next();
-    //   } catch (err) {
-    //     return next(new Error("Authentication error: Invalid token"));
-    //   }
-    // });
+    // Auth middleware - JWT token verification
+    this.io.use((socket, next) => {
+      const token = socket.handshake.auth.token;
+
+      console.log("🔐 Socket.IO Auth Debug:", {
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : null,
+        tokenType: token ? (token.includes(".") ? "JWT" : "Other") : null,
+      });
+
+      if (!token) {
+        console.log("❌ Socket connection denied: No token provided");
+        return next(new Error("Authentication error: No token provided"));
+      }
+
+      try {
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_ACCESS_SECRET || "default_secret"
+        ) as { sub: string; type: string };
+
+        console.log("🔍 JWT Decoded:", {
+          sub: decoded.sub,
+          type: decoded.type,
+          isValidObjectId: /^[0-9a-fA-F]{24}$/.test(decoded.sub),
+        });
+
+        // Use 'sub' field as userId (JWT standard)
+        (socket as any).userId = decoded.sub;
+        console.log(`✅ Socket authenticated for user: ${decoded.sub}`);
+        next();
+      } catch (err) {
+        console.log(`❌ Socket authentication failed:`, {
+          error: err instanceof Error ? err.message : "Invalid token",
+          tokenPreview: token ? `${token.substring(0, 30)}...` : null,
+        });
+        return next(new Error("Authentication error: Invalid token"));
+      }
+    });
 
     this.io.on("connection", async (socket) => {
       console.log("A user connected:", socket.id);
+
+      // Add this before the get_unread_counts handler
+      socket.onAny((eventName, ...args) => {
+        console.log(
+          `🔍 DEBUG: Received event '${eventName}' from socket ${socket.id}:`,
+          args
+        );
+      });
 
       // Send initial read states for the user (only if auth is enabled)
       try {
@@ -95,7 +128,6 @@ class SocketService {
 
           // Send read states to newly connected client
           socket.emit("read_states", readStates);
-
           console.log(`📚 Sent initial read states for user ${userId}:`, {
             groupCount: Object.keys(readStates).length,
           });
@@ -105,11 +137,169 @@ class SocketService {
         // Don't fail connection for read state errors
       }
 
-      // Handle joining group chat rooms with message history loading
+      // Handle viewing group (passive - no read state changes)
+      socket.on("view_group", async (groupId: string) => {
+        try {
+          console.log(
+            `👁️ User ${socket.id} viewing group ${groupId} (passive)`
+          );
+
+          // Load and send recent message history (last 50 messages) for UI display
+          const recentMessages = await (Message as any).getGroupMessages(
+            groupId,
+            50
+          );
+
+          // Send message history to the viewing user only (no read state changes)
+          // Send message history to the viewing user only
+          if (recentMessages && recentMessages.length > 0) {
+            const formattedMessages = recentMessages
+              .reverse()
+              .map((msg: any) => ({
+                id: msg._id.toString(),
+                content: msg.content,
+                senderId: msg.senderId.toString(),
+                senderName: msg.senderName,
+                groupId: msg.groupId.toString(),
+                timestamp: msg.createdAt,
+                type: msg.type,
+                isEdited: msg.isEdited,
+                replyToMessageId: msg.replyToMessageId?.toString() || null,
+              }));
+
+            socket.emit("message_history", formattedMessages);
+            /*
+          if (recentMessages && recentMessages.length > 0) {
+            socket.emit("message_history", {
+              groupId,
+              messages: recentMessages.map((msg: any) => ({
+                id: msg._id.toString(),
+                content: msg.content,
+                senderId: msg.senderId.toString(),
+                senderName: msg.senderName,
+                groupId: msg.groupId.toString(),
+                timestamp: msg.createdAt,
+                type: msg.type || "text",
+                isEdited: msg.isEdited || false,
+                replyToMessageId: msg.replyToMessageId?.toString() || null,
+              })),
+            });
+              */
+            console.log(
+              `📚 Sent ${recentMessages.length} messages for viewing group ${groupId}`
+            );
+          }
+
+          // Send current unread count for this group (only if auth is enabled)
+          try {
+            const userId = this.getUserIdForReadState(socket);
+            if (userId) {
+              const unreadCount = await readStateService.calculateUnreadCounts(
+                userId,
+                [groupId]
+              );
+
+              socket.emit("unread_counts", unreadCount);
+              console.log(
+                `📊 Sent unread counts for viewing group ${groupId}:`,
+                unreadCount
+              );
+            }
+          } catch (readStateError) {
+            console.error(
+              `⚠️ Error calculating unread count for viewing group ${groupId}:`,
+              readStateError
+            );
+          }
+        } catch (error) {
+          console.error(`❌ Error viewing group ${groupId}:`, error);
+          socket.emit("error", { message: "Failed to view group" });
+        }
+      });
+
+      // Handle batch viewing multiple groups (passive - no read state changes)
+      socket.on("view_groups", async (groupIds: string[]) => {
+        try {
+          console.log(
+            `👁️ User ${socket.id} viewing ${groupIds.length} groups (passive batch)`
+          );
+
+          const userId = this.getUserIdForReadState(socket);
+          const allMessages: Record<string, any[]> = {};
+          let allUnreadCounts: any[] = [];
+
+          // Process each group
+          for (const groupId of groupIds) {
+            try {
+              // Load message history for this group
+              const recentMessages = await (Message as any).getGroupMessages(
+                groupId,
+                50
+              );
+
+              if (recentMessages && recentMessages.length > 0) {
+                const formattedMessages = recentMessages
+                  .reverse()
+                  .map((msg: any) => ({
+                    id: msg._id.toString(),
+                    content: msg.content,
+                    senderId: msg.senderId.toString(),
+                    senderName: msg.senderName,
+                    groupId: msg.groupId.toString(),
+                    timestamp: msg.createdAt,
+                    type: msg.type,
+                    isEdited: msg.isEdited,
+                    replyToMessageId: msg.replyToMessageId?.toString() || null,
+                  }));
+
+                allMessages[groupId] = formattedMessages;
+              }
+
+              // Calculate unread count for this group
+              if (userId) {
+                const unreadCount =
+                  await readStateService.calculateUnreadCounts(userId, [
+                    groupId,
+                  ]);
+                allUnreadCounts = allUnreadCounts.concat(unreadCount);
+              }
+            } catch (groupError) {
+              console.error(
+                `⚠️ Error processing group ${groupId}:`,
+                groupError
+              );
+              // Continue with other groups
+            }
+          }
+
+          // Send all message history at once
+          if (Object.keys(allMessages).length > 0) {
+            socket.emit("batch_message_history", allMessages);
+            console.log(
+              `📚 Sent batch message history for ${
+                Object.keys(allMessages).length
+              } groups`
+            );
+          }
+
+          // Send all unread counts at once
+          if (allUnreadCounts.length > 0) {
+            socket.emit("unread_counts", allUnreadCounts);
+            console.log(
+              `📊 Sent batch unread counts for ${allUnreadCounts.length} groups`
+            );
+          }
+        } catch (error) {
+          console.error(`❌ Error viewing groups:`, error);
+          socket.emit("error", { message: "Failed to view groups" });
+        }
+      });
+
+      // Handle joining group chat rooms (active - with read state updates)
       socket.on("join_group", async (groupId: string) => {
         try {
           socket.join(groupId);
-          console.log(`💬 User ${socket.id} joined group ${groupId}`);
+          console.log(`💬 User ${socket.id} actively joined group ${groupId}`);
 
           // Load and send recent message history (last 50 messages)
           const recentMessages = await (Message as any).getGroupMessages(
@@ -139,12 +329,20 @@ class SocketService {
             );
           }
 
-          // Send current read state and unread count for this group (only if auth is enabled)
+          // ACTIVE JOIN: Mark group as read and update read state
           try {
             const userId = this.getUserIdForReadState(socket);
 
             if (userId) {
-              // Get read state for this specific group
+              // Mark messages as read when actively joining
+              const now = new Date();
+              await readStateService.updateReadState(userId, groupId, now);
+
+              console.log(
+                `✅ Marked group ${groupId} as read for user ${userId} on active join`
+              );
+
+              // Send updated read state
               const readState = await readStateService.getReadState(
                 userId,
                 groupId
@@ -158,16 +356,30 @@ class SocketService {
                 });
               }
 
-              // Calculate and send unread count for this group
+              // Send updated unread count (should be 0 now)
               const unreadCounts = await readStateService.calculateUnreadCounts(
                 userId,
                 [groupId]
               );
               socket.emit("unread_counts", unreadCounts);
+
+              // Broadcast read state update to other devices/sessions
+              socket.broadcast.emit("read_state_updated", {
+                groupId,
+                lastReadTimestamp: now.toISOString(),
+                userId,
+              });
+
+              console.log(
+                `📊 Updated read state for active join to group ${groupId}:`,
+                {
+                  unreadCount: unreadCounts,
+                }
+              );
             }
           } catch (readStateError) {
             console.error(
-              `⚠️ Error loading read state for group ${groupId}:`,
+              `⚠️ Error updating read state for group ${groupId}:`,
               readStateError
             );
             // Don't fail the join operation for read state errors
@@ -237,6 +449,40 @@ class SocketService {
           console.log(
             `📤 Message broadcasted to group ${data.groupId} (including sender): "${data.content}"`
           );
+
+          // Update unread counts for all group members (real-time dashboard updates)
+          try {
+            const group = await Group.findById(data.groupId);
+            if (group && group.members) {
+              console.log(
+                `🔄 Updating unread counts for ${group.members.length} group members`
+              );
+
+              for (const member of group.members) {
+                const memberId = member.id.toString();
+
+                // Calculate fresh unread counts for this user
+                const memberUnreadCounts =
+                  await readStateService.calculateUnreadCounts(memberId);
+
+                // Broadcast to ALL sockets of this user (not just group room)
+                this.io!.emit("unread_counts_for_user", {
+                  userId: memberId,
+                  unreadCounts: memberUnreadCounts,
+                });
+              }
+
+              console.log(
+                `✅ Updated unread counts for all members of group ${data.groupId}`
+              );
+            }
+          } catch (unreadCountError) {
+            console.error(
+              "❌ Error updating unread counts after message:",
+              unreadCountError
+            );
+            // Don't fail the message send for unread count errors
+          }
         } catch (error) {
           console.error("❌ Error handling message:", error);
           socket.emit("error", { message: "Failed to send message" });
@@ -286,7 +532,22 @@ class SocketService {
               return;
             }
 
+            // Validate and parse timestamp from client
+            console.log("🕐 Parsing timestamp:", {
+              received: data.lastReadTimestamp,
+              type: typeof data.lastReadTimestamp,
+            });
+
             const lastReadTimestamp = new Date(data.lastReadTimestamp);
+
+            if (isNaN(lastReadTimestamp.getTime())) {
+              console.error("❌ Invalid timestamp received from client:", {
+                received: data.lastReadTimestamp,
+                parsed: lastReadTimestamp,
+              });
+              socket.emit("error", { message: "Invalid timestamp format" });
+              return;
+            }
 
             // Get device info from socket handshake
             const userAgent = socket.handshake.headers["user-agent"];
@@ -323,6 +584,71 @@ class SocketService {
             });
           } catch (error) {
             console.error("❌ Error handling mark_messages_read:", error);
+            socket.emit("error", { message: "Failed to update read state" });
+          }
+        }
+      );
+
+      // Handle read state updates (from client updateReadState function)
+      socket.on(
+        "update_read_state",
+        async (data: {
+          groupId: string;
+          timestamp: string; // ISO string from client
+          deviceInfo?: {
+            userAgent?: string;
+            platform?: string;
+          };
+        }) => {
+          try {
+            // Get user ID from authenticated socket
+            const userId = this.getUserIdForReadState(socket);
+            if (!userId) {
+              // Skip read state operations when auth is not available
+              return;
+            }
+
+            // Validate and parse timestamp from client
+            console.log("🕐 Parsing update_read_state timestamp:", {
+              received: data.timestamp,
+              type: typeof data.timestamp,
+            });
+
+            const timestamp = new Date(data.timestamp);
+
+            if (isNaN(timestamp.getTime())) {
+              console.error("❌ Invalid timestamp received from client:", {
+                received: data.timestamp,
+                parsed: timestamp,
+              });
+              socket.emit("error", { message: "Invalid timestamp format" });
+              return;
+            }
+
+            // Update read state in database
+            const updatedState = await readStateService.updateReadState(
+              userId,
+              data.groupId,
+              timestamp,
+              data.deviceInfo
+            );
+
+            console.log(
+              `📖 User ${userId} updated read state for group ${
+                data.groupId
+              } to ${timestamp.toISOString()}`
+            );
+
+            // Broadcast read state update to all user's devices (same userId)
+            // This will sync read state across devices
+            this.io!.emit("read_state_updated", {
+              userId,
+              groupId: data.groupId,
+              lastReadTimestamp: updatedState.lastReadTimestamp,
+              updatedAt: updatedState.updatedAt,
+            });
+          } catch (error) {
+            console.error("❌ Error handling update_read_state:", error);
             socket.emit("error", { message: "Failed to update read state" });
           }
         }
@@ -416,9 +742,14 @@ class SocketService {
             // Get user ID and check if read states are supported
             const userId = this.getUserIdForReadState(socket);
             if (!userId) {
+              console.log(
+                "Skipping unread count calculation: no user ID available"
+              );
               // Skip read state operations when auth is not enabled
               return;
             }
+
+            console.log("Starting the unread counts now.");
 
             // Calculate unread counts
             const unreadCounts = await readStateService.calculateUnreadCounts(
