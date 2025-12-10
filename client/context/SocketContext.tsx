@@ -7,6 +7,7 @@ import {
   useContext,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import io from "socket.io-client";
 import { useAuth } from "./AuthContext";
@@ -147,6 +148,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   // Typing users (groupId -> userId array)
   const [typingUsers, setTypingUsers] = useState<Record<string, string[]>>({});
+
+  // Track actively joined groups (for auto-marking messages as read)
+  const activelyJoinedGroupsRef = useRef<Set<string>>(new Set());
 
   // Connect function
   const connect = useCallback(() => {
@@ -431,6 +435,30 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           return { ...prev, [message.groupId]: [...groupMessages, message] };
         }
       });
+
+      // Auto-mark as read if user is actively joined to this group
+      // Only auto-read messages from other users (not our own messages)
+      if (
+        activelyJoinedGroupsRef.current.has(message.groupId) &&
+        message.senderId !== user?.id
+      ) {
+        console.log(
+          `🔄 Auto-marking message as read - user actively viewing group ${message.groupId}`
+        );
+
+        // Update read state to current timestamp
+        const now = new Date();
+        if (newSocket?.connected) {
+          newSocket.emit("update_read_state", {
+            groupId: message.groupId,
+            timestamp: now.toISOString(),
+            deviceInfo: {
+              userAgent: navigator.userAgent,
+              platform: "web",
+            },
+          });
+        }
+      }
     });
 
     // Handle message history when joining a group
@@ -677,6 +705,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       if (socket?.connected) {
         console.log(`💬 Actively joining group: ${groupId} (marks as read)`);
         socket.emit("join_group", groupId);
+
+        // Track as actively joined for auto-read functionality
+        activelyJoinedGroupsRef.current.add(groupId);
       }
     },
     [socket]
@@ -686,6 +717,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     (groupId: string) => {
       if (socket?.connected) {
         socket.emit("leave_group", groupId);
+
+        // Remove from actively joined groups
+        activelyJoinedGroupsRef.current.delete(groupId);
       }
     },
     [socket]
