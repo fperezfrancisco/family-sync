@@ -59,16 +59,16 @@ const TABS = [
     description: "Upcoming events and calendar",
   },
   {
-    id: "media",
-    label: "Media",
-    icon: ImageIcon,
-    description: "Shared photos and files",
-  },
-  {
     id: "tasks",
     label: "Tasks",
     icon: CheckSquare,
     description: "Group tasks and to-do lists",
+  },
+  {
+    id: "media",
+    label: "Media",
+    icon: ImageIcon,
+    description: "Shared photos and files",
   },
 ] as const;
 
@@ -95,10 +95,10 @@ export default function GroupTabs({
         return <ChatTab groupId={groupId} />;
       case "events":
         return <EventsTab groupId={groupId} group={group} />;
-      case "media":
-        return <MediaTab groupId={groupId} />;
       case "tasks":
         return <TasksTab groupId={groupId} />;
+      case "media":
+        return <MediaTab groupId={groupId} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -549,7 +549,7 @@ function GroupEventsTab({
   return (
     <div className="space-y-6">
       {/* Group Events Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-[var(--foreground)] font-inter">
             Group Events
@@ -717,7 +717,7 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
   return (
     <div className="space-y-6">
       {/* Group Tasks Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-[var(--foreground)] font-inter">
             Group Tasks
@@ -748,7 +748,6 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
           tasks={getFilteredTasks()}
           isLoading={false}
           error={null}
-          onCreateTask={() => setIsCreateModalOpen(true)}
           onTaskStatusUpdate={handleTaskStatusUpdate}
           onTaskViewDetails={handleTaskViewDetails}
           onTaskClaim={handleTaskClaim}

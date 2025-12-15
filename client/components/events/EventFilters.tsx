@@ -1,7 +1,14 @@
 "use client";
 
-import React from "react";
-import { Calendar, Filter, X, Users } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Calendar,
+  Filter,
+  X,
+  Users,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 interface EventFiltersProps {
   onFilterChange: (filters: EventFilters) => void;
@@ -31,6 +38,9 @@ export default function EventFilters({
   currentFilters,
   availableGroups = [],
 }: EventFiltersProps) {
+  // State for collapsible filters on mobile
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
   /**
    * Update filters when a filter changes
    */
@@ -65,26 +75,52 @@ export default function EventFilters({
     );
   };
 
-  /**
-   * Get group type styling
-   */
-  const getGroupTypeStyle = (type: string) => {
-    switch (type) {
-      case "family":
-        return "text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-950/30";
-      case "friends":
-        return "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30";
-      case "work":
-        return "text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30";
-      default:
-        return "text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950/30";
-    }
-  };
-
   return (
-    <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Mobile Filter Toggle Button */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          className="flex items-center justify-between w-full px-4 py-3 bg-[var(--muted)] hover:bg-[var(--muted)]/80 rounded-lg border border-[var(--border)] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-[var(--foreground)]" />
+            <span className="font-medium text-[var(--foreground)]">
+              Filters
+            </span>
+            {hasActiveFilters() && (
+              <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full ml-2">
+                {
+                  Object.values(currentFilters).filter(
+                    (v) => v !== undefined && v !== "all" && v !== ""
+                  ).length
+                }
+              </span>
+            )}
+          </div>
+          {isFiltersOpen ? (
+            <ChevronUp className="h-4 w-4 text-[var(--muted-foreground)]" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-[var(--muted-foreground)]" />
+          )}
+        </button>
+
+        {/* Clear All Button for Mobile - shown when filters are active */}
+        {hasActiveFilters() && isFiltersOpen && (
+          <div className="mt-2">
+            <button
+              onClick={clearAllFilters}
+              className="flex items-center gap-1 px-3 py-2 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] rounded-md transition-colors"
+            >
+              <X className="h-3 w-3" />
+              Clear All Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Header - Always visible on desktop */}
+      <div className="hidden lg:flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-[var(--muted-foreground)]" />
           <h3 className="font-semibold text-[var(--foreground)] font-inter">
@@ -103,128 +139,130 @@ export default function EventFilters({
         )}
       </div>
 
-      {/* Filter Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Date Range Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-[var(--foreground)] font-inter">
-            Date Range
-          </label>
-          <select
-            value={currentFilters.dateRange || ""}
-            onChange={(e) =>
-              handleFilterUpdate("dateRange", e.target.value || undefined)
-            }
-            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Events</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="custom">Custom Range</option>
-          </select>
-        </div>
-
-        {/* Custom Date Range */}
-        {currentFilters.dateRange === "custom" && (
-          <>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--foreground)] font-inter">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={currentFilters.startDate || ""}
-                onChange={(e) =>
-                  handleFilterUpdate("startDate", e.target.value || undefined)
-                }
-                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--foreground)] font-inter">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={currentFilters.endDate || ""}
-                onChange={(e) =>
-                  handleFilterUpdate("endDate", e.target.value || undefined)
-                }
-                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </>
-        )}
-
-        {/* Status Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-[var(--foreground)] font-inter">
-            Status
-          </label>
-          <select
-            value={currentFilters.status || "all"}
-            onChange={(e) =>
-              handleFilterUpdate(
-                "status",
-                e.target.value === "all" ? undefined : e.target.value
-              )
-            }
-            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Statuses</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
-
-        {/* Group Filter */}
-        {availableGroups.length > 0 && (
+      {/* Filter Grid - Collapsible on mobile, always visible on desktop */}
+      <div className={`${isFiltersOpen ? "block" : "hidden"} lg:block`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Date Range Filter */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-[var(--foreground)] font-inter">
-              Group
+              Date Range
             </label>
             <select
-              value={currentFilters.groupId || ""}
+              value={currentFilters.dateRange || ""}
               onChange={(e) =>
-                handleFilterUpdate("groupId", e.target.value || undefined)
+                handleFilterUpdate("dateRange", e.target.value || undefined)
               }
               className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Groups</option>
-              {availableGroups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
+              <option value="">All Events</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="custom">Custom Range</option>
             </select>
           </div>
-        )}
 
-        {/* RSVP Status Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-[var(--foreground)] font-inter">
-            My RSVP Status
-          </label>
-          <select
-            value={currentFilters.rsvpStatus || "all"}
-            onChange={(e) =>
-              handleFilterUpdate(
-                "rsvpStatus",
-                e.target.value === "all" ? undefined : e.target.value
-              )
-            }
-            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Events</option>
-            <option value="attending">Attending</option>
-            <option value="maybe">Maybe</option>
-            <option value="pending">Pending Response</option>
-            <option value="not_attending">Not Attending</option>
-          </select>
+          {/* Custom Date Range */}
+          {currentFilters.dateRange === "custom" && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--foreground)] font-inter">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={currentFilters.startDate || ""}
+                  onChange={(e) =>
+                    handleFilterUpdate("startDate", e.target.value || undefined)
+                  }
+                  className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--foreground)] font-inter">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={currentFilters.endDate || ""}
+                  onChange={(e) =>
+                    handleFilterUpdate("endDate", e.target.value || undefined)
+                  }
+                  className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[var(--foreground)] font-inter">
+              Status
+            </label>
+            <select
+              value={currentFilters.status || "all"}
+              onChange={(e) =>
+                handleFilterUpdate(
+                  "status",
+                  e.target.value === "all" ? undefined : e.target.value
+                )
+              }
+              className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Statuses</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          {/* Group Filter */}
+          {availableGroups.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[var(--foreground)] font-inter">
+                Group
+              </label>
+              <select
+                value={currentFilters.groupId || ""}
+                onChange={(e) =>
+                  handleFilterUpdate("groupId", e.target.value || undefined)
+                }
+                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Groups</option>
+                {availableGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* RSVP Status Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[var(--foreground)] font-inter">
+              My RSVP Status
+            </label>
+            <select
+              value={currentFilters.rsvpStatus || "all"}
+              onChange={(e) =>
+                handleFilterUpdate(
+                  "rsvpStatus",
+                  e.target.value === "all" ? undefined : e.target.value
+                )
+              }
+              className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Events</option>
+              <option value="attending">Attending</option>
+              <option value="maybe">Maybe</option>
+              <option value="pending">Pending Response</option>
+              <option value="not_attending">Not Attending</option>
+            </select>
+          </div>
         </div>
       </div>
 

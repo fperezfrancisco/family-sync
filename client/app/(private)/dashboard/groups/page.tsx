@@ -68,7 +68,7 @@ export default function GroupsPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-6">
+      <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center justify-between border-b border-[var(--border)] pb-6">
         <div>
           <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
             Groups

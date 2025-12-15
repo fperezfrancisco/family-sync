@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Event } from "@/types/events";
 import { useAuth } from "@/context/AuthContext";
 import { EventHeader, EventTabs } from "@/components/events";
 import { useEvents } from "@/context/EventsContext";
 import { EventsAPI } from "@/lib/api";
+import { ArrowLeft } from "lucide-react";
 
 /**
  * Individual Event Page
@@ -21,6 +22,8 @@ export default function EventPage() {
   const [error, setError] = useState<string | null>(null);
   const { user, loading: authLoading } = useAuth();
   const { events } = useEvents();
+
+  const router = useRouter();
 
   /**
    * Fetch event data from API
@@ -102,6 +105,16 @@ export default function EventPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Events
+        </button>
+      </div>
+
       {/* Event Header with title, details, and action buttons */}
       <EventHeader
         event={event}
