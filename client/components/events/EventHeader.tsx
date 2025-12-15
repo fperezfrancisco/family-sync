@@ -21,6 +21,7 @@ import { Event, UpdateEventData } from "@/types/events";
 import Modal from "@/components/ui/Modal";
 import { useEvents } from "@/context/EventsContext";
 import EditEventModal from "./EditEventModal";
+import Image from "next/image";
 
 interface EventHeaderProps {
   event: Event;
@@ -113,7 +114,7 @@ export default function EventHeader({
     return date;
   };
 
-  // Format date and time with timezone handling
+  // Format date only (no time)
   const formatEventDate = (
     startDate: string,
     endDate?: string,
@@ -125,42 +126,43 @@ export default function EventHeader({
     const dateOptions: Intl.DateTimeFormatOptions = {
       weekday: "long",
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
     };
+
+    if (end && start.toDateString() !== end.toDateString()) {
+      return `${start.toLocaleDateString(
+        "en-US",
+        dateOptions
+      )} - ${end.toLocaleDateString("en-US", dateOptions)}`;
+    }
+    return start.toLocaleDateString("en-US", dateOptions);
+  };
+
+  // Format time only (for events with set times)
+  const formatEventTime = (
+    startDate: string,
+    endDate?: string,
+    isAllDay?: boolean
+  ) => {
+    if (isAllDay) return null;
+
+    const start = createTimezoneAdjustedDate(startDate, false);
+    const end = endDate ? createTimezoneAdjustedDate(endDate, false) : null;
 
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
     };
 
-    if (isAllDay) {
-      if (end && start.toDateString() !== end.toDateString()) {
-        return `${start.toLocaleDateString(
-          "en-US",
-          dateOptions
-        )} - ${end.toLocaleDateString("en-US", dateOptions)}`;
-      }
-      return start.toLocaleDateString("en-US", dateOptions);
-    }
-
-    const startStr = `${start.toLocaleDateString(
-      "en-US",
-      dateOptions
-    )} at ${start.toLocaleTimeString("en-US", timeOptions)}`;
+    const startTime = start.toLocaleTimeString("en-US", timeOptions);
 
     if (end) {
-      if (start.toDateString() === end.toDateString()) {
-        return `${startStr} - ${end.toLocaleTimeString("en-US", timeOptions)}`;
-      } else {
-        return `${startStr} - ${end.toLocaleDateString(
-          "en-US",
-          dateOptions
-        )} at ${end.toLocaleTimeString("en-US", timeOptions)}`;
-      }
+      const endTime = end.toLocaleTimeString("en-US", timeOptions);
+      return `${startTime} - ${endTime}`;
     }
 
-    return startStr;
+    return startTime;
   };
 
   // Handle edit event
@@ -238,17 +240,20 @@ export default function EventHeader({
 
   return (
     <>
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-6">
-        {/* Navigation and Actions */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Events
-          </button>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
+        <div className="w-full aspect-[3/2] md:aspect-[24/9] bg-neutral-200 relative overflow-hidden">
+          <div className="w-full h-full absolute z-[5] bg-black/20"></div>
+          <Image
+            src="/wallpapers/default-cabin.jpg"
+            alt="User Wallpaper"
+            width={2000}
+            height={1000}
+            className="object-cover bottom-0 h-full"
+          />
+        </div>
 
+        {/* Navigation and Actions */}
+        <div className="flex items-center justify-between hidden">
           {/* Action Buttons - Only show if user has permissions */}
           {(canEdit || canDelete) && (
             <div className="flex items-center gap-2">
@@ -274,171 +279,152 @@ export default function EventHeader({
           )}
         </div>
 
-        {/* Event Information */}
-        <div className="space-y-4">
-          {/* Title and Status */}
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
-                  {event.name}
-                </h1>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(
-                    event.status
-                  )}`}
-                >
-                  {event.status}
-                </span>
+        <div className="w-full p-6 flex flex-col items-start gap-4">
+          {/* Event Information */}
+          <div className="w-full flex flex-wrap items-start gap-4">
+            <div className="flex grow flex-col items-start gap-2">
+              {/* Title and Status */}
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
+                      {event.name}
+                    </h1>
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(
+                        event.status
+                      )}`}
+                    >
+                      {event.status}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Description */}
-          {event.description && (
-            <p className="text-[var(--muted-foreground)] text-lg leading-relaxed">
-              {event.description}
-            </p>
-          )}
-
-          {/* Event Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[var(--muted)]/30 rounded-lg">
-            {/* Date and Time */}
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-[var(--foreground)]">
-                  Date & Time
+              {/* Description */}
+              {event.description && (
+                <p className="text-[var(--muted-foreground)] text-lg leading-relaxed">
+                  {event.description}
                 </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {formatEventDate(
+              )}
+              {/* Group Association */}
+              {event.group && (
+                <div className="flex items-start gap-3">
+                  <Users className="h-5 w-5 text-orange-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-foreground">
+                      {event.group.name ? event.group.name : "Standalone"} Event
+                    </p>
+                    <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded capitalize">
+                      {event.group.type}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex min-w-[250px] flex-col items-start gap-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-foreground mt-0.5" />
+                <div className="flex flex-col">
+                  <p className="text-sm font-semibold text-foreground">
+                    {formatEventDate(
+                      event.startDate,
+                      event.endDate,
+                      event.isAllDay
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {!event.isAllDay &&
+                  formatEventTime(
                     event.startDate,
                     event.endDate,
                     event.isAllDay
+                  ) && (
+                    <>
+                      <Clock className="h-4 w-4 text-foreground" />
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatEventTime(
+                          event.startDate,
+                          event.endDate,
+                          event.isAllDay
+                        )}
+                      </p>
+                    </>
                   )}
-                </p>
-                {event.isAllDay && (
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    All day event
-                  </p>
+              </div>
+
+              {/* Location */}
+              <div className="flex items-center gap-2">
+                {event.isVirtual ? (
+                  <Globe className="h-5 w-5 text-green-500 mt-0.5" />
+                ) : (
+                  <MapPin className="h-5 w-5 text-foreground mt-0.5" />
                 )}
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="flex items-start gap-3">
-              {event.isVirtual ? (
-                <Globe className="h-5 w-5 text-green-500 mt-0.5" />
-              ) : (
-                <MapPin className="h-5 w-5 text-red-500 mt-0.5" />
-              )}
-              <div>
-                <p className="font-medium text-[var(--foreground)]">
-                  {event.isVirtual ? "Virtual Event" : "Location"}
-                </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {event.location || "Location not specified"}
-                </p>
-                {event.locationUrl && (
-                  <a
-                    href={event.locationUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:text-blue-500 underline"
-                  >
-                    {event.isVirtual ? "Join Meeting" : "View on Map"}
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Organizer */}
-            <div className="flex items-start gap-3">
-              <User className="h-5 w-5 text-purple-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-[var(--foreground)]">
-                  Organizer
-                </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {event.owner?.name || "Unknown Organizer"}
-                </p>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  {event.owner?.email || "No email provided"}
-                </p>
-              </div>
-            </div>
-
-            {/* Group Association */}
-            {event.group && (
-              <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-orange-500 mt-0.5" />
                 <div>
-                  <p className="font-medium text-[var(--foreground)]">
-                    Group Event
+                  <p className="text-sm font-semibold text-foreground">
+                    {event.location || "Location not specified"}
                   </p>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {event.group.name}
-                  </p>
-                  <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded capitalize">
-                    {event.group.type}
-                  </span>
+                  {event.locationUrl && (
+                    <a
+                      href={event.locationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:text-blue-500 underline"
+                    >
+                      {event.isVirtual ? "Join Meeting" : "View on Map"}
+                    </a>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Event Statistics */}
-          <div className="flex items-center gap-6 text-sm text-[var(--muted-foreground)]">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>{event.attendeeCount} attending</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>
-                Created{" "}
-                {createTimezoneAdjustedDate(
-                  event.createdAt,
-                  true
-                ).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
+              <div className="w-full flex flex-col gap-2 hidden">
+                {/* Event Statistics */}
+                <div className="flex w-full items-center gap-4 text-sm text-[var(--muted-foreground)]">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <span>{event.attendeeCount} attending</span>
+                  </div>
+                </div>
 
-          {/* Attendees Preview */}
-          {event.attendees && event.attendees.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-[var(--foreground)]">
-                Attendees:
-              </span>
-              <div className="flex -space-x-2">
-                {event.attendees
-                  .filter((attendee) => attendee.status === "attending")
-                  .slice(0, 5)
-                  .map((attendee, index) => (
-                    <div
-                      key={attendee.user._id || index}
-                      className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white text-xs font-medium"
-                      title={`${attendee.user.name} (${attendee.status})`}
-                    >
-                      {attendee.user.name?.charAt(0).toUpperCase() || "?"}
+                {/* Attendees Preview */}
+                {event.attendees && event.attendees.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-[var(--foreground)]">
+                      Attendees:
+                    </span>
+                    <div className="flex -space-x-2">
+                      {event.attendees
+                        .filter((attendee) => attendee.status === "attending")
+                        .slice(0, 5)
+                        .map((attendee, index) => (
+                          <div
+                            key={attendee.user._id || index}
+                            className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white text-xs font-medium"
+                            title={`${attendee.user.name} (${attendee.status})`}
+                          >
+                            {attendee.user.name?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                        ))}
+                      {event.attendeeCount > 5 && (
+                        <div className="w-8 h-8 bg-[var(--muted)] border-2 border-[var(--background)] rounded-full flex items-center justify-center text-[var(--muted-foreground)] text-xs font-medium">
+                          +{event.attendeeCount - 5}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                {event.attendeeCount > 5 && (
-                  <div className="w-8 h-8 bg-[var(--muted)] border-2 border-[var(--background)] rounded-full flex items-center justify-center text-[var(--muted-foreground)] text-xs font-medium">
-                    +{event.attendeeCount - 5}
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
 
           {/* RSVP Section */}
-          <div className="border-t border-[var(--border)] pt-6 mt-6">
-            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+          <div className=" border-t border-[var(--border)] pt-2 mt-2 w-full">
+            <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
               Your Attendance
             </h3>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleRSVP("attending")}
                 disabled={rsvpLoading}
