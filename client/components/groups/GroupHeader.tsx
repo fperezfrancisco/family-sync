@@ -15,6 +15,7 @@ import Modal from "@/components/ui/Modal";
 import { useGroups } from "@/context/GroupsContext";
 // INVITATION SYSTEM: Import invite modal
 import InviteMembersModal from "./InviteMembersModal";
+import EditGroupModal from "./EditGroupModal";
 import Image from "next/image";
 
 interface GroupHeaderProps {
@@ -203,39 +204,6 @@ export default function GroupHeader({
                 )}
               </div>
             </div>
-            {/* Action Buttons - Only show if user has permissions */}
-            {(canEdit || canDelete || canInvite) && (
-              <div className="flex flex-wrap items-center gap-2">
-                {/* INVITATION SYSTEM: Invite Members button */}
-                {canInvite && (
-                  <button
-                    onClick={() => setIsInviteModalOpen(true)}
-                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-green-500 hover:dark:bg-green-700 transition-colors"
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Invite Members
-                  </button>
-                )}
-                {canEdit && (
-                  <button
-                    onClick={handleEditGroup}
-                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-blue-500 hover:dark:bg-blue-700 transition-colors"
-                  >
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Edit Group
-                  </button>
-                )}
-                {canDelete && (
-                  <button
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-red-600 dark:text-red-400 rounded-md hover:bg-red-500 hover:text-white hover:dark:bg-red-700 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Group
-                  </button>
-                )}
-              </div>
-            )}
           </div>
           <div className="space-y-2 grow flex flex-col">
             {/* Description */}
@@ -281,6 +249,39 @@ export default function GroupHeader({
                 )}
               </div>
             </div>
+            {/* Action Buttons - Only show if user has permissions */}
+            {(canEdit || canDelete || canInvite) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {/* INVITATION SYSTEM: Invite Members button */}
+                {canInvite && (
+                  <button
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-green-500 hover:dark:bg-green-700 transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Invite Members
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={handleEditGroup}
+                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-blue-500 hover:dark:bg-blue-700 transition-colors"
+                  >
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit Group
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-red-600 dark:text-red-400 rounded-md hover:bg-red-500 hover:text-white hover:dark:bg-red-700 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Group
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
         {/* Navigation and Actions */}
@@ -318,27 +319,14 @@ export default function GroupHeader({
         </div>
       </Modal>
 
-      {/* Edit Group Modal - Placeholder for now */}
-      <Modal
+      {/* Edit Group Modal - Now functional */}
+      <EditGroupModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Group"
-        size="md"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Edit group functionality will be implemented here.
-          </p>
-          <div className="flex justify-end">
-            <button
-              onClick={() => setIsEditModalOpen(false)}
-              className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </Modal>
+        group={group}
+        currentUserId={currentUserId}
+        onGroupUpdate={onGroupUpdate}
+      />
 
       {/* INVITATION SYSTEM: Invite Members Modal */}
       <InviteMembersModal

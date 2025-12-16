@@ -153,8 +153,8 @@ export default function InviteMembersModal({
             name="email"
             value={formData.email}
             onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-inter ${
-              error ? "border-red-500" : "border-border"
+            className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-inter ${
+              error ? "border-red-500" : "border-[var(--border)]"
             }`}
             placeholder="Enter email address"
             disabled={isLoading}
@@ -172,14 +172,14 @@ export default function InviteMembersModal({
             name="role"
             value={formData.role}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-inter"
+            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-inter"
             disabled={isLoading}
           >
             <option value="member">Member</option>
             <option value="admin">Admin</option>
             <option value="guest">Guest</option>
           </select>
-          <p className="mt-1 text-xs text-muted-foreground font-inter">
+          <p className="mt-1 text-xs text-[var(--muted-foreground)] font-inter">
             Members can create events, Admins can manage the group, Guests have
             limited access
           </p>
@@ -195,12 +195,12 @@ export default function InviteMembersModal({
             value={formData.message}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-inter"
+            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-inter"
             placeholder="Add a personal message to the invitation..."
             maxLength={500}
             disabled={isLoading}
           />
-          <p className="mt-1 text-xs text-muted-foreground font-inter">
+          <p className="mt-1 text-xs text-[var(--muted-foreground)] font-inter">
             {formData.message?.length || 0}/500 characters
           </p>
         </div>
@@ -219,12 +219,12 @@ export default function InviteMembersModal({
         )}
 
         {/* Form Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
           <button
             type="button"
             onClick={handleClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50 font-inter"
+            className="px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] rounded-md hover:bg-[var(--muted)] transition-colors disabled:opacity-50 font-inter"
           >
             Cancel
           </button>
