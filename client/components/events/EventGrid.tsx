@@ -195,19 +195,29 @@ export default function EventGrid({
 
   const eventGroups = groupEventsByDate(events);
   const sortedGroupKeys = Object.keys(eventGroups).sort((a, b) => {
-    // Custom sorting to ensure proper order
-    const order = ["Today", "Tomorrow", "Past Events"];
+    // Custom sorting to ensure proper order: Today, Tomorrow, Future Events (by month), Past Events (at bottom)
+    const order = ["Today", "Tomorrow"];
     const aIndex = order.indexOf(a);
     const bIndex = order.indexOf(b);
 
+    // Handle "Today" and "Tomorrow" - should appear first
     if (aIndex !== -1 && bIndex !== -1) {
       return aIndex - bIndex;
     } else if (aIndex !== -1) {
-      return -1;
+      return -1; // a is in priority list, comes first
     } else if (bIndex !== -1) {
+      return 1; // b is in priority list, comes first
+    }
+
+    // Handle "Past Events" - should appear last
+    if (a === "Past Events" && b !== "Past Events") {
       return 1;
-    } else {
-      // For future date groups (month/year format), parse and sort chronologically
+    } else if (b === "Past Events" && a !== "Past Events") {
+      return -1;
+    }
+
+    // For future date groups (month/year format), parse and sort chronologically
+    if (a !== "Past Events" && b !== "Past Events") {
       try {
         const dateA = new Date(a + " 1"); // Add day to make it a valid date
         const dateB = new Date(b + " 1");
@@ -217,6 +227,8 @@ export default function EventGrid({
         return a.localeCompare(b);
       }
     }
+
+    return 0;
   });
 
   return (

@@ -56,6 +56,9 @@ export interface Event {
   allowGuestInvites: boolean;
   requireRSVP: boolean;
   maxAttendees?: number;
+  creatorMessage?: string;
+  rsvpDeadline?: string;
+  dressCode?: string;
   attendees: EventAttendee[];
   status: "draft" | "published" | "cancelled" | "completed";
   attendeeCount: number;
@@ -111,6 +114,9 @@ export interface CreateEventData {
   allowGuestInvites?: boolean;
   requireRSVP?: boolean;
   maxAttendees?: number;
+  creatorMessage?: string;
+  rsvpDeadline?: string;
+  dressCode?: string;
   inviteUserIds?: string[];
 }
 
@@ -132,6 +138,9 @@ export interface UpdateEventData {
   allowGuestInvites?: boolean;
   requireRSVP?: boolean;
   maxAttendees?: number;
+  creatorMessage?: string;
+  rsvpDeadline?: string;
+  dressCode?: string;
   owner?: { id: string; name: string; email: string }; // Owner ID
   status?: "draft" | "published" | "cancelled" | "completed";
 }

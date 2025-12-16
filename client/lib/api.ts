@@ -408,6 +408,9 @@ export const EventsAPI = {
     allowGuestInvites?: boolean;
     requireRSVP?: boolean;
     maxAttendees?: number;
+    creatorMessage?: string;
+    rsvpDeadline?: string;
+    dressCode?: string;
     inviteUserIds?: string[];
   }) =>
     request("/events", {
@@ -432,6 +435,9 @@ export const EventsAPI = {
       allowGuestInvites?: boolean;
       requireRSVP?: boolean;
       maxAttendees?: number;
+      creatorMessage?: string;
+      rsvpDeadline?: string;
+      dressCode?: string;
       status?: "draft" | "published" | "cancelled" | "completed";
     }
   ) =>

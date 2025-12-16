@@ -46,6 +46,9 @@ export default function CreateEventModal({
     allowGuestInvites: true,
     requireRSVP: true,
     maxAttendees: undefined,
+    creatorMessage: "",
+    rsvpDeadline: "",
+    dressCode: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -142,6 +145,15 @@ export default function CreateEventModal({
     }
 
     try {
+      // Convert rsvpDeadline to ISO datetime format if provided
+      let isoRsvpDeadline: string | undefined = undefined;
+      if (formData.rsvpDeadline) {
+        // Input format from date picker: YYYY-MM-DD
+        // Convert to ISO datetime: YYYY-MM-DDTHH:MM:SSZ
+        const dateObj = new Date(formData.rsvpDeadline + "T00:00:00Z");
+        isoRsvpDeadline = dateObj.toISOString();
+      }
+
       const eventData: CreateEventData = {
         name: formData.name!,
         description: formData.description || undefined,
@@ -162,6 +174,9 @@ export default function CreateEventModal({
         allowGuestInvites: formData.allowGuestInvites ?? true,
         requireRSVP: formData.requireRSVP ?? true,
         maxAttendees: formData.maxAttendees || undefined,
+        creatorMessage: formData.creatorMessage || undefined,
+        rsvpDeadline: isoRsvpDeadline || undefined,
+        dressCode: formData.dressCode || undefined,
       };
 
       await onSubmit(eventData);
@@ -195,6 +210,9 @@ export default function CreateEventModal({
       allowGuestInvites: true,
       requireRSVP: true,
       maxAttendees: undefined,
+      creatorMessage: "",
+      rsvpDeadline: "",
+      dressCode: "",
     });
     setErrors({});
     onClose();
@@ -453,6 +471,69 @@ export default function CreateEventModal({
               {errors.maxAttendees && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.maxAttendees}
+                </p>
+              )}
+            </div>
+
+            {/* Creator Message */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1 font-inter">
+                Message to Guests (Optional)
+              </label>
+              <textarea
+                name="creatorMessage"
+                value={formData.creatorMessage || ""}
+                onChange={handleInputChange}
+                maxLength={500}
+                rows={3}
+                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.creatorMessage ? "border-red-500" : "border-border"
+                }`}
+                placeholder="Share a personal message with your guests..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {formData.creatorMessage?.length || 0}/500 characters
+              </p>
+            </div>
+
+            {/* Dress Code */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1 font-inter">
+                Dress Code (Optional)
+              </label>
+              <input
+                type="text"
+                name="dressCode"
+                value={formData.dressCode || ""}
+                onChange={handleInputChange}
+                maxLength={100}
+                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.dressCode ? "border-red-500" : "border-border"
+                }`}
+                placeholder="e.g., Business Casual, Formal, Smart Casual"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Examples: Formal, Business Casual, Casual, Black Tie
+              </p>
+            </div>
+
+            {/* RSVP Deadline */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1 font-inter">
+                RSVP Deadline (Optional)
+              </label>
+              <input
+                type="date"
+                name="rsvpDeadline"
+                value={formData.rsvpDeadline || ""}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.rsvpDeadline ? "border-red-500" : "border-border"
+                }`}
+              />
+              {errors.rsvpDeadline && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.rsvpDeadline}
                 </p>
               )}
             </div>

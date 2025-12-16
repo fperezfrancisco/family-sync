@@ -25,6 +25,8 @@ import {
 } from "@/types/tasks";
 import { useEventComments } from "@/context/EventCommentsContext";
 import { EventComment } from "@/types/eventComments";
+import EventDetailsCard from "./EventDetailsCard";
+import CreatorMessageCard from "./CreatorMessageCard";
 
 interface EventTabsProps {
   eventId: string;
@@ -69,7 +71,8 @@ type TabId = (typeof TABS)[number]["id"];
 export default function EventTabs({
   eventId,
   event,
-}: Omit<EventTabsProps, "currentUserId">) {
+  currentUserId,
+}: EventTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   /**
@@ -78,7 +81,7 @@ export default function EventTabs({
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
-        return <OverviewTab event={event} />;
+        return <OverviewTab event={event} currentUserId={currentUserId} />;
       case "chat":
         return <ChatTab eventId={eventId} />;
       case "media":
@@ -133,7 +136,13 @@ export default function EventTabs({
 /**
  * Overview Tab - Shows event details and attendee list
  */
-function OverviewTab({ event }: { event: Event }) {
+function OverviewTab({
+  event,
+  currentUserId,
+}: {
+  event: Event;
+  currentUserId?: string;
+}) {
   // Get RSVP status styling
   const getRSVPStatusColor = (status: string) => {
     switch (status) {
@@ -163,88 +172,12 @@ function OverviewTab({ event }: { event: Event }) {
 
   return (
     <div className="space-y-6">
+      <CreatorMessageCard event={event} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Attendees Section */}
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="h-5 w-5 text-blue-500" />
-            <h3 className="text-lg font-semibold text-[var(--foreground)]">
-              Attendees
-            </h3>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              ({event.attendeeCount} attending, {event.attendees?.length || 0}{" "}
-              total)
-            </span>
-          </div>
-
-          {event.attendees && event.attendees.length > 0 ? (
-            <div className="space-y-4">
-              {Object.entries(attendeesByStatus).map(
-                ([status, attendees]) =>
-                  attendees &&
-                  attendees.length > 0 && (
-                    <div key={status}>
-                      <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
-                        {status === "not_attending" ? "Not Attending" : status}{" "}
-                        ({attendees.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {attendees.map((attendee, index) => (
-                          <div
-                            key={attendee.user._id || index}
-                            className="flex items-center justify-between p-3 rounded-lg bg-[var(--muted)]/50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                                {attendee.user.name?.charAt(0).toUpperCase() ||
-                                  "?"}
-                              </div>
-                              <div>
-                                <p className="font-medium text-[var(--foreground)]">
-                                  {attendee.user.name}
-                                </p>
-                                <p className="text-sm text-[var(--muted-foreground)]">
-                                  {attendee.user.email}
-                                </p>
-                                {attendee.respondedAt && (
-                                  <p className="text-xs text-[var(--muted-foreground)]">
-                                    Responded{" "}
-                                    {new Date(
-                                      attendee.respondedAt
-                                    ).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getRSVPStatusColor(
-                                attendee.status
-                              )}`}
-                            >
-                              {attendee.status === "not_attending"
-                                ? "Not Attending"
-                                : attendee.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-2" />
-              <p className="text-[var(--muted-foreground)]">No attendees yet</p>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                Attendees will appear here when they RSVP
-              </p>
-            </div>
-          )}
-        </div>
-
         {/* Event Details Section */}
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
+        <EventDetailsCard event={event} />
+        {/* - IGNORE
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
           <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
             Event Details
           </h3>
@@ -331,6 +264,98 @@ function OverviewTab({ event }: { event: Event }) {
               </div>
             </div>
           </div>
+        </div>
+          
+          */}
+
+        {/* Attendees Section */}
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                Attendees
+              </h3>
+              <span className="text-sm text-[var(--muted-foreground)]">
+                ({event.attendeeCount} attending, {event.attendees?.length || 0}{" "}
+                total)
+              </span>
+            </div>
+            {event.allowGuestInvites && currentUserId !== event.owner.id && (
+              <button
+                onClick={() => alert("Invite feature coming soon")}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Invite
+              </button>
+            )}
+          </div>
+
+          {event.attendees && event.attendees.length > 0 ? (
+            <div className="space-y-4">
+              {Object.entries(attendeesByStatus).map(
+                ([status, attendees]) =>
+                  attendees &&
+                  attendees.length > 0 && (
+                    <div key={status}>
+                      <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
+                        {status === "not_attending" ? "Not Attending" : status}{" "}
+                        ({attendees.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {attendees.map((attendee, index) => (
+                          <div
+                            key={attendee.user._id || index}
+                            className="flex items-center justify-between p-3 rounded-lg bg-[var(--muted)]/50"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                                {attendee.user.name?.charAt(0).toUpperCase() ||
+                                  "?"}
+                              </div>
+                              <div>
+                                <p className="font-medium text-[var(--foreground)]">
+                                  {attendee.user.name}
+                                </p>
+                                <p className="text-sm text-[var(--muted-foreground)]">
+                                  {attendee.user.email}
+                                </p>
+                                {attendee.respondedAt && (
+                                  <p className="text-xs text-[var(--muted-foreground)]">
+                                    Responded{" "}
+                                    {new Date(
+                                      attendee.respondedAt
+                                    ).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getRSVPStatusColor(
+                                attendee.status
+                              )}`}
+                            >
+                              {attendee.status === "not_attending"
+                                ? "Not Attending"
+                                : attendee.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-2" />
+              <p className="text-[var(--muted-foreground)]">No attendees yet</p>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                Attendees will appear here when they RSVP
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
