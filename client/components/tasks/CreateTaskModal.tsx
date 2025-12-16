@@ -85,6 +85,8 @@ export default function CreateTaskModal({
   );
 
   console.log("Available Events: ", availableEvents);
+  console.log("Default Group: ", defaultGroupId);
+  console.log("Default Event: ", defaultEventId);
 
   // Computed properties for better UX
   const selectedGroup = React.useMemo(() => {
@@ -98,6 +100,8 @@ export default function CreateTaskModal({
 
   // Get available users for assignment based on task type and selection
   const availableAssignees = React.useMemo(() => {
+    console.log("Calculating available assignees.");
+    console.log("Selected group: ", selectedGroup);
     if (taskType === "group" && selectedGroup?.members) {
       return selectedGroup.members;
     }
@@ -253,6 +257,15 @@ export default function CreateTaskModal({
 
     setIsSubmitting(true);
     try {
+      // Convert date string to ISO datetime format if provided
+      let isoDateTime: string | undefined = undefined;
+      if (formData.dueDate) {
+        // Input format from date picker: YYYY-MM-DD
+        // Convert to ISO datetime: YYYY-MM-DDTHH:MM:SSZ
+        const dateObj = new Date(formData.dueDate + "T00:00:00Z");
+        isoDateTime = dateObj.toISOString();
+      }
+
       // Clean up form data
       const cleanFormData: CreateTaskData = {
         ...formData,
@@ -261,7 +274,7 @@ export default function CreateTaskModal({
           assignmentMode === "assign" && formData.assigneeIds?.length
             ? formData.assigneeIds
             : undefined,
-        dueDate: formData.dueDate || undefined,
+        dueDate: isoDateTime || undefined,
         eventId: formData.eventId || undefined,
         allowSelfAssign: assignmentMode === "self" ? true : false, // Disable self-assign when assigning to specific users
       };
@@ -345,7 +358,7 @@ export default function CreateTaskModal({
               </label>
 
               {defaultGroupId ? (
-                <div className="bg-[var(--primary)] border border-[var(--border)] rounded-md p-4">
+                <div className="bg-[var(--card)] border border-[var(--border)] rounded-md p-4">
                   <div className="flex items-center">
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
                     <div>

@@ -618,6 +618,7 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
 
   // Get current group information
   const currentGroup = groups.find((group: Group) => group.id === groupId);
+  console.log("Current group: ", currentGroup);
 
   /**
    * Handle task creation for this group
@@ -762,17 +763,7 @@ function GroupTasksTab({ groupId }: { groupId: string }) {
         onClose={() => setIsCreateModalOpen(false)}
         onCreateTask={handleCreateTask}
         defaultGroupId={groupId}
-        availableGroups={
-          currentGroup
-            ? [
-                {
-                  id: currentGroup.id,
-                  name: currentGroup.name,
-                  type: currentGroup.type,
-                },
-              ]
-            : []
-        }
+        availableGroups={currentGroup ? [currentGroup] : []}
         availableEvents={[]} // TODO: Filter events for this group
       />
     </div>

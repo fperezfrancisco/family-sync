@@ -78,6 +78,21 @@ const EventSchema = new Schema(
     requireRSVP: { type: Boolean, default: true },
     maxAttendees: { type: Number, required: false },
 
+    // Event host message and details
+    creatorMessage: {
+      type: String,
+      required: false,
+      trim: true,
+      maxlength: 500,
+    },
+    rsvpDeadline: { type: Date, required: false },
+    dressCode: {
+      type: String,
+      required: false,
+      trim: true,
+      maxlength: 100,
+    },
+
     // Attendees and invitations
     attendees: [EventAttendeeSchema],
 

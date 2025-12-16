@@ -282,7 +282,7 @@ export default function EventHeader({
         <div className="w-full p-6 flex flex-col items-start gap-4">
           {/* Event Information */}
           <div className="w-full flex flex-wrap items-start gap-4">
-            <div className="flex grow flex-col items-start gap-2">
+            <div className="flex  flex-col items-start gap-2">
               {/* Title and Status */}
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
@@ -307,11 +307,13 @@ export default function EventHeader({
                   {event.description}
                 </p>
               )}
+            </div>
+            <div className="flex grow flex-col items-start gap-2">
               {/* Group Association */}
               {event.group && (
                 <div className="flex items-start gap-3">
                   <Users className="h-5 w-5 text-orange-500 mt-0.5" />
-                  <div>
+                  <div className="flex items-center flex-wrap gap-2">
                     <p className="text-sm text-foreground">
                       {event.group.name ? event.group.name : "Standalone"} Event
                     </p>
@@ -321,8 +323,6 @@ export default function EventHeader({
                   </div>
                 </div>
               )}
-            </div>
-            <div className="flex min-w-[250px] flex-col items-start gap-2">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-foreground mt-0.5" />
                 <div className="flex flex-col">

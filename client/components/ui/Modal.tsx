@@ -76,7 +76,7 @@ export default function Modal({
         className={`
           w-full ${sizeClasses[size]} 
           bg-[var(--background)]
-          border border-border 
+          border border-[var(--border)] 
           rounded-lg 
           shadow-xl 
           transform transition-all 
@@ -86,10 +86,10 @@ export default function Modal({
         `}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <h2
             id="modal-title"
-            className="text-xl font-semibold text-foreground font-inter"
+            className="text-xl font-semibold text-[var(--foreground)] font-inter"
           >
             {title}
           </h2>
@@ -99,10 +99,10 @@ export default function Modal({
               className="
                 p-2 
                 rounded-md 
-                hover:bg-muted 
+                hover:bg-[var(--muted)] 
                 transition-colors 
-                text-muted-foreground 
-                hover:text-foreground
+                text-[var(--muted-foreground)] 
+                hover:text-[var(--foreground)]
               "
               aria-label="Close modal"
             >

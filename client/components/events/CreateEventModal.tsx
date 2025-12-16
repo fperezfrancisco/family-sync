@@ -46,6 +46,9 @@ export default function CreateEventModal({
     allowGuestInvites: true,
     requireRSVP: true,
     maxAttendees: undefined,
+    creatorMessage: "",
+    rsvpDeadline: "",
+    dressCode: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -142,6 +145,15 @@ export default function CreateEventModal({
     }
 
     try {
+      // Convert rsvpDeadline to ISO datetime format if provided
+      let isoRsvpDeadline: string | undefined = undefined;
+      if (formData.rsvpDeadline) {
+        // Input format from date picker: YYYY-MM-DD
+        // Convert to ISO datetime: YYYY-MM-DDTHH:MM:SSZ
+        const dateObj = new Date(formData.rsvpDeadline + "T00:00:00Z");
+        isoRsvpDeadline = dateObj.toISOString();
+      }
+
       const eventData: CreateEventData = {
         name: formData.name!,
         description: formData.description || undefined,
@@ -162,6 +174,9 @@ export default function CreateEventModal({
         allowGuestInvites: formData.allowGuestInvites ?? true,
         requireRSVP: formData.requireRSVP ?? true,
         maxAttendees: formData.maxAttendees || undefined,
+        creatorMessage: formData.creatorMessage || undefined,
+        rsvpDeadline: isoRsvpDeadline || undefined,
+        dressCode: formData.dressCode || undefined,
       };
 
       await onSubmit(eventData);
@@ -195,6 +210,9 @@ export default function CreateEventModal({
       allowGuestInvites: true,
       requireRSVP: true,
       maxAttendees: undefined,
+      creatorMessage: "",
+      rsvpDeadline: "",
+      dressCode: "",
     });
     setErrors({});
     onClose();
@@ -225,8 +243,8 @@ export default function CreateEventModal({
             name="name"
             value={formData.name || ""}
             onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.name ? "border-red-500" : "border-border"
+            className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              errors.name ? "border-red-500" : "border-[var(--border)]"
             }`}
             placeholder="Enter event name"
             maxLength={200}
@@ -246,11 +264,11 @@ export default function CreateEventModal({
             value={formData.description || ""}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             placeholder="Describe your event..."
             maxLength={2000}
           />
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             {(formData.description || "").length}/2000 characters
           </p>
         </div>
@@ -258,7 +276,7 @@ export default function CreateEventModal({
         {/* Date and Time Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2 font-inter">
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-2 font-inter">
               Start Date & Time *
             </label>
             <input
@@ -267,8 +285,8 @@ export default function CreateEventModal({
               value={formData.startDate || ""}
               onChange={handleInputChange}
               min={getTodayDate()}
-              className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.startDate ? "border-red-500" : "border-border"
+              className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.startDate ? "border-red-500" : "border-[var(--border)]"
               }`}
             />
             {errors.startDate && (
@@ -277,7 +295,7 @@ export default function CreateEventModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2 font-inter">
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-2 font-inter">
               End Date & Time
             </label>
             <input
@@ -286,8 +304,8 @@ export default function CreateEventModal({
               value={formData.endDate || ""}
               onChange={handleInputChange}
               min={formData.startDate || getTodayDate()}
-              className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.endDate ? "border-red-500" : "border-border"
+              className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.endDate ? "border-red-500" : "border-[var(--border)]"
               }`}
             />
             {errors.endDate && (
@@ -303,9 +321,9 @@ export default function CreateEventModal({
             name="isAllDay"
             checked={formData.isAllDay || false}
             onChange={handleInputChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-border rounded"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--border)] rounded"
           />
-          <label className="ml-2 text-sm text-foreground font-inter">
+          <label className="ml-2 text-sm text-[var(--foreground)] font-inter">
             All day event
           </label>
         </div>
@@ -336,7 +354,7 @@ export default function CreateEventModal({
                 name="location"
                 value={formData.location || ""}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter event location"
                 maxLength={500}
               />
@@ -353,7 +371,7 @@ export default function CreateEventModal({
               name="locationUrl"
               value={formData.locationUrl || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={
                 formData.isVirtual
                   ? "https://zoom.us/j/..."
@@ -374,7 +392,7 @@ export default function CreateEventModal({
               name="group"
               value={formData.group?.id || ""}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Standalone Event</option>
               {availableGroups.map((group) => (
@@ -390,8 +408,8 @@ export default function CreateEventModal({
         )}
 
         {/* Event Settings */}
-        <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-medium text-foreground font-inter">
+        <div className="space-y-3 p-4 bg-[var(--muted)]/50 rounded-lg">
+          <h4 className="font-medium text-[var(--foreground)] font-inter">
             Event Settings
           </h4>
 
@@ -415,9 +433,9 @@ export default function CreateEventModal({
                 name="requireRSVP"
                 checked={formData.requireRSVP ?? true}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-border rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--border)] rounded"
               />
-              <label className="ml-2 text-sm text-foreground font-inter">
+              <label className="ml-2 text-sm text-[var(--foreground)] font-inter">
                 Require RSVP
               </label>
             </div>
@@ -445,8 +463,10 @@ export default function CreateEventModal({
                 value={formData.maxAttendees || ""}
                 onChange={handleInputChange}
                 min="1"
-                className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.maxAttendees ? "border-red-500" : "border-border"
+                className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.maxAttendees
+                    ? "border-red-500"
+                    : "border-[var(--border)]"
                 }`}
                 placeholder="No limit"
               />
@@ -456,16 +476,83 @@ export default function CreateEventModal({
                 </p>
               )}
             </div>
+
+            {/* Creator Message */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1 font-inter">
+                Message to Guests (Optional)
+              </label>
+              <textarea
+                name="creatorMessage"
+                value={formData.creatorMessage || ""}
+                onChange={handleInputChange}
+                maxLength={500}
+                rows={3}
+                className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.creatorMessage
+                    ? "border-red-500"
+                    : "border-[var(--border)]"
+                }`}
+                placeholder="Share a personal message with your guests..."
+              />
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                {formData.creatorMessage?.length || 0}/500 characters
+              </p>
+            </div>
+
+            {/* Dress Code */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1 font-inter">
+                Dress Code (Optional)
+              </label>
+              <input
+                type="text"
+                name="dressCode"
+                value={formData.dressCode || ""}
+                onChange={handleInputChange}
+                maxLength={100}
+                className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.dressCode ? "border-red-500" : "border-[var(--border)]"
+                }`}
+                placeholder="e.g., Business Casual, Formal, Smart Casual"
+              />
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                Examples: Formal, Business Casual, Casual, Black Tie
+              </p>
+            </div>
+
+            {/* RSVP Deadline */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1 font-inter">
+                RSVP Deadline (Optional)
+              </label>
+              <input
+                type="date"
+                name="rsvpDeadline"
+                value={formData.rsvpDeadline || ""}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-md bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.rsvpDeadline
+                    ? "border-red-500"
+                    : "border-[var(--border)]"
+                }`}
+              />
+              {errors.rsvpDeadline && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.rsvpDeadline}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
           <button
             type="button"
             onClick={handleClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] rounded-md hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
           >
             Cancel
           </button>

@@ -50,6 +50,15 @@ const CreateEventSchema = z
     allowGuestInvites: z.boolean().default(true),
     requireRSVP: z.boolean().default(true),
     maxAttendees: z.number().min(1).optional(),
+    creatorMessage: z.string().max(500).trim().optional().or(z.literal("")),
+    rsvpDeadline: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), {
+        message: "Invalid RSVP deadline format",
+      })
+      .optional()
+      .or(z.literal("")),
+    dressCode: z.string().max(100).trim().optional().or(z.literal("")),
     inviteUserIds: z.array(z.string()).optional(), // Users to invite
   })
   .refine(
@@ -92,6 +101,15 @@ const UpdateEventSchema = z
     allowGuestInvites: z.boolean().optional(),
     requireRSVP: z.boolean().optional(),
     maxAttendees: z.number().min(1).optional(),
+    creatorMessage: z.string().max(500).trim().optional().or(z.literal("")),
+    rsvpDeadline: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), {
+        message: "Invalid RSVP deadline format",
+      })
+      .optional()
+      .or(z.literal("")),
+    dressCode: z.string().max(100).trim().optional().or(z.literal("")),
     status: z.enum(["draft", "published", "cancelled", "completed"]).optional(),
   })
   .refine(
@@ -272,6 +290,9 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
         maxAttendees: event.maxAttendees,
+        creatorMessage: event.creatorMessage,
+        rsvpDeadline: event.rsvpDeadline,
+        dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
@@ -354,6 +375,9 @@ router.get("/:eventId", async (req: AuthRequest, res: Response) => {
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
         maxAttendees: event.maxAttendees,
+        creatorMessage: event.creatorMessage,
+        rsvpDeadline: event.rsvpDeadline,
+        dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
@@ -426,6 +450,11 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       allowGuestInvites: eventData.allowGuestInvites,
       requireRSVP: eventData.requireRSVP,
       maxAttendees: eventData.maxAttendees,
+      creatorMessage: eventData.creatorMessage,
+      rsvpDeadline: eventData.rsvpDeadline
+        ? new Date(eventData.rsvpDeadline)
+        : undefined,
+      dressCode: eventData.dressCode,
       attendees: [],
     });
 
@@ -482,6 +511,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
         maxAttendees: event.maxAttendees,
+        creatorMessage: event.creatorMessage,
+        rsvpDeadline: event.rsvpDeadline,
+        dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
@@ -539,6 +571,9 @@ router.put("/:eventId", async (req: AuthRequest, res: Response) => {
     if (updateData.endDate) {
       event.endDate = new Date(updateData.endDate);
     }
+    if (updateData.rsvpDeadline) {
+      event.rsvpDeadline = new Date(updateData.rsvpDeadline);
+    }
 
     await event.save();
     await event.populate("owner", "name email");
@@ -570,6 +605,9 @@ router.put("/:eventId", async (req: AuthRequest, res: Response) => {
         allowGuestInvites: event.allowGuestInvites,
         requireRSVP: event.requireRSVP,
         maxAttendees: event.maxAttendees,
+        creatorMessage: event.creatorMessage,
+        rsvpDeadline: event.rsvpDeadline,
+        dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
@@ -839,6 +877,9 @@ router.get("/group/:groupId", async (req: AuthRequest, res: Response) => {
         status: event.status,
         attendeeCount: (event as any).attendeeCount,
         userRSVPStatus: (event as any).getUserRSVPStatus(userId),
+        creatorMessage: event.creatorMessage,
+        rsvpDeadline: event.rsvpDeadline,
+        dressCode: event.dressCode,
         canEdit: canEditEvent(event, userId),
         canDelete: canDeleteEvent(event, userId),
         createdAt: event.createdAt,
