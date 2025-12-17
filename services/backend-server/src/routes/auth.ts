@@ -505,9 +505,14 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
     const timestamp = Date.now();
     const fileExtension = req.file.originalname.split(".").pop();
 
+    // Get current user to check avatar version
+    const currentUser = await User.findById(userId);
+    const nextAvatarVersion = (currentUser?.avatar?.version || 1) === 1 ? 2 : 1;
+
     // Define S3 keys for both versions (using WebP for better quality/compression)
-    const fullSizeKey = `profile-images/${userId}/profileImage.webp`;
-    const smallSizeKey = `profile-images/${userId}/profileImageSmall.webp`;
+    // Use rotating suffix (_1 or _2) to ensure truly different URLs on each upload
+    const fullSizeKey = `profile-images/${userId}/profileImage_${nextAvatarVersion}.webp`;
+    const smallSizeKey = `profile-images/${userId}/profileImageSmall_${nextAvatarVersion}.webp`;
 
     // Process images with Sharp
     let fullSizeBuffer: Buffer;
@@ -555,6 +560,10 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
       Key: fullSizeKey,
       Body: fullSizeBuffer,
       ContentType: "image/webp",
+      CacheControl: "no-cache, no-store, must-revalidate",
+      Metadata: {
+        "upload-timestamp": Date.now().toString(),
+      },
     };
 
     // Upload small image to S3
@@ -563,6 +572,10 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
       Key: smallSizeKey,
       Body: smallSizeBuffer,
       ContentType: "image/webp",
+      CacheControl: "no-cache, no-store, must-revalidate",
+      Metadata: {
+        "upload-timestamp": Date.now().toString(),
+      },
     };
 
     // Execute both uploads
@@ -642,12 +655,14 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
         avatar: {
           fullSize: fullSizeUrl,
           small: smallSizeUrl,
+          version: nextAvatarVersion, // Save which version we're using
         },
         // Maintain legacy field for backward compatibility
         avatarUrl: smallSizeUrl,
       });
       console.log("✅ User avatar URLs updated in database:", {
         userId,
+        version: nextAvatarVersion,
         avatar: {
           fullSize: fullSizeUrl,
           small: smallSizeUrl,
@@ -758,9 +773,14 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
     const timestamp = Date.now();
     const fileExtension = req.file.originalname.split(".").pop();
 
+    // Get current user to check banner version
+    const currentUser = await User.findById(userId);
+    const nextBannerVersion = (currentUser?.banner?.version || 1) === 1 ? 2 : 1;
+
     // Define S3 keys for both versions (using WebP for better quality/compression)
-    const fullSizeKey = `profile-images/${userId}/profileBanner.webp`;
-    const smallSizeKey = `profile-images/${userId}/profileBannerSmall.webp`;
+    // Use rotating suffix (_1 or _2) to ensure truly different URLs on each upload
+    const fullSizeKey = `profile-images/${userId}/profileBanner_${nextBannerVersion}.webp`;
+    const smallSizeKey = `profile-images/${userId}/profileBannerSmall_${nextBannerVersion}.webp`;
 
     // Process images with Sharp
     let fullSizeBuffer: Buffer;
@@ -808,6 +828,10 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
       Key: fullSizeKey,
       Body: fullSizeBuffer,
       ContentType: "image/webp",
+      CacheControl: "no-cache, no-store, must-revalidate",
+      Metadata: {
+        "upload-timestamp": Date.now().toString(),
+      },
     };
 
     // Upload small image to S3
@@ -816,6 +840,10 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
       Key: smallSizeKey,
       Body: smallSizeBuffer,
       ContentType: "image/webp",
+      CacheControl: "no-cache, no-store, must-revalidate",
+      Metadata: {
+        "upload-timestamp": Date.now().toString(),
+      },
     };
 
     // Execute both uploads
@@ -895,12 +923,14 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
         banner: {
           fullSize: fullSizeUrl,
           small: smallSizeUrl,
+          version: nextBannerVersion, // Save which version we're using
         },
         // Maintain legacy field for backward compatibility
         bannerUrl: smallSizeUrl,
       });
       console.log("✅ User banner URLs updated in database:", {
         userId,
+        version: nextBannerVersion,
         banner: {
           fullSize: fullSizeUrl,
           small: smallSizeUrl,
@@ -929,8 +959,8 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
         mimeType: "image/webp", // Output format
         dimensions: {
           fullSize: {
-            maxWidth: 1200,
-            maxHeight: 675,
+            width: 1200,
+            height: 675,
           },
           small: {
             width: 800,

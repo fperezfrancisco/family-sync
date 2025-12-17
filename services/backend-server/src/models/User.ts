@@ -26,10 +26,12 @@ const UserSchema = new Schema(
     avatar: {
       fullSize: { type: String, required: false },
       small: { type: String, required: false },
+      version: { type: Number, default: 1 }, // Toggle between 1 and 2 for cache busting
     },
     banner: {
       fullSize: { type: String, required: false },
       small: { type: String, required: false },
+      version: { type: Number, default: 1 }, // Toggle between 1 and 2 for cache busting
     },
     // Legacy fields for backward compatibility
     avatarUrl: { type: String, required: false },
