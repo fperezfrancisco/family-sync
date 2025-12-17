@@ -7,6 +7,7 @@ import {
   FileText,
   Users,
   Settings,
+  Palette,
   Menu,
   X,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { GroupsAPI } from "@/lib/api";
 import DetailsTab from "./EditGroupModal/DetailsTab";
 import MembersTab from "./EditGroupModal/MembersTab";
 import SettingsTab from "./EditGroupModal/SettingsTab";
+import { AppearanceTab } from "./EditGroupModal/AppearanceTab";
 
 interface EditGroupModalProps {
   isOpen: boolean;
@@ -67,7 +69,7 @@ export default function EditGroupModal({
   onGroupUpdate,
 }: EditGroupModalProps) {
   const [activeTab, setActiveTab] = useState<
-    "details" | "members" | "settings"
+    "details" | "members" | "settings" | "appearance"
   >("details");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string>("");
@@ -98,6 +100,20 @@ export default function EditGroupModal({
     maxMembers: groupWithSettings.inviteSettings?.maxMembers || "",
   });
   const [settingsChanged, setSettingsChanged] = useState(false);
+
+  // Form state for Appearance Tab
+  const [customizationData, setCustomizationData] = useState(
+    group.customization || {
+      headerImage: {
+        source: "preset" as const,
+        value: "mountain-sunrise",
+      },
+      accentColor: {
+        preset: "blue",
+        hex: "#3b82f6",
+      },
+    }
+  );
 
   const userRole = getUserRole(group, currentUserId);
   const canEdit = canEditGroup(userRole);
@@ -275,6 +291,38 @@ export default function EditGroupModal({
   /**
    * Handle modal close
    */
+  const saveCustomization = async (customization: {
+    headerImage: { source: "preset" | "custom"; value: string };
+    accentColor: { preset: string; hex: string };
+  }): Promise<void> => {
+    try {
+      setIsSaving(true);
+      setError("");
+
+      await GroupsAPI.editGroup(group.id, {
+        customization,
+      });
+
+      setCustomizationData(customization);
+      setSuccess("Appearance updated successfully!");
+
+      if (onGroupUpdate) onGroupUpdate();
+
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: unknown) {
+      console.error("Error saving customization:", err);
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to save appearance";
+      setError(errorMsg);
+      throw err;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  /**
+   * Handle modal close
+   */
   const handleClose = () => {
     if (isSaving) return;
 
@@ -361,6 +409,22 @@ export default function EditGroupModal({
               Settings
             </button>
           )}
+          {isOwner && (
+            <button
+              onClick={() => {
+                setActiveTab("appearance");
+                setMobileMenuOpen(false);
+              }}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === "appearance"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Palette className="h-4 w-4" />
+              Appearance
+            </button>
+          )}
         </div>
 
         {/* Tab Navigation - Mobile with Burger Menu */}
@@ -370,6 +434,7 @@ export default function EditGroupModal({
               {activeTab === "details" && "Details"}
               {activeTab === "members" && "Members"}
               {activeTab === "settings" && "Settings"}
+              {activeTab === "appearance" && "Appearance"}
             </span>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -428,6 +493,22 @@ export default function EditGroupModal({
                 >
                   <Settings className="h-4 w-4" />
                   Settings
+                </button>
+              )}
+              {isOwner && (
+                <button
+                  onClick={() => {
+                    setActiveTab("appearance");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full px-4 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+                    activeTab === "appearance"
+                      ? "bg-[var(--primary)]/10 text-primary"
+                      : "text-[var(--muted-foreground)] hover:text-foreground hover:bg-[var(--muted)]/50"
+                  }`}
+                >
+                  <Palette className="h-4 w-4" />
+                  Appearance
                 </button>
               )}
             </div>
@@ -496,6 +577,16 @@ export default function EditGroupModal({
               }}
               isSaving={isSaving}
               currentMemberCount={members.length}
+            />
+          )}
+
+          {activeTab === "appearance" && isOwner && (
+            <AppearanceTab
+              groupName={group.name}
+              groupType={group.type}
+              customization={customizationData}
+              onSave={saveCustomization}
+              isSaving={isSaving}
             />
           )}
         </div>

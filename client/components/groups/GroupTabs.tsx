@@ -84,6 +84,9 @@ export default function GroupTabs({
 }: Omit<GroupTabsProps, "currentUserId">) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
+  // Get accent color from group customization
+  const accentColor = group.customization?.accentColor?.hex || null;
+
   /**
    * Render tab content based on active tab
    */
@@ -112,6 +115,7 @@ export default function GroupTabs({
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const tabColor = accentColor || "var(--primary)";
 
             return (
               <button
@@ -119,17 +123,28 @@ export default function GroupTabs({
                 onClick={() => setActiveTab(tab.id)}
                 className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                   isActive
-                    ? "border-[var(--primary)] text-[var(--primary)] dark:text-[var(--primary)]"
-                    : "border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]"
+                    ? "text-foreground dark:text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
                 }`}
+                style={
+                  isActive
+                    ? {
+                        borderBottomColor: tabColor,
+                        color: tabColor,
+                      }
+                    : undefined
+                }
                 title={tab.description}
               >
                 <Icon
-                  className={`mr-2 h-5 w-5 ${
+                  className={`mr-2 h-5 w-5 transition-colors`}
+                  style={
                     isActive
-                      ? "text-[var(--primary)] dark:text-[var(--primary)]"
-                      : "text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]"
-                  }`}
+                      ? {
+                          color: tabColor,
+                        }
+                      : undefined
+                  }
                 />
                 {tab.label}
               </button>
@@ -161,6 +176,9 @@ function OverviewTab({ group }: { group: Group }) {
     limit: 10,
   });
 
+  // Get accent color from group customization
+  const accentColor = group.customization?.accentColor?.hex || null;
+
   // Navigation handler for activity items
   const handleActivityNavigation = React.useCallback(
     (activity: RecentActivity) => {
@@ -182,7 +200,12 @@ function OverviewTab({ group }: { group: Group }) {
         {/* Members Section */}
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="h-5 w-5 text-[var(--primary)]" />
+            <Users
+              className="h-5 w-5"
+              style={{
+                color: accentColor || "var(--primary)",
+              }}
+            />
             <h3 className="text-lg font-semibold text-[var(--foreground)]">
               Members
             </h3>
@@ -198,7 +221,12 @@ function OverviewTab({ group }: { group: Group }) {
                 className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                    style={{
+                      backgroundColor: accentColor || "#3b82f6",
+                    }}
+                  >
                     {member.name?.charAt(0).toUpperCase() || "?"}
                   </div>
                   <div>

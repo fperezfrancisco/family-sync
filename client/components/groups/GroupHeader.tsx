@@ -156,22 +156,23 @@ export default function GroupHeader({
       <div className="w-full bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
         <div className="w-full aspect-[3/2] md:aspect-[24/9] bg-neutral-200 relative overflow-hidden">
           <div className="w-full h-full absolute z-[5] bg-black/20"></div>
-          <Image
-            src="/wallpapers/default-cabin.jpg"
-            alt="User Wallpaper"
-            width={2000}
-            height={1000}
-            className="object-cover bottom-0 h-full"
-          />
-          <div className="flex items-center justify-between absolute top-4 left-4 z-10">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center text-white hover:text-[var(--foreground)] transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Groups
-            </button>
-          </div>
+          {/* Determine header image URL from customization or default */}
+          {(() => {
+            const headerImageUrl =
+              group.customization?.headerImage?.source === "preset"
+                ? `/group-images/${group.customization.headerImage.value}.jpg`
+                : group.customization?.headerImage?.value ||
+                  "/wallpapers/default-cabin.jpg";
+            return (
+              <Image
+                src={headerImageUrl}
+                alt="Group Header"
+                width={2000}
+                height={1000}
+                className="object-cover bottom-0 h-full"
+              />
+            );
+          })()}
         </div>
         <div className="w-full p-6 flex flex-wrap items-start gap-6">
           {/* Group Information */}
@@ -183,10 +184,18 @@ export default function GroupHeader({
                   <h1 className="text-3xl font-bold text-foreground font-inter">
                     {group.name}
                   </h1>
+                  {/* Type Badge with customization color */}
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getGroupTypeColor(
-                      group.type
-                    )}`}
+                    className={`px-2 py-1 text-xs font-medium rounded-full capitalize text-white ${
+                      group.customization?.accentColor?.hex
+                        ? ""
+                        : getGroupTypeColor(group.type)
+                    }`}
+                    style={{
+                      backgroundColor:
+                        group.customization?.accentColor?.hex ||
+                        getGroupTypeColor(group.type),
+                    }}
                   >
                     {group.type}
                   </span>

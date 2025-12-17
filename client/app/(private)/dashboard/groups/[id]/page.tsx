@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 // import { GroupsAPI } from "@/lib/api"; // TODO: Uncomment when API is ready
 import { Group } from "@/types/groups";
 import { useAuth } from "@/context/AuthContext";
 import { GroupHeader, GroupTabs } from "@/components/groups";
 import { useGroups } from "@/context/GroupsContext";
+import { ArrowLeft } from "lucide-react";
 
 /**
  * Individual Group Page
@@ -21,6 +22,7 @@ export default function GroupPage() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { groups } = useGroups();
+  const router = useRouter();
 
   /**
    * Fetch group data from API
@@ -98,6 +100,13 @@ export default function GroupPage() {
 
   return (
     <div className="space-y-6 w-full h-full">
+      <button
+        onClick={() => router.back()}
+        className="flex items-center text-white hover:text-[var(--foreground)] transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to Groups
+      </button>
       {/* Group Header with title, description, and action buttons */}
       <GroupHeader
         group={group}

@@ -307,7 +307,21 @@ export const GroupsAPI = {
     }).then((r) => r.json()),
   editGroup: (
     groupId: string,
-    body: { name?: string; description?: string; type?: string }
+    body: {
+      name?: string;
+      description?: string;
+      type?: string;
+      customization?: {
+        headerImage?: {
+          source: "preset" | "custom";
+          value: string;
+        };
+        accentColor?: {
+          preset: string;
+          hex: string;
+        };
+      };
+    }
   ) =>
     request(`/groups/${groupId}`, {
       method: "PUT",

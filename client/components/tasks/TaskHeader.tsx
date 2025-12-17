@@ -261,12 +261,12 @@ export default function TaskHeader({
 
   return (
     <>
-      <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-6">
         {/* Navigation and Actions */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Tasks
@@ -322,7 +322,7 @@ export default function TaskHeader({
 
             {/* Edit/Delete Actions */}
             {(canEdit || canDelete) && (
-              <div className="flex items-center gap-2 border-l border-border pl-3 ml-3">
+              <div className="flex items-center gap-2 border-l border-[var(--border)] pl-3 ml-3">
                 {canEdit && (
                   <button
                     onClick={handleEditTask}
@@ -386,20 +386,22 @@ export default function TaskHeader({
 
           {/* Description */}
           {task.description && (
-            <p className="text-muted-foreground text-lg leading-relaxed">
+            <p className="text-[var(--muted-foreground)] text-lg leading-relaxed">
               {task.description}
             </p>
           )}
 
           {/* Task Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[var(--muted)]/30 rounded-lg">
             {/* Due Date */}
             {task.dueDate && (
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-red-500 mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground">Due Date</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-[var(--foreground)]">
+                    Due Date
+                  </p>
+                  <p className="text-sm text-[var(--muted-foreground)]">
                     {formatDate(task.dueDate)}
                   </p>
                   {task.isOverdue && (
@@ -415,11 +417,13 @@ export default function TaskHeader({
             <div className="flex items-start gap-3">
               <User className="h-5 w-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-foreground">Created By</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium text-[var(--foreground)]">
+                  Created By
+                </p>
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {task.creator.name}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[var(--muted-foreground)]">
                   {task.creator.email}
                 </p>
               </div>
@@ -430,8 +434,8 @@ export default function TaskHeader({
               <div className="flex items-start gap-3">
                 <Users className="h-5 w-5 text-orange-500 mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground">Group</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-[var(--foreground)]">Group</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">
                     {task.group.name}
                   </p>
                   <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded capitalize">
@@ -446,11 +450,11 @@ export default function TaskHeader({
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground">Event</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-[var(--foreground)]">Event</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">
                     {task.event.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-[var(--muted-foreground)]">
                     {formatDate(task.event.startDate)}
                   </p>
                 </div>
@@ -478,12 +482,12 @@ export default function TaskHeader({
                     </div>
                   ))}
                   {task.assignees.length > 5 && (
-                    <div className="w-8 h-8 bg-muted border-2 border-background rounded-full flex items-center justify-center text-muted-foreground text-xs font-medium">
+                    <div className="w-8 h-8 bg-[var(--muted)] border-2 border-background rounded-full flex items-center justify-center text-[var(--muted-foreground)] text-xs font-medium">
                       +{task.assignees.length - 5}
                     </div>
                   )}
                 </div>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-[var(--muted-foreground)]">
                   ({task.assignees.length} assigned)
                 </span>
               </div>
@@ -491,7 +495,7 @@ export default function TaskHeader({
           )}
 
           {/* Task Settings */}
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-6 text-sm text-[var(--muted-foreground)]">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               <span>
@@ -530,7 +534,7 @@ export default function TaskHeader({
         size="md"
       >
         <div className="space-y-4 p-4">
-          <p className="text-muted-foreground">
+          <p className="text-[var(--muted-foreground)]">
             Are you sure you want to delete &quot;{task.title}&quot;? This
             action cannot be undone. All task data, comments, and associated
             information will be permanently lost.
@@ -539,7 +543,7 @@ export default function TaskHeader({
             <button
               onClick={() => setIsDeleteModalOpen(false)}
               disabled={isLoading}
-              className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm border border-[var(--border)] rounded-md hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
