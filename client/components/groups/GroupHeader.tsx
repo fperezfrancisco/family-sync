@@ -84,6 +84,8 @@ export default function GroupHeader({
   // INVITATION SYSTEM: Add invite permission check
   const canInvite = canInviteMembers(userRole);
 
+  const accentColor = group.customization?.accentColor?.hex || "#3b82f6";
+
   // Get group type styling
   const getGroupTypeColor = (type: Group["type"]) => {
     switch (type) {
@@ -245,8 +247,9 @@ export default function GroupHeader({
                 {group.members.slice(0, 5).map((member) => (
                   <div
                     key={member.id}
-                    className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
+                    className={`w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium`}
                     title={`${member.name} (${member.role})`}
+                    style={{ backgroundColor: accentColor }}
                   >
                     {member.name?.charAt(0).toUpperCase() || "?"}
                   </div>
