@@ -280,20 +280,22 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     try {
       const result = await AuthAPI.uploadAvatar(avatarFile);
-      console.log("Avatar upload result:", result);
+      console.log("✅ Avatar upload result:", result);
       setUploadSuccess(true);
 
       // Refresh user data to get updated avatar URL
+      console.log("🔄 Starting refreshMe()...");
       await refreshMe();
+      console.log("✅ refreshMe() complete");
 
       // Clear upload state after a short delay
       setTimeout(() => {
         setAvatarFile(null);
-        // setAvatarPreview(null);
+        setAvatarPreview(null);
         setUploadSuccess(false);
       }, 2000);
     } catch (error) {
-      console.error("Avatar upload failed:", error);
+      console.error("❌ Avatar upload failed:", error);
       setUploadError(
         error instanceof Error
           ? error.message
@@ -314,11 +316,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     try {
       const result = await AuthAPI.uploadBanner(bannerFile);
-      console.log("Banner upload result:", result);
+      console.log("✅ Banner upload result:", result);
       setUploadSuccess(true);
 
       // Refresh user data to get updated banner URL
+      console.log("🔄 Starting refreshMe()...");
       await refreshMe();
+      console.log("✅ refreshMe() complete");
 
       // Clear upload state after a short delay
       setTimeout(() => {
@@ -327,7 +331,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         setUploadSuccess(false);
       }, 2000);
     } catch (error) {
-      console.error("Banner upload failed:", error);
+      console.error("❌ Banner upload failed:", error);
       setUploadError(
         error instanceof Error
           ? error.message

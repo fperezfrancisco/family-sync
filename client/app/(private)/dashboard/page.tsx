@@ -279,15 +279,19 @@ export default function DashboardPage() {
         <div className="w-full min-h-[120px] aspect-[20/9] md:aspect-[32/9] bg-neutral-400 rounded-2xl overflow-hidden object-bottom">
           {loading ? null : (
             <Image
+              key={`banner-${user?.banner?.fullSize}`}
               src={
-                user?.banner?.fullSize ||
-                user?.banner?.fullSize ||
-                user?.bannerUrl ||
-                "/wallpapers/default-lake.jpg"
+                user?.banner?.fullSize
+                  ? user.banner.fullSize
+                  : user?.bannerUrl
+                  ? user.bannerUrl
+                  : "/wallpapers/default-lake.jpg"
               }
               alt="User Wallpaper"
               width={2000}
               height={1000}
+              priority
+              unoptimized={!!user?.banner?.fullSize}
               className="object-cover object-bottom w-full h-auto"
             />
           )}
@@ -296,15 +300,19 @@ export default function DashboardPage() {
           <div className="aspect-square bg-black dark:bg-white rounded-full border-4 border-[var(--background)] size-[180px] md:size-[220px]">
             {loading ? null : (
               <Image
+                key={`avatar-${user?.avatar?.fullSize}`}
                 src={
-                  user?.avatar?.fullSize ||
-                  user?.avatar?.fullSize ||
-                  user?.avatarUrl ||
-                  "/avatars/ben-profile.jpg"
+                  user?.avatar?.fullSize
+                    ? user.avatar.fullSize
+                    : user?.avatarUrl
+                    ? user.avatarUrl
+                    : "/avatars/ben-profile.jpg"
                 }
                 alt="User Avatar"
                 width={300}
                 height={300}
+                priority
+                unoptimized={!!user?.avatar?.fullSize}
                 className="object-cover rounded-full w-full h-full"
               />
             )}
