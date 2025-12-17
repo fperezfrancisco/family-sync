@@ -75,7 +75,7 @@ export default function Modal({
         ref={modalRef}
         className={`
           w-full ${sizeClasses[size]} 
-          bg-[var(--background)]
+          bg-[var(--card)]
           border border-[var(--border)] 
           rounded-lg 
           shadow-xl 

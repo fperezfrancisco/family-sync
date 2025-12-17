@@ -98,9 +98,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshMe = async () => {
     try {
       const response = await AuthAPI.me();
+      console.log("🔄 refreshMe() response:", response);
+      console.log("Updated user data:", response.user);
       setUser(response.user);
+      console.log("✅ User state updated with new data");
     } catch (error) {
-      console.error("Failed to refresh user data", error);
+      console.error("❌ Failed to refresh user data", error);
     }
   };
 
