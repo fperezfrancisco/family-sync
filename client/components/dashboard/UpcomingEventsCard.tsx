@@ -107,17 +107,17 @@ export default function UpcomingEventsCard({
   if (upcomingEvents.length === 0) {
     return (
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 font-inter">
+        <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4 font-inter">
           Upcoming Events
         </h3>
         <div className="text-center py-8">
-          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground font-inter mb-3">
+          <Calendar className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-3" />
+          <p className="text-sm text-[var(--muted-foreground)] font-inter mb-3">
             No upcoming events scheduled
           </p>
           <button
             onClick={onCreateEvent}
-            className="text-sm text-primary hover:text-primary/80 font-medium font-inter"
+            className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium font-inter"
           >
             Create your first event
           </button>
@@ -146,7 +146,7 @@ export default function UpcomingEventsCard({
           <div
             key={event.id}
             onClick={() => handleEventClick(event.id)}
-            className="p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)]/20 hover:bg-[var(--accent)]/50 transition-all duration-200 cursor-pointer group"
+            className="p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)]/20 hover:bg-[var(--accent)]/50 transition-all duration-200 cursor-pointer group overflow-hidden"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
@@ -161,7 +161,7 @@ export default function UpcomingEventsCard({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   {/* Location */}
                   {(event.location || event.isVirtual) && (
                     <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">

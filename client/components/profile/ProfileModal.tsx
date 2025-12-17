@@ -47,19 +47,27 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  // To crop profile picture 
+  // To crop profile picture
   const [isCropping, setIsCropping] = useState(false);
+  const [isCroppingBanner, setIsCroppingBanner] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [cropBanner, setCropBanner] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [zoomBanner, setZoomBanner] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixelsBanner, setCroppedAreaPixelsBanner] =
+    useState<any>(null);
 
   // reader.onload = (e) => {
   //   setAvatarPreview(e.target?.result as string);
-  //   setIsCropping(true);  
+  //   setIsCropping(true);
   // };
 
   const applyCrop = async () => {
@@ -85,6 +93,37 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
       // Close cropping UI
       setIsCropping(false);
+    } catch (err) {
+      console.error("Crop failed:", err);
+    }
+  };
+
+  const applyCropBanner = async () => {
+    if (!croppedAreaPixelsBanner || !bannerPreview) return;
+
+    try {
+      const croppedImg = await getCroppedImg(
+        bannerPreview,
+        croppedAreaPixelsBanner
+      );
+
+      // Update preview with the cropped version
+      setBannerPreview(croppedImg);
+
+      // Convert base64 → File so backend receives the cropped image
+      const file = await fetch(croppedImg)
+        .then((res) => res.blob())
+        .then(
+          (blob) =>
+            new File([blob], "banner.jpg", {
+              type: "image/jpeg",
+            })
+        );
+
+      setBannerFile(file);
+
+      // Close cropping UI
+      setIsCroppingBanner(false);
     } catch (err) {
       console.error("Crop failed:", err);
     }
@@ -175,11 +214,37 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     reader.readAsDataURL(file);
   };
 
+  const handleBannerSelect = (file: File) => {
+    const error = validateFile(file);
+    if (error) {
+      setUploadError(error);
+      return;
+    }
+
+    setUploadError(null);
+    setBannerFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setBannerPreview(e.target?.result as string);
+      setIsCroppingBanner(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handle file input change
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       handleAvatarSelect(file);
+    }
+  };
+
+  const handleBannerInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleBannerSelect(file);
     }
   };
 
@@ -193,6 +258,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const file = e.dataTransfer.files[0];
     if (file) {
       handleAvatarSelect(file);
+    }
+  };
+
+  const handleDropBanner = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleBannerSelect(file);
     }
   };
 
@@ -221,6 +294,40 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       }, 2000);
     } catch (error) {
       console.error("Avatar upload failed:", error);
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "Upload failed. Please try again."
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleBannerUpload = async () => {
+    console.log("Entered handle banner upload", { bannerFile });
+    if (!bannerFile) return;
+    console.log("Banner file exists.");
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const result = await AuthAPI.uploadBanner(bannerFile);
+      console.log("Banner upload result:", result);
+      setUploadSuccess(true);
+
+      // Refresh user data to get updated banner URL
+      await refreshMe();
+
+      // Clear upload state after a short delay
+      setTimeout(() => {
+        setBannerFile(null);
+        // setBannerPreview(null);
+        setUploadSuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Banner upload failed:", error);
       setUploadError(
         error instanceof Error
           ? error.message
@@ -260,6 +367,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       // Upload avatar first if there's a new one
       if (avatarFile) {
         await handleAvatarUpload();
+      }
+
+      if (bannerFile) {
+        await handleBannerUpload();
       }
 
       // Prepare update data (only send fields that aren't empty)
@@ -331,6 +442,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     // Reset image upload state
     setAvatarFile(null);
     setAvatarPreview(null);
+    setBannerFile(null);
+    setBannerPreview(null);
     setUploadError(null);
     setUploadSuccess(false);
   };
@@ -415,6 +528,53 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </div>
         </div>
       )}
+      {isCroppingBanner && (
+        <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-6">
+          <div className="bg-white rounded-lg p-4 w-full max-w-md">
+            <div className="relative w-full h-64 bg-black/10">
+              <Cropper
+                image={bannerPreview!}
+                crop={cropBanner}
+                zoom={zoomBanner}
+                aspect={16 / 9}
+                onCropChange={setCropBanner}
+                onZoomChange={setZoomBanner}
+                restrictPosition={false}
+                onCropComplete={(croppedArea, croppedPixels) =>
+                  setCroppedAreaPixelsBanner(croppedPixels)
+                }
+              />
+              <div className="mt-4">
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoomBanner}
+                  onChange={(e) => setZoomBanner(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => setIsCroppingBanner(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={applyCropBanner}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       <div className="relative w-full max-w-2xl max-h-[90vh] bg-[var(--card)] rounded-xl shadow-2xl flex flex-col">
@@ -470,8 +630,24 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             {/* Profile Banner */}
             <div className="relative h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden">
               <div className="absolute inset-0 bg-black/20"></div>
+              {bannerPreview ? (
+                <img
+                  src={bannerPreview}
+                  alt="Banner preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : user?.banner?.fullSize || user?.bannerUrl ? (
+                <img
+                  src={user.banner?.fullSize || user.bannerUrl}
+                  alt="Current banner"
+                  className="w-full h-full object-cover"
+                />
+              ) : null}
               {isEditing && (
-                <button className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors">
+                <button
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors"
+                >
                   <Camera className="h-4 w-4" />
                 </button>
               )}
@@ -744,6 +920,96 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <div className="mt-2 flex items-center space-x-2 text-sm text-green-600">
                       <CheckCircle className="h-4 w-4" />
                       <span>Avatar updated successfully!</span>
+                    </div>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                    Profile Banner
+                  </label>
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleBannerInputChange}
+                    className="hidden"
+                  />
+
+                  {/* Upload area */}
+                  <div
+                    className="border-2 border-dashed border-[var(--border)] rounded-lg p-6 text-center hover:border-[var(--primary)] transition-colors cursor-pointer"
+                    onDragOver={handleDragOver}
+                    onDrop={handleDropBanner}
+                    onClick={() => bannerInputRef.current?.click()}
+                  >
+                    {bannerPreview ? (
+                      <div className="space-y-3">
+                        <img
+                          src={bannerPreview}
+                          alt="Banner preview"
+                          className="w-20 h-20 object-cover rounded-full mx-auto border-2 border-[var(--border)]"
+                        />
+                        <p className="text-sm text-[var(--foreground)]">
+                          {bannerFile?.name}
+                        </p>
+                        <div className="flex items-center justify-center space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBannerUpload();
+                            }}
+                            disabled={isUploading}
+                            className="flex items-center space-x-2 px-3 py-1.5 text-sm bg-[var(--primary)] text-[var(--primary-foreground)] rounded-lg hover:bg-[var(--primary)]/90 transition-colors disabled:opacity-50"
+                          >
+                            {isUploading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4" />
+                            )}
+                            <span>
+                              {isUploading ? "Uploading..." : "Upload"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setBannerFile(null);
+                              setBannerPreview(null);
+                              setUploadError(null);
+                            }}
+                            className="px-3 py-1.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <ImageIcon className="h-8 w-8 mx-auto text-[var(--muted-foreground)]" />
+                        <p className="text-sm text-[var(--muted-foreground)]">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          JPEG, PNG or WebP (max 5MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload status messages */}
+                  {uploadError && (
+                    <div className="mt-2 flex items-center space-x-2 text-sm text-red-600">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
+
+                  {uploadSuccess && (
+                    <div className="mt-2 flex items-center space-x-2 text-sm text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Banner updated successfully!</span>
                     </div>
                   )}
                 </div>

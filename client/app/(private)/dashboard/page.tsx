@@ -25,6 +25,12 @@ import { useTasks } from "@/context/TasksContext";
 import { useSocket } from "@/context/SocketContext";
 import { useTotalUnreadMessages } from "@/hooks/useTotalUnreadMessages";
 import { useRecentActivity } from "@/hooks/useRecentActivity";
+import Modal from "@/components/ui/Modal";
+import CreateGroupForm, {
+  CreateGroupFormData,
+} from "@/components/groups/CreateGroupForm";
+import CreateTaskModal from "@/components/tasks/CreateTaskModal";
+import { CreateTaskData } from "@/types/tasks";
 
 /**
  * Dashboard Page Component
@@ -33,9 +39,9 @@ import { useRecentActivity } from "@/hooks/useRecentActivity";
  */
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const { groups, refreshGroups } = useGroups();
+  const { groups, refreshGroups, createNewGroup } = useGroups();
   const { events, createEvent } = useEvents();
-  const { tasks } = useTasks();
+  const { tasks, createTask } = useTasks();
   const { messages, isLoadingReadStates, getUnreadCount, unreadCounts } =
     useSocket();
   const totalUnreadMessages = useTotalUnreadMessages();
@@ -51,6 +57,9 @@ export default function DashboardPage() {
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [isRecentActivityModalOpen, setIsRecentActivityModalOpen] =
     useState(false);
+  const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
 
   // Navigation handler for activity items
   const handleActivityNavigation = useCallback(
@@ -109,11 +118,55 @@ export default function DashboardPage() {
       setIsCreateEventModalOpen(false);
     } catch (error) {
       console.error("Failed to create event:", error);
-      throw error; // Re-throw to let the modal handle it
+      throw error;
     } finally {
       setIsCreatingEvent(false);
     }
   };
+
+  /**
+   * Handle creating a new group
+   */
+  const handleCreateGroup = async (data: CreateGroupFormData) => {
+    try {
+      setIsCreatingGroup(true);
+      await createNewGroup(data);
+      setIsCreateGroupModalOpen(false);
+    } catch (error) {
+      console.error("Failed to create group:", error);
+      throw error;
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
+  /**
+   * Handle creating a new task
+   */
+  const handleCreateTask = async (taskData: CreateTaskData) => {
+    try {
+      await createTask(taskData);
+      setIsCreateTaskModalOpen(false);
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Transform events data for modal
+   */
+  const availableEvents = (events || []).map((event) => ({
+    id: event.id,
+    name: event.name,
+    startDate: event.startDate,
+    attendees: event.attendees.map((attendee) => ({
+      id: attendee.user._id,
+      name: attendee.user.name || "",
+      email: attendee.user.email || "",
+      role: attendee.status,
+    })),
+  }));
 
   /**
    * Open create event modal
@@ -368,6 +421,7 @@ export default function DashboardPage() {
             </button>
 
             <button
+              onClick={() => setIsCreateTaskModalOpen(true)}
               className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
@@ -376,12 +430,11 @@ export default function DashboardPage() {
             </button>
 
             <button
+              onClick={() => setIsCreateGroupModalOpen(true)}
               className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
                              border border-border hover:bg-accent transition-colors duration-150 font-inter"
             >
-              <span className="font-medium text-foreground">
-                Invite Members
-              </span>
+              <span className="font-medium text-foreground">Create Group</span>
               <Users className="h-5 w-5 text-muted-foreground" />
             </button>
           </div>
@@ -429,6 +482,29 @@ export default function DashboardPage() {
       <RecentActivityModal
         isOpen={isRecentActivityModalOpen}
         onClose={() => setIsRecentActivityModalOpen(false)}
+      />
+
+      {/* Create Group Modal */}
+      <Modal
+        isOpen={isCreateGroupModalOpen}
+        onClose={() => !isCreatingGroup && setIsCreateGroupModalOpen(false)}
+        title="Create New Group"
+        size="md"
+      >
+        <CreateGroupForm
+          onSubmit={handleCreateGroup}
+          onCancel={() => setIsCreateGroupModalOpen(false)}
+          isLoading={isCreatingGroup}
+        />
+      </Modal>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateTaskModalOpen}
+        onClose={() => setIsCreateTaskModalOpen(false)}
+        onCreateTask={handleCreateTask}
+        availableGroups={groups || []}
+        availableEvents={availableEvents}
       />
     </div>
   );

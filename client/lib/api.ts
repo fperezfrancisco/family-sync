@@ -248,6 +248,40 @@ export const AuthAPI = {
 
     return response.json();
   },
+  uploadBanner: async (
+    file: File
+  ): Promise<{
+    message: string;
+    urls: {
+      fullSize: {
+        direct: string;
+        presigned: string;
+      };
+      small: {
+        direct: string;
+        presigned: string;
+      };
+    };
+    metadata: {
+      originalName: string;
+      size: number;
+      mimeType: string;
+      dimensions: {
+        width: number;
+        height: number;
+      };
+    };
+  }> => {
+    const formData = new FormData();
+    formData.append("banner", file);
+
+    const response = await request("/auth/profile/banner", {
+      method: "POST",
+      body: formData, // FormData handles Content-Type automatically
+    });
+
+    return response.json();
+  },
   // Profile update
   updateProfile: async (profileData: {
     name?: string;
