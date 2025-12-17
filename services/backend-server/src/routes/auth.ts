@@ -560,7 +560,7 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
       Key: fullSizeKey,
       Body: fullSizeBuffer,
       ContentType: "image/webp",
-      CacheControl: "no-cache, no-store, must-revalidate",
+      CacheControl: "max-age=31536000, public", // Cache for 1 year since URL is unique
       Metadata: {
         "upload-timestamp": Date.now().toString(),
       },
@@ -572,7 +572,7 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
       Key: smallSizeKey,
       Body: smallSizeBuffer,
       ContentType: "image/webp",
-      CacheControl: "no-cache, no-store, must-revalidate",
+      CacheControl: "max-age=31536000, public", // Cache for 1 year since URL is unique
       Metadata: {
         "upload-timestamp": Date.now().toString(),
       },
@@ -828,7 +828,7 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
       Key: fullSizeKey,
       Body: fullSizeBuffer,
       ContentType: "image/webp",
-      CacheControl: "no-cache, no-store, must-revalidate",
+      CacheControl: "max-age=31536000, public", // Cache for 1 year since URL is unique
       Metadata: {
         "upload-timestamp": Date.now().toString(),
       },
@@ -840,7 +840,7 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
       Key: smallSizeKey,
       Body: smallSizeBuffer,
       ContentType: "image/webp",
-      CacheControl: "no-cache, no-store, must-revalidate",
+      CacheControl: "max-age=31536000, public", // Cache for 1 year since URL is unique
       Metadata: {
         "upload-timestamp": Date.now().toString(),
       },
