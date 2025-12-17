@@ -698,6 +698,259 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
 });
 
 /**
+ * Profile Banner Upload Endpoint
+ * Uploads user profile banner image with automatic resizing
+ * Creates both full-size and small (800x200) versions
+ */
+
+router.post("/profile/banner", upload.single("banner"), async (req, res) => {
+  try {
+    console.log("🔧 S3 Configuration:", {
+      bucket: BUCKET_NAME,
+      region: BUCKET_REGION,
+      hasAccessKey: !!BUCKET_ACCESS_KEY,
+      hasSecretKey: !!BUCKET_SECRET_ACCESS_KEY,
+    });
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No banner file uploaded",
+      });
+    }
+
+    // Extract userId from authentication token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Missing or invalid token",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    let userId: string;
+
+    try {
+      const payload = verifyAccess(token as string);
+      if (payload.type !== "access") {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized: Invalid token type",
+        });
+      }
+      userId = payload.sub;
+    } catch (tokenError) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Invalid token",
+      });
+    }
+
+    // Validate file type
+    if (!req.file.mimetype.startsWith("image/")) {
+      return res.status(400).json({
+        success: false,
+        message: "Only image files are allowed",
+      });
+    }
+
+    const timestamp = Date.now();
+    const fileExtension = req.file.originalname.split(".").pop();
+
+    // Define S3 keys for both versions (using WebP for better quality/compression)
+    const fullSizeKey = `profile-images/${userId}/profileBanner.webp`;
+    const smallSizeKey = `profile-images/${userId}/profileBannerSmall.webp`;
+
+    // Process images with Sharp
+    let fullSizeBuffer: Buffer;
+    let smallSizeBuffer: Buffer;
+
+    try {
+      // Create full-size version (high quality, maintain aspect ratio)
+      fullSizeBuffer = await sharp(req.file.buffer)
+        .resize(1200, 675, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({
+          quality: 92,
+          effort: 6, // Higher effort for better compression
+        })
+        .toBuffer();
+
+      // Create small version (high quality for crisp small displays)
+      smallSizeBuffer = await sharp(req.file.buffer)
+        .resize(800, 450, {
+          fit: "cover",
+          position: "center",
+        })
+        .webp({
+          quality: 90,
+          effort: 6,
+        })
+        .toBuffer();
+    } catch (imageError) {
+      console.error("❌ Image Processing Error:", imageError);
+      return res.status(400).json({
+        success: false,
+        message: "Failed to process image",
+        error:
+          imageError instanceof Error
+            ? imageError.message
+            : "Image processing failed",
+      });
+    }
+
+    // Upload full-size image to S3
+    const fullSizeParams = {
+      Bucket: BUCKET_NAME,
+      Key: fullSizeKey,
+      Body: fullSizeBuffer,
+      ContentType: "image/webp",
+    };
+
+    // Upload small image to S3
+    const smallSizeParams = {
+      Bucket: BUCKET_NAME,
+      Key: smallSizeKey,
+      Body: smallSizeBuffer,
+      ContentType: "image/webp",
+    };
+
+    // Execute both uploads
+    console.log("🚀 Starting S3 uploads...", {
+      fullSizeKey,
+      smallSizeKey,
+      bucket: BUCKET_NAME,
+    });
+
+    let fullSizeResult, smallSizeResult;
+    try {
+      [fullSizeResult, smallSizeResult] = await Promise.all([
+        s3.send(new PutObjectCommand(fullSizeParams)),
+        s3.send(new PutObjectCommand(smallSizeParams)),
+      ]);
+
+      console.log("✅ S3 Upload Results:", {
+        fullSizeETag: fullSizeResult.ETag,
+        smallSizeETag: smallSizeResult.ETag,
+      });
+    } catch (s3Error) {
+      console.error("❌ S3 Upload Error:", s3Error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to upload to S3",
+        error: s3Error instanceof Error ? s3Error.message : "S3 upload failed",
+      });
+    }
+
+    // Generate URLs for both images
+    const fullSizeUrl = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${fullSizeKey}`;
+    const smallSizeUrl = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${smallSizeKey}`;
+
+    // Generate presigned URLs (valid for 24 hours for profile images)
+    const fullSizePresignedUrl = await getSignedUrl(
+      s3,
+      new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: fullSizeKey,
+      }),
+      { expiresIn: 86400 }
+    );
+
+    const smallSizePresignedUrl = await getSignedUrl(
+      s3,
+      new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: smallSizeKey,
+      }),
+      { expiresIn: 86400 }
+    );
+
+    console.log("✅ Profile Banner Upload Success:", {
+      userId,
+      originalSize: req.file.size,
+      fullSizeKey,
+      smallSizeKey,
+      bucketName: BUCKET_NAME,
+      region: BUCKET_REGION,
+      uploadedAt: new Date().toISOString(),
+    });
+
+    console.log("🔗 Generated URLs:", {
+      fullSize: {
+        direct: fullSizeUrl,
+        presigned: fullSizePresignedUrl,
+      },
+      small: {
+        direct: smallSizeUrl,
+        presigned: smallSizePresignedUrl,
+      },
+    });
+
+    // Update user's banner URLs in database
+    try {
+      await User.findByIdAndUpdate(userId, {
+        banner: {
+          fullSize: fullSizeUrl,
+          small: smallSizeUrl,
+        },
+        // Maintain legacy field for backward compatibility
+        bannerUrl: smallSizeUrl,
+      });
+      console.log("✅ User banner URLs updated in database:", {
+        userId,
+        banner: {
+          fullSize: fullSizeUrl,
+          small: smallSizeUrl,
+        },
+      });
+    } catch (dbError) {
+      console.error("❌ Failed to update user banner URLs:", dbError);
+      // Don't fail the request if DB update fails, images are already uploaded
+    }
+
+    return res.status(200).json({
+      message: "Profile banner uploaded successfully!",
+      urls: {
+        fullSize: {
+          direct: fullSizeUrl,
+          presigned: fullSizePresignedUrl,
+        },
+        small: {
+          direct: smallSizeUrl,
+          presigned: smallSizePresignedUrl,
+        },
+      },
+      metadata: {
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimeType: "image/webp", // Output format
+        dimensions: {
+          fullSize: {
+            maxWidth: 1200,
+            maxHeight: 675,
+          },
+          small: {
+            width: 800,
+            height: 450,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    console.error("❌ Profile Banner Upload Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload profile banner",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
  * PUT /profile
  * Update user profile details (excluding password and email)
  * Only allows users to update their own profile
