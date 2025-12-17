@@ -29,6 +29,32 @@ const GroupSchema = new Schema({
     requireApproval: { type: Boolean, default: false }, // Owner must approve invites
     maxMembers: { type: Number, default: null }, // Null = no limit
   },
+  // CUSTOMIZATION: Header image and accent color for group branding
+  customization: {
+    headerImage: {
+      source: {
+        type: String,
+        enum: ["preset", "custom"],
+        default: "preset",
+      },
+      value: {
+        type: String,
+        default: "mountain-sunrise", // preset name or URL for custom
+      },
+      uploadedAt: { type: Date, required: false },
+      uploadedBy: { type: Schema.Types.ObjectId, ref: "User", required: false },
+    },
+    accentColor: {
+      preset: {
+        type: String,
+        default: "blue",
+      },
+      hex: {
+        type: String,
+        default: "#3b82f6", // Tailwind blue-500
+      },
+    },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

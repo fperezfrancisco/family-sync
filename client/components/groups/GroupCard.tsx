@@ -13,8 +13,6 @@ import {
   User,
 } from "lucide-react";
 import { Group } from "@/types/groups";
-import { User as MemberUser } from "@/types/auth";
-import { useQuery } from "@tanstack/react-query";
 import { EventsAPI } from "@/lib/api";
 import Image from "next/image";
 
@@ -46,6 +44,8 @@ export default function GroupCard({
     console.log("Response of events: ", response);
     return response.events;
   };
+
+  console.log("Group card group: ", group);
 
   // Get user's role in the group
   const getUserRole = () => {
@@ -93,7 +93,29 @@ export default function GroupCard({
     }
   };
 
+  const groupImageURL =
+    group.customization && group.customization.headerImage?.source === "preset"
+      ? `/group-images/${group.customization.headerImage.value}.jpg`
+      : group.customization?.headerImage?.value ||
+        "/wallpapers/default-cabin.jpg";
+
+  console.log("Group Image URL: ", groupImageURL);
+
   const typeStyle = getGroupTypeStyle(group.type);
+
+  // Get accent color from customization or use theme default
+  const accentColor = group.customization?.accentColor?.hex || null;
+
+  // Create lighter background color from hex (for icon background)
+  const getLighterColor = (hex: string): string => {
+    // Convert hex to lighter shade for background
+    const rgb = parseInt(hex.slice(1), 16);
+    const r = (rgb >> 16) & 255;
+    const g = (rgb >> 8) & 255;
+    const b = rgb & 255;
+    // Return with lighter opacity
+    return `rgba(${r}, ${g}, ${b}, 0.1)`;
+  };
 
   // Get role icon
   const getRoleIcon = () => {
@@ -127,11 +149,11 @@ export default function GroupCard({
       {/* Card Image */}
       <div className="w-full aspect-[5/3] bg-neutral-400 overflow-hidden">
         <Image
-          src={"/wallpapers/default-cabin.jpg"}
-          width={500}
-          height={333}
+          src={groupImageURL}
+          width={2000}
+          height={1200}
           alt="Group Image"
-          className="w-full object-cover "
+          className="w-full object-center h-full object-cover "
         />
       </div>
 
@@ -139,24 +161,40 @@ export default function GroupCard({
       <div className="p-6 pb-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-3">
+            {/* Icon Container with accent color */}
             <div
-              className={`p-2 rounded-lg ${typeStyle.bg} ${typeStyle.border} border`}
+              className="p-2 rounded-lg border"
+              style={{
+                backgroundColor: accentColor
+                  ? getLighterColor(accentColor)
+                  : typeStyle.bg.split(" ")[0],
+                borderColor: accentColor || "var(--border)",
+              }}
             >
-              <Users className={`h-5 w-5 ${typeStyle.icon}`} />
+              <Users
+                style={{
+                  color: accentColor || undefined,
+                }}
+                className={`h-5 w-5 ${accentColor ? "" : typeStyle.icon}`}
+              />
             </div>
             <div>
-              <h3 className="font-semibold text-[var(--foreground)] font-inter text-lg leading-tight">
+              <h3 className="font-semibold text-foreground font-inter text-lg leading-tight">
                 {group.name}
               </h3>
               <div className="flex items-center space-x-2 mt-1">
+                {/* Type Badge with accent color */}
                 <span
-                  className={`text-xs px-2 py-1 rounded-full ${typeStyle.bg} ${typeStyle.text} font-medium capitalize`}
+                  className="text-xs px-2 py-1 rounded-full font-medium capitalize text-white"
+                  style={{
+                    backgroundColor: accentColor || typeStyle.bg.split(" ")[0],
+                  }}
                 >
                   {group.type}
                 </span>
                 <div className="flex items-center space-x-1">
                   {getRoleIcon()}
-                  <span className="text-xs text-[var(--muted-foreground)] capitalize">
+                  <span className="text-xs text-muted-foreground capitalize">
                     {userRole}
                   </span>
                 </div>
@@ -238,7 +276,15 @@ export default function GroupCard({
                 className="relative"
                 title={member.name}
               >
-                <div className="h-6 w-6 bg-[var(--primary)]/90 rounded-full border-2 border-[var(--background)] flex items-center justify-center">
+                <div
+                  className="h-6 w-6 rounded-full border-2 flex items-center justify-center"
+                  style={{
+                    backgroundColor: accentColor
+                      ? `${accentColor}90`
+                      : "var(--primary)/90",
+                    borderColor: "var(--background)",
+                  }}
+                >
                   <span className="text-xs font-medium text-white">
                     {member.name.charAt(0).toUpperCase()}
                   </span>

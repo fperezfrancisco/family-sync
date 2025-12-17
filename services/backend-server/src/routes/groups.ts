@@ -34,6 +34,24 @@ const UpdateGroupSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   type: z.enum(["family", "friends", "work", "other"]).optional(),
+  customization: z
+    .object({
+      headerImage: z
+        .object({
+          source: z.enum(["preset", "custom"]),
+          value: z.string().min(1),
+        })
+        .optional(),
+      accentColor: z
+        .object({
+          preset: z.string(),
+          hex: z
+            .string()
+            .regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color format"),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 const AddMemberSchema = z.object({
@@ -162,6 +180,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         owner: group.owner,
         members: group.members,
         createdAt: group.createdAt,
+        customization: group.customization,
         userRole:
           group.owner.toString() === userId
             ? "owner"
@@ -222,6 +241,7 @@ router.get("/:groupId", async (req: AuthRequest, res: Response) => {
         owner: group.owner,
         members: group.members,
         createdAt: group.createdAt,
+        customization: group.customization,
         userRole,
       },
     });
@@ -279,6 +299,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         owner: group.owner,
         members: group.members,
         createdAt: group.createdAt,
+        customization: group.customization,
         userRole: "owner",
       },
     });
@@ -345,6 +366,7 @@ router.put("/:groupId", async (req: AuthRequest, res: Response) => {
         owner: group.owner,
         members: group.members,
         createdAt: group.createdAt,
+        customization: group.customization,
         userRole,
       },
     });

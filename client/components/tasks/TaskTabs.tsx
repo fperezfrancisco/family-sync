@@ -69,7 +69,7 @@ export default function TaskTabs({
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="border-b border-border">
+      <div className="border-b border-[var(--border)]">
         <nav className="-mb-px flex space-x-8 overflow-x-auto">
           {TABS.map((tab, index) => {
             const Icon = tab.icon;
@@ -82,7 +82,7 @@ export default function TaskTabs({
                 className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                   isActive
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300"
+                    : "border-transparent text-[var(--muted-foreground)] hover:text-foreground hover:border-gray-300"
                 }`}
                 title={tab.description}
               >
@@ -90,7 +90,7 @@ export default function TaskTabs({
                   className={`mr-2 h-5 w-5 ${
                     isActive
                       ? "text-blue-500 dark:text-blue-400"
-                      : "text-muted-foreground group-hover:text-foreground"
+                      : "text-[var(--muted-foreground)] group-hover:text-foreground"
                   }`}
                 />
                 {tab.label}
@@ -152,11 +152,13 @@ function OverviewTab({ task }: { task: Task }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Assignees Section */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-5 w-5 text-blue-500" />
-            <h3 className="text-lg font-semibold text-foreground">Assignees</h3>
-            <span className="text-sm text-muted-foreground">
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Assignees
+            </h3>
+            <span className="text-sm text-[var(--muted-foreground)]">
               ({task.assignees?.length || 0} assigned)
             </span>
           </div>
@@ -166,20 +168,20 @@ function OverviewTab({ task }: { task: Task }) {
               {task.assignees.map((assignee) => (
                 <div
                   key={assignee._id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  className="flex items-center justify-between p-3 rounded-lg bg-[var(--muted)]/50"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
                       {assignee.name?.charAt(0).toUpperCase() || "?"}
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">
+                      <p className="font-medium text-[var(--foreground)]">
                         {assignee.name}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-[var(--muted-foreground)]">
                         {assignee.email}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-[var(--muted-foreground)]">
                         Assigned {formatDate(assignee.assignedAt)} by{" "}
                         {assignee.assignedBy?.name}
                       </p>
@@ -190,9 +192,9 @@ function OverviewTab({ task }: { task: Task }) {
             </div>
           ) : (
             <div className="text-center py-8">
-              <User className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">No assignees yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <User className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-2" />
+              <p className="text-[var(--muted-foreground)]">No assignees yet</p>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 {task.allowSelfAssign
                   ? "This task allows self-assignment"
                   : "Assignees will appear here when assigned"}
@@ -202,14 +204,14 @@ function OverviewTab({ task }: { task: Task }) {
         </div>
 
         {/* Task Progress & Details */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
+        <div className="bg-card border border-[var(--border)] rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
             Task Progress
           </h3>
           <div className="space-y-4">
             {/* Current Status */}
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
                 Current Status
               </h4>
               <span
@@ -224,19 +226,23 @@ function OverviewTab({ task }: { task: Task }) {
             {/* Completion Details */}
             {task.completedAt && task.completedBy && (
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
                   Completion Details
                 </h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Completed by:</span>
-                    <span className="text-foreground">
+                    <span className="text-[var(--muted-foreground)]">
+                      Completed by:
+                    </span>
+                    <span className="text-[var(--foreground)]">
                       {task.completedBy.name}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Completed on:</span>
-                    <span className="text-foreground">
+                    <span className="text-[var(--muted-foreground)]">
+                      Completed on:
+                    </span>
+                    <span className="text-[var(--foreground)]">
                       {formatDate(task.completedAt)}
                     </span>
                   </div>
@@ -247,19 +253,23 @@ function OverviewTab({ task }: { task: Task }) {
             {/* Verification Details */}
             {task.verifiedAt && task.verifiedBy && (
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
                   Verification Details
                 </h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Verified by:</span>
-                    <span className="text-foreground">
+                    <span className="text-[var(--muted-foreground)]">
+                      Verified by:
+                    </span>
+                    <span className="text-[var(--foreground)]">
                       {task.verifiedBy.name}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Verified on:</span>
-                    <span className="text-foreground">
+                    <span className="text-[var(--muted-foreground)]">
+                      Verified on:
+                    </span>
+                    <span className="text-[var(--foreground)]">
                       {formatDate(task.verifiedAt)}
                     </span>
                   </div>
@@ -270,7 +280,7 @@ function OverviewTab({ task }: { task: Task }) {
             {/* Block Information */}
             {task.isBlocked && task.blockReason && (
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
                   Block Information
                 </h4>
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -283,21 +293,23 @@ function OverviewTab({ task }: { task: Task }) {
 
             {/* Task Settings */}
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+              <h4 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
                 Task Settings
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">
+                  <span className="text-[var(--muted-foreground)]">
                     Self-assignment:
                   </span>
-                  <span className="text-foreground">
+                  <span className="text-[var(--foreground)]">
                     {task.allowSelfAssign ? "Allowed" : "Not Allowed"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Verification:</span>
-                  <span className="text-foreground">
+                  <span className="text-[var(--muted-foreground)]">
+                    Verification:
+                  </span>
+                  <span className="text-[var(--foreground)]">
                     {task.requiresVerification ? "Required" : "Not Required"}
                   </span>
                 </div>
@@ -308,24 +320,24 @@ function OverviewTab({ task }: { task: Task }) {
       </div>
 
       {/* Task Timeline */}
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">
+      <div className="bg-card border border-[var(--border)] rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
           Task Timeline
         </h3>
         <div className="space-y-4">
           {/* Created */}
-          <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-4 p-3 bg-[var(--muted)]/50 rounded-lg">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-[var(--foreground)]">
                   Task Created
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-[var(--muted-foreground)]">
                   {formatDate(task.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-[var(--muted-foreground)]">
                 Created by {task.creator.name}
               </p>
             </div>
@@ -335,19 +347,19 @@ function OverviewTab({ task }: { task: Task }) {
           {task.assignees?.map((assignee) => (
             <div
               key={assignee._id}
-              className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg"
+              className="flex items-center gap-4 p-3 bg-[var(--muted)]/50 rounded-lg"
             >
               <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-[var(--foreground)]">
                     User Assigned
                   </span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-[var(--muted-foreground)]">
                     {formatDate(assignee.assignedAt)}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {assignee.name} assigned by {assignee.assignedBy?.name}
                 </p>
               </div>
@@ -356,18 +368,18 @@ function OverviewTab({ task }: { task: Task }) {
 
           {/* Completion */}
           {task.completedAt && (
-            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-4 p-3 bg-[var(--muted)]/50 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-[var(--foreground)]">
                     Task Completed
                   </span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-[var(--muted-foreground)]">
                     {formatDate(task.completedAt)}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[var(--muted-foreground)]">
                   Completed by {task.completedBy?.name}
                 </p>
               </div>
@@ -376,18 +388,18 @@ function OverviewTab({ task }: { task: Task }) {
 
           {/* Verification */}
           {task.verifiedAt && (
-            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-4 p-3 bg-[var(--muted)]/50 rounded-lg">
               <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-[var(--foreground)]">
                     Task Verified
                   </span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-[var(--muted-foreground)]">
                     {formatDate(task.verifiedAt)}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[var(--muted-foreground)]">
                   Verified by {task.verifiedBy?.name}
                 </p>
               </div>
@@ -395,14 +407,14 @@ function OverviewTab({ task }: { task: Task }) {
           )}
 
           {/* Last Updated */}
-          <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-4 p-3 bg-[var(--muted)]/50 rounded-lg">
             <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-[var(--foreground)]">
                   Last Updated
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-[var(--muted-foreground)]">
                   {formatDate(task.updatedAt)}
                 </span>
               </div>
@@ -457,7 +469,7 @@ function CommentsTab({ taskId, task }: { taskId: string; task: Task }) {
             .map((comment) => (
               <div
                 key={comment._id}
-                className="bg-card border border-border rounded-lg p-4"
+                className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4"
               >
                 <div className="flex items-start gap-3">
                   {/* User Avatar */}
@@ -478,7 +490,7 @@ function CommentsTab({ taskId, task }: { taskId: string; task: Task }) {
                       >
                         {comment.type.replace("_", " ")}
                       </span>
-                      <span className="text-muted-foreground">
+                      <span className="text-[var(--muted-foreground)]">
                         {formatCommentDate(comment.createdAt)}
                       </span>
                     </div>
@@ -508,11 +520,11 @@ function CommentsTab({ taskId, task }: { taskId: string; task: Task }) {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16">
-          <MessageCircle className="h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold text-foreground mb-2">
+          <MessageCircle className="h-16 w-16 text-[var(--muted-foreground)] mb-4" />
+          <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">
             No Comments Yet
           </h3>
-          <p className="text-muted-foreground text-center max-w-md">
+          <p className="text-[var(--muted-foreground)] text-center max-w-md">
             Comments and activity will appear here as work progresses on this
             task.
           </p>
@@ -520,13 +532,13 @@ function CommentsTab({ taskId, task }: { taskId: string; task: Task }) {
       )}
 
       {/* Add Comment Section - TODO: Implement comment functionality */}
-      <div className="bg-card border border-border rounded-lg p-4">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
         <div className="flex flex-col items-center justify-center py-8">
-          <MessageCircle className="h-12 w-12 text-muted-foreground mb-3" />
-          <h4 className="text-lg font-semibold text-foreground mb-2">
+          <MessageCircle className="h-12 w-12 text-[var(--muted-foreground)] mb-3" />
+          <h4 className="text-lg font-semibold text-[var(--foreground)] mb-2">
             Comments Coming Soon
           </h4>
-          <p className="text-muted-foreground text-center">
+          <p className="text-[var(--muted-foreground)] text-center">
             Comment functionality will be implemented here. Users will be able
             to add comments, discuss task progress, and collaborate.
           </p>
@@ -542,15 +554,17 @@ function CommentsTab({ taskId, task }: { taskId: string; task: Task }) {
 function MediaTab({ taskId }: { taskId: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16">
-      <ImageIcon className="h-16 w-16 text-muted-foreground mb-4" />
-      <h3 className="text-xl font-semibold text-foreground mb-2">
+      <ImageIcon className="h-16 w-16 text-[var(--muted-foreground)] mb-4" />
+      <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">
         Media Attachments Coming Soon
       </h3>
-      <p className="text-muted-foreground text-center max-w-md">
+      <p className="text-[var(--muted-foreground)] text-center max-w-md">
         Media sharing functionality will be implemented here. Users will be able
         to upload files, images, and documents related to the task.
       </p>
-      <p className="text-sm text-muted-foreground mt-4">Task ID: {taskId}</p>
+      <p className="text-sm text-[var(--muted-foreground)] mt-4">
+        Task ID: {taskId}
+      </p>
     </div>
   );
 }
