@@ -262,7 +262,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     const events = await Event.find(query)
       .populate("owner", "name email")
       .populate("group", "_id name type")
-      .populate("attendees.user", "name email")
+      .populate("attendees.user", "name email avatar")
       .sort({ startDate: 1 })
       .limit(parseInt(limit as string))
       .skip(parseInt(offset as string));
@@ -336,7 +336,7 @@ router.get("/:eventId", async (req: AuthRequest, res: Response) => {
     const event = await Event.findById(eventId)
       .populate("owner", "name email")
       .populate("group", "_id name type")
-      .populate("attendees.user", "name email");
+      .populate("attendees.user", "name email avatar");
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -484,7 +484,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     await event.save();
     //await event.populate("owner", "name email");
     //await event.populate("group", "_id name type");
-    await event.populate("attendees.user", "name email");
+    await event.populate("attendees.user", "name email avatar");
 
     return res.status(201).json({
       message: "Event created successfully",
@@ -578,7 +578,7 @@ router.put("/:eventId", async (req: AuthRequest, res: Response) => {
     await event.save();
     await event.populate("owner", "name email");
     await event.populate("group", "_id name type");
-    await event.populate("attendees.user", "name email");
+    await event.populate("attendees.user", "name email avatar");
 
     return res.status(200).json({
       message: "Event updated successfully",
@@ -851,7 +851,7 @@ router.get("/group/:groupId", async (req: AuthRequest, res: Response) => {
     })
       .populate("owner", "name email")
       .populate("group", "_id name type")
-      .populate("attendees.user", "name email")
+      .populate("attendees.user", "name email avatar")
       .sort({ startDate: 1 });
 
     return res.status(200).json({

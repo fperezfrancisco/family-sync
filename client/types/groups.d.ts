@@ -3,6 +3,10 @@ export interface GroupMember {
   name: string;
   email: string;
   role: "owner" | "admin" | "member" | "guest";
+  avatar?: {
+    fullSize?: string;
+    small?: string;
+  };
 }
 
 export interface GroupCustomization {

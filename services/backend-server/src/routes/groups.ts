@@ -21,6 +21,10 @@ interface GroupMember {
   name: string;
   email: string;
   role: "owner" | "admin" | "member" | "guest";
+  avatar?: {
+    fullSize?: string;
+    small?: string;
+  };
 }
 
 // Zod schemas for request validation
@@ -59,6 +63,12 @@ const AddMemberSchema = z.object({
   name: z.string(),
   email: z.string(),
   role: z.enum(["admin", "member", "guest"]).default("member"),
+  avatar: z
+    .object({
+      fullSize: z.string().optional(),
+      small: z.string().optional(),
+    })
+    .optional(),
 });
 
 const UpdateMemberRoleSchema = z.object({
@@ -281,6 +291,10 @@ router.post("/", async (req: AuthRequest, res: Response) => {
           name: user.name,
           email: user.email,
           role: "owner",
+          avatar: {
+            fullSize: user.avatar?.fullSize || null,
+            small: user.avatar?.small || null,
+          },
         },
       ],
     });
@@ -486,6 +500,10 @@ router.post("/:groupId/members", async (req: AuthRequest, res: Response) => {
       name: newMember.name,
       email: newMember.email,
       role,
+      avatar: {
+        fullSize: newMember.avatar?.fullSize || null,
+        small: newMember.avatar?.small || null,
+      },
     });
 
     await group.save();
@@ -497,6 +515,10 @@ router.post("/:groupId/members", async (req: AuthRequest, res: Response) => {
         name: newMember.name,
         email: newMember.email,
         role,
+        avatar: {
+          fullSize: newMember.avatar?.fullSize || null,
+          small: newMember.avatar?.small || null,
+        },
       },
     });
   } catch (error) {

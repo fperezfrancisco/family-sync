@@ -9,6 +9,11 @@ const GroupMemberSchema = new Schema({
     enum: ["owner", "admin", "member", "guest"],
     default: "member",
   },
+  // Store member's avatar for group display (auto-updated when user updates their avatar)
+  avatar: {
+    fullSize: { type: String, required: false },
+    small: { type: String, required: false },
+  },
 });
 
 const GroupSchema = new Schema({

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   MessageCircle,
@@ -310,10 +311,22 @@ function OverviewTab({
                             className="flex items-center justify-between p-3 rounded-lg bg-[var(--muted)]/50"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                                {attendee.user.name?.charAt(0).toUpperCase() ||
-                                  "?"}
-                              </div>
+                              {attendee.user.avatar?.small ? (
+                                <Image
+                                  key={`attendee-avatar-${attendee.user._id}-${attendee.user.avatar.small}`}
+                                  src={attendee.user.avatar.small}
+                                  alt={attendee.user.name}
+                                  width={40}
+                                  height={40}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                                  {attendee.user.name
+                                    ?.charAt(0)
+                                    .toUpperCase() || "?"}
+                                </div>
+                              )}
                               <div>
                                 <p className="font-medium text-[var(--foreground)]">
                                   {attendee.user.name}

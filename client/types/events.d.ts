@@ -9,6 +9,10 @@ export interface EventAttendee {
     _id: string;
     name: string;
     email: string;
+    avatar?: {
+      fullSize?: string;
+      small?: string;
+    };
   };
   status: "pending" | "attending" | "not_attending" | "maybe";
   invitedAt: string;

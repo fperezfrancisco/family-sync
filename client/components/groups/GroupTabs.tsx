@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import {
   MessageCircle,
   Calendar,
@@ -221,14 +222,25 @@ function OverviewTab({ group }: { group: Group }) {
                 className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                    style={{
-                      backgroundColor: accentColor || "#3b82f6",
-                    }}
-                  >
-                    {member.name?.charAt(0).toUpperCase() || "?"}
-                  </div>
+                  {member.avatar?.small ? (
+                    <Image
+                      key={`member-avatar-${member.id}-${member.avatar.small}`}
+                      src={member.avatar.small}
+                      alt={member.name}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                      style={{
+                        backgroundColor: accentColor || "#3b82f6",
+                      }}
+                    >
+                      {member.name?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
                   <div>
                     <p className="font-medium text-[var(--foreground)]">
                       {member.name}
