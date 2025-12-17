@@ -3,6 +3,8 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import crypto, { verify } from "crypto";
 import User from "../models/User.js";
+import Group from "../models/Groups.js";
+import Event from "../models/Events.js";
 import RefreshSession from "../models/Auth.js";
 import { create } from "domain";
 import {
@@ -668,6 +670,34 @@ router.post("/profile/avatar", upload.single("avatar"), async (req, res) => {
           small: smallSizeUrl,
         },
       });
+
+      // Update user's avatar in all groups they are a member of (for live/auto-update)
+      await Group.updateMany(
+        { "members.id": userId },
+        {
+          $set: {
+            "members.$.avatar": {
+              fullSize: fullSizeUrl,
+              small: smallSizeUrl,
+            },
+          },
+        }
+      );
+      console.log("✅ Updated user's avatar in all group member records");
+
+      // Update user's avatar in all events where they are an attendee
+      await Event.updateMany(
+        { "attendees.user": userId },
+        {
+          $set: {
+            "attendees.$.user.avatar": {
+              fullSize: fullSizeUrl,
+              small: smallSizeUrl,
+            },
+          },
+        }
+      );
+      console.log("✅ Updated user's avatar in all event attendee records");
     } catch (dbError) {
       console.error("❌ Failed to update user avatar URLs:", dbError);
       // Don't fail the request if DB update fails, images are already uploaded
@@ -936,6 +966,10 @@ router.post("/profile/banner", upload.single("banner"), async (req, res) => {
           small: smallSizeUrl,
         },
       });
+
+      // Note: Banners are user-specific profile images, not displayed in group/event member lists
+      // Only avatars are synced to group members and event attendees
+      // If needed in the future, banner sync can be added here similar to avatar updates
     } catch (dbError) {
       console.error("❌ Failed to update user banner URLs:", dbError);
       // Don't fail the request if DB update fails, images are already uploaded
@@ -1077,6 +1111,31 @@ router.put("/profile", async (req, res) => {
       userId,
       updatedFields: Object.keys(updateData),
     });
+
+    // Sync profile updates to all groups where this user is a member
+    if (updateData.name || updateData.email) {
+      const syncData: any = {};
+      if (updateData.name) syncData["members.$.name"] = updateData.name;
+      if (updateData.email) syncData["members.$.email"] = updateData.email;
+
+      await Group.updateMany({ "members.id": userId }, { $set: syncData });
+      console.log("✅ Updated user info in all group member records");
+    }
+
+    // Sync profile updates to all events where this user is the owner
+    // Note: Event attendees reference User by ID, so they automatically get updated name/email when populated
+    if (updateData.name || updateData.email) {
+      await Event.updateMany(
+        { "owner.id": userId },
+        {
+          $set: {
+            "owner.name": updateData.name || existingUser.name,
+            "owner.email": updateData.email || existingUser.email,
+          },
+        }
+      );
+      console.log("✅ Updated user info in all event owner records");
+    }
 
     // Return updated user data (excluding sensitive fields)
     return res.status(200).json({
