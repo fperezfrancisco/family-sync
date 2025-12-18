@@ -108,6 +108,37 @@ const EventSchema = new Schema(
     recurrenceRule: { type: String, required: false }, // RRULE format
     parentEvent: { type: Schema.Types.ObjectId, ref: "Event", required: false },
 
+    // CUSTOMIZATION: Header image and accent color for event branding
+    customization: {
+      headerImage: {
+        source: {
+          type: String,
+          enum: ["preset", "custom"],
+          default: "preset",
+        },
+        value: {
+          type: String,
+          default: "mountain-sunrise",
+        },
+        uploadedAt: { type: Date, required: false },
+        uploadedBy: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: false,
+        },
+      },
+      accentColor: {
+        preset: {
+          type: String,
+          default: "blue",
+        },
+        hex: {
+          type: String,
+          default: "#3b82f6",
+        },
+      },
+    },
+
     // Metadata
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
