@@ -185,6 +185,11 @@ export default function EditTaskModal({
           // Handle null for dueDate when clearing
           if (fieldName === "dueDate" && newValue === "") {
             Object.assign(updateData, { [fieldName]: null });
+          } else if (fieldName === "dueDate" && newValue) {
+            // Convert date from YYYY-MM-DD format to ISO 8601 datetime
+            // Date input gives us YYYY-MM-DD, we need to convert to ISO datetime at start of day (UTC)
+            const dateObj = new Date(`${newValue}T00:00:00Z`);
+            Object.assign(updateData, { [fieldName]: dateObj.toISOString() });
           } else {
             // Type-safe assignment using object spread
             Object.assign(updateData, { [fieldName]: newValue });
