@@ -70,6 +70,18 @@ export interface Event {
   userRSVPStatus?: "pending" | "attending" | "not_attending" | "maybe" | null;
   canEdit?: boolean;
   canDelete?: boolean;
+  customization?: {
+    headerImage?: {
+      source: "preset" | "custom";
+      value: string;
+      uploadedAt?: string;
+      uploadedBy?: string;
+    };
+    accentColor?: {
+      preset: string;
+      hex: string;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -147,6 +159,16 @@ export interface UpdateEventData {
   dressCode?: string;
   owner?: { id: string; name: string; email: string }; // Owner ID
   status?: "draft" | "published" | "cancelled" | "completed";
+  customization?: {
+    headerImage?: {
+      source: "preset" | "custom";
+      value: string;
+    };
+    accentColor?: {
+      preset: string;
+      hex: string;
+    };
+  };
 }
 
 /**
