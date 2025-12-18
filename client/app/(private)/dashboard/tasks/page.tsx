@@ -190,7 +190,7 @@ export default function TasksPage() {
       <div className="">
         {/* Page Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center flex-wrap gap-4 justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
                 Tasks
@@ -203,7 +203,7 @@ export default function TasksPage() {
               <button
                 onClick={handleRefreshTasks}
                 disabled={isRefreshing}
-                className="inline-flex items-center gap-2 px-3 py-2 text-[var(--foreground)]  border border-[var(--border)] rounded-md hover:bg-[var(--muted)] disabled:opacity-50"
+                className="inline-flex text-sm items-center gap-2 px-3 py-2 text-[var(--foreground)]  border border-[var(--border)] rounded-md hover:bg-[var(--muted)] disabled:opacity-50"
               >
                 <RefreshCw
                   className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
@@ -212,7 +212,7 @@ export default function TasksPage() {
               </button>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary)]/50 transition-colors"
+                className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary)]/50 transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 New Task

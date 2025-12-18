@@ -31,6 +31,7 @@ import CreateGroupForm, {
 } from "@/components/groups/CreateGroupForm";
 import CreateTaskModal from "@/components/tasks/CreateTaskModal";
 import { CreateTaskData } from "@/types/tasks";
+import DashboardTaskCard from "@/components/dashboard/DashboardTaskCard";
 
 /**
  * Dashboard Page Component
@@ -421,36 +422,36 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <button
               onClick={handleOpenCreateEventModal}
-              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary)
-                             border border-border hover:bg-accent transition-colors duration-150 font-inter"
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-[var(--secondary)]
+                             border border-[var(--border)] hover:bg-[var(--accent)] transition-colors duration-150 font-inter"
             >
               <span className="font-medium">Create New Event</span>
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-5 w-5 text-[var(--muted-foreground)]" />
             </button>
 
             <button
               onClick={() => setIsCreateTaskModalOpen(true)}
-              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
-                             border border-border hover:bg-accent transition-colors duration-150 font-inter"
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-[var(--secondary)] 
+                             border border-[var(--border)] hover:bg-[var(--accent)] transition-colors duration-150 font-inter"
             >
               <span className="font-medium text-foreground">Add Task</span>
-              <CheckSquare className="h-5 w-5 text-muted-foreground" />
+              <CheckSquare className="h-5 w-5 text-[var(--muted-foreground)]" />
             </button>
 
             <button
               onClick={() => setIsCreateGroupModalOpen(true)}
-              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-(--secondary) 
-                             border border-border hover:bg-accent transition-colors duration-150 font-inter"
+              className="w-full flex items-center justify-between p-3 rounded-md hover:bg-[var(--secondary)] 
+                             border border-[var(--border)] hover:bg-[var(--accent)] transition-colors duration-150 font-inter"
             >
               <span className="font-medium text-foreground">Create Group</span>
-              <Users className="h-5 w-5 text-muted-foreground" />
+              <Users className="h-5 w-5 text-[var(--muted-foreground)]" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Placeholder sections for future development */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 min-[900px]:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Upcoming Events Preview */}
         <UpcomingEventsCard
           events={events || []}
@@ -462,18 +463,59 @@ export default function DashboardPage() {
 
         {/* Task Progress */}
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4 font-inter">
-            Task Progress
-          </h3>
-          <div className="text-center py-8">
-            <TrendingUp className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-3" />
-            <p className="text-sm text-[var(--muted-foreground)] font-inter">
-              No tasks assigned
-            </p>
-            <button className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium mt-2 font-inter">
-              Add your first task
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-[var(--foreground)] font-inter">
+              My Tasks
+            </h3>
+            <button
+              onClick={() => setIsCreateTaskModalOpen(true)}
+              className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium"
+            >
+              + New
             </button>
           </div>
+
+          {user && tasks && tasks.length > 0 ? (
+            <div className="space-y-2 ">
+              {tasks
+                .filter((task) => {
+                  // Show tasks assigned to current user or unassigned tasks they can claim
+                  const isAssigned =
+                    task.assignees &&
+                    task.assignees.some((a) => a.id === user.id);
+                  const isUnassigned =
+                    !task.assignees || task.assignees.length === 0;
+                  const canClaim = isUnassigned && task.allowSelfAssign;
+                  return isAssigned || canClaim;
+                })
+                .slice(0, 5) // Show max 5 tasks
+                .map((task) => {
+                  const isAssigned =
+                    task.assignees &&
+                    task.assignees.some((a) => a.id === user.id);
+                  return (
+                    <DashboardTaskCard
+                      key={task._id}
+                      task={task}
+                      isAssigned={isAssigned}
+                    />
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <TrendingUp className="h-12 w-12 text-[var(--muted-foreground)] mx-auto mb-3" />
+              <p className="text-sm text-[var(--muted-foreground)] font-inter">
+                No tasks yet
+              </p>
+              <button
+                onClick={() => setIsCreateTaskModalOpen(true)}
+                className="text-sm text-[var(--primary)] hover:text-[var(--primary)]/80 font-medium mt-2 font-inter"
+              >
+                Create your first task
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

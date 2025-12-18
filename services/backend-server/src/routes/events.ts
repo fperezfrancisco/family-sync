@@ -111,6 +111,24 @@ const UpdateEventSchema = z
       .or(z.literal("")),
     dressCode: z.string().max(100).trim().optional().or(z.literal("")),
     status: z.enum(["draft", "published", "cancelled", "completed"]).optional(),
+    customization: z
+      .object({
+        headerImage: z
+          .object({
+            source: z.enum(["preset", "custom"]),
+            value: z.string().min(1),
+          })
+          .optional(),
+        accentColor: z
+          .object({
+            preset: z.string(),
+            hex: z
+              .string()
+              .regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color format"),
+          })
+          .optional(),
+      })
+      .optional(),
   })
   .refine(
     (data) => {
@@ -295,6 +313,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
+        customization: event.customization,
         attendeeCount: (event as any).attendeeCount,
         userRSVPStatus: (event as any).getUserRSVPStatus(userId),
         createdAt: event.createdAt,
@@ -380,6 +399,7 @@ router.get("/:eventId", async (req: AuthRequest, res: Response) => {
         dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
+        customization: event.customization,
         attendeeCount: (event as any).attendeeCount,
         pendingInvites: (event as any).pendingInvites,
         userRSVPStatus: (event as any).getUserRSVPStatus(userId),
@@ -610,6 +630,7 @@ router.put("/:eventId", async (req: AuthRequest, res: Response) => {
         dressCode: event.dressCode,
         attendees: event.attendees,
         status: event.status,
+        customization: event.customization,
         attendeeCount: (event as any).attendeeCount,
         pendingInvites: (event as any).pendingInvites,
         createdAt: event.createdAt,

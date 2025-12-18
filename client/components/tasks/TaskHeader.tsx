@@ -6,9 +6,7 @@ import {
   Edit3,
   ArrowLeft,
   Calendar,
-  Users,
   User,
-  Clock,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -151,26 +149,6 @@ export default function TaskHeader({
     }
   };
 
-  // Get category styling
-  const getCategoryColor = (category: Task["category"]) => {
-    switch (category) {
-      case "supplies":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
-      case "logistics":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-      case "preparation":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400";
-      case "chores":
-        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "coordination":
-        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400";
-      case "other":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-    }
-  };
-
   // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -261,268 +239,164 @@ export default function TaskHeader({
 
   return (
     <>
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-6">
-        {/* Navigation and Actions */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tasks
-          </button>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 space-y-4">
+        {/* Navigation */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors text-sm"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Tasks
+        </button>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Quick Status Actions */}
-            {canUpdateStatus && (
-              <div className="flex items-center gap-2 mr-3">
-                {task.status === "not_started" && (
-                  <button
-                    onClick={() => handleStatusUpdate("in_progress")}
-                    className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Task
-                  </button>
-                )}
-                {task.status === "in_progress" && (
-                  <button
-                    onClick={() => handleStatusUpdate("completed")}
-                    className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-500 transition-colors"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Complete
-                  </button>
-                )}
-                {task.status === "blocked" && (
-                  <button
-                    onClick={() => handleStatusUpdate("in_progress")}
-                    className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Unblock
-                  </button>
-                )}
-              </div>
-            )}
+        {/* Task Title */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-foreground font-inter">
+            {task.title}
+          </h1>
 
-            {/* Claim Task Button */}
-            {task.assignees.length === 0 &&
-              task.allowSelfAssign &&
-              currentUserId && (
-                <button
-                  onClick={handleClaimTask}
-                  className="flex items-center px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-500 transition-colors"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Claim Task
-                </button>
-              )}
-
-            {/* Edit/Delete Actions */}
-            {(canEdit || canDelete) && (
-              <div className="flex items-center gap-2 border-l border-[var(--border)] pl-3 ml-3">
-                {canEdit && (
-                  <button
-                    onClick={handleEditTask}
-                    className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
-                  >
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Edit Task
-                  </button>
-                )}
-                {canDelete && (
-                  <button
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </button>
-                )}
-              </div>
-            )}
+          {/* Status & Priority Badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${statusDisplay.color}`}
+            >
+              <StatusIcon className="h-3 w-3 mr-1" />
+              {statusDisplay.label}
+            </span>
+            <span
+              className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getPriorityColor(
+                task.priority
+              )}`}
+            >
+              <Flag className="h-3 w-3 inline mr-1" />
+              {task.priority} Priority
+            </span>
           </div>
         </div>
 
-        {/* Task Information */}
-        <div className="space-y-4">
-          {/* Title and Status */}
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-foreground font-inter">
-                  {task.title}
-                </h1>
-                <span
-                  className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${statusDisplay.color}`}
-                >
-                  <StatusIcon className="h-3 w-3 mr-1" />
-                  {statusDisplay.label}
-                </span>
-              </div>
+        {/* Description */}
+        {task.description && (
+          <p className="text-[var(--muted-foreground)] text-base leading-relaxed">
+            {task.description}
+          </p>
+        )}
 
-              {/* Priority and Category Badges */}
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getPriorityColor(
-                    task.priority
-                  )}`}
+        {/* Due Date Info */}
+        {task.dueDate && (
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar
+              className={`h-4 w-4 ${
+                task.isOverdue ? "text-red-500" : "text-muted-foreground"
+              }`}
+            />
+            <span className="text-[var(--muted-foreground)]">
+              Due:{" "}
+              <span className="font-medium">{formatDate(task.dueDate)}</span>
+              {task.isOverdue && (
+                <span className="ml-2 text-red-600 font-medium">Overdue</span>
+              )}
+            </span>
+          </div>
+        )}
+
+        {/* Assignees Badge */}
+        {task.assignees && task.assignees.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-foreground uppercase tracking-wide">
+              Assigned to:
+            </span>
+            <div className="flex -space-x-2">
+              {task.assignees.slice(0, 5).map((assignee) => (
+                <div
+                  key={assignee._id}
+                  className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
+                  title={`${assignee.name} - Assigned ${new Date(
+                    assignee.assignedAt
+                  ).toLocaleDateString()}`}
                 >
-                  <Flag className="h-3 w-3 inline mr-1" />
-                  {task.priority} Priority
-                </span>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${getCategoryColor(
-                    task.category
-                  )}`}
-                >
-                  {task.category}
-                </span>
-              </div>
+                  {assignee.name?.charAt(0).toUpperCase() || "?"}
+                </div>
+              ))}
+              {task.assignees.length > 5 && (
+                <div className="w-7 h-7 bg-[var(--muted)] border-2 border-background rounded-full flex items-center justify-center text-[var(--muted-foreground)] text-xs font-medium">
+                  +{task.assignees.length - 5}
+                </div>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Description */}
-          {task.description && (
-            <p className="text-[var(--muted-foreground)] text-lg leading-relaxed">
-              {task.description}
-            </p>
-          )}
-
-          {/* Task Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[var(--muted)]/30 rounded-lg">
-            {/* Due Date */}
-            {task.dueDate && (
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-red-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-[var(--foreground)]">
-                    Due Date
-                  </p>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {formatDate(task.dueDate)}
-                  </p>
-                  {task.isOverdue && (
-                    <span className="text-xs text-red-600 font-medium">
-                      Overdue
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Creator */}
-            <div className="flex items-start gap-3">
-              <User className="h-5 w-5 text-purple-500 mt-0.5" />
-              <div>
-                <p className="font-medium text-[var(--foreground)]">
-                  Created By
-                </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {task.creator.name}
-                </p>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  {task.creator.email}
-                </p>
-              </div>
-            </div>
-
-            {/* Group Association */}
-            {task.group && (
-              <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-orange-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-[var(--foreground)]">Group</p>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {task.group.name}
-                  </p>
-                  <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 rounded capitalize">
-                    {task.group.type}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Event Association */}
-            {task.event && (
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-[var(--foreground)]">Event</p>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {task.event.name}
-                  </p>
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    {formatDate(task.event.startDate)}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Assignees */}
-          {task.assignees && task.assignees.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-foreground">
-                Assigned to:
-              </span>
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {task.assignees.slice(0, 5).map((assignee) => (
-                    <div
-                      key={assignee._id}
-                      className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-medium"
-                      title={`${assignee.name} - Assigned ${new Date(
-                        assignee.assignedAt
-                      ).toLocaleDateString()}`}
-                    >
-                      {assignee.name?.charAt(0).toUpperCase() || "?"}
-                    </div>
-                  ))}
-                  {task.assignees.length > 5 && (
-                    <div className="w-8 h-8 bg-[var(--muted)] border-2 border-background rounded-full flex items-center justify-center text-[var(--muted-foreground)] text-xs font-medium">
-                      +{task.assignees.length - 5}
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-[var(--muted-foreground)]">
-                  ({task.assignees.length} assigned)
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Task Settings */}
-          <div className="flex items-center gap-6 text-sm text-[var(--muted-foreground)]">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 w-full pt-4 border-t border-[var(--border)] ">
+          {/* Quick Status Actions */}
+          {canUpdateStatus && (
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>
-                Created {new Date(task.createdAt).toLocaleDateString()}
-              </span>
+              {task.status === "not_started" && (
+                <button
+                  onClick={() => handleStatusUpdate("in_progress")}
+                  className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Task
+                </button>
+              )}
+              {task.status === "in_progress" && (
+                <button
+                  onClick={() => handleStatusUpdate("completed")}
+                  className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-500 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Complete
+                </button>
+              )}
+              {task.status === "blocked" && (
+                <button
+                  onClick={() => handleStatusUpdate("in_progress")}
+                  className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Unblock
+                </button>
+              )}
             </div>
-            {task.requiresVerification && (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                <span>Requires verification</span>
-              </div>
+          )}
+
+          {/* Claim Task Button */}
+          {task.assignees.length === 0 &&
+            task.allowSelfAssign &&
+            currentUserId && (
+              <button
+                onClick={handleClaimTask}
+                className="flex items-center px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-500 transition-colors"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Claim Task
+              </button>
             )}
-            {task.allowSelfAssign && (
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>Self-assignment allowed</span>
-              </div>
-            )}
-            {task.isBlocked && task.blockReason && (
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                <span className="text-red-600">
-                  Blocked: {task.blockReason}
-                </span>
-              </div>
-            )}
-          </div>
+
+          {/* Edit/Delete Actions */}
+          {(canEdit || canDelete) && (
+            <div className="flex items-center gap-2">
+              {canEdit && (
+                <button
+                  onClick={handleEditTask}
+                  className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit Task
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Task
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

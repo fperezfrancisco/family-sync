@@ -238,45 +238,27 @@ export default function EventHeader({
     }
   };
 
+  const eventHeaderImage =
+    event.customization && event.customization.headerImage?.source === "preset"
+      ? `/group-images/${event.customization.headerImage.value}.jpg`
+      : event.customization?.headerImage?.value ||
+        "/wallpapers/default-cabin.jpg";
+
+  console.log("event Header image: ", eventHeaderImage);
+
   return (
     <>
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
         <div className="w-full aspect-[3/2] md:aspect-[24/9] bg-neutral-200 relative overflow-hidden">
           <div className="w-full h-full absolute z-[5] bg-black/20"></div>
+
           <Image
-            src="/wallpapers/default-cabin.jpg"
+            src={eventHeaderImage}
             alt="User Wallpaper"
             width={2000}
             height={1000}
             className="object-cover bottom-0 h-full"
           />
-        </div>
-
-        {/* Navigation and Actions */}
-        <div className="flex items-center justify-between hidden">
-          {/* Action Buttons - Only show if user has permissions */}
-          {(canEdit || canDelete) && (
-            <div className="flex items-center gap-2">
-              {canEdit && (
-                <button
-                  onClick={handleEditEvent}
-                  className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
-                >
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Event
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-500 transition-colors"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Event
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="w-full p-6 flex flex-col items-start gap-4">
@@ -413,6 +395,32 @@ export default function EventHeader({
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
+              {/* Navigation and Actions */}
+              <div className="flex items-center justify-between">
+                {/* Action Buttons - Only show if user has permissions */}
+                {(canEdit || canDelete) && (
+                  <div className="flex items-center gap-2 ml-auto pt-4">
+                    {canEdit && (
+                      <button
+                        onClick={handleEditEvent}
+                        className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-blue-500 transition-colors"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Event
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="flex items-center px-3 py-2 text-xs bg-[var(--muted)] text-white rounded-md hover:bg-red-500 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Event
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

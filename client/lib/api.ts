@@ -487,6 +487,16 @@ export const EventsAPI = {
       rsvpDeadline?: string;
       dressCode?: string;
       status?: "draft" | "published" | "cancelled" | "completed";
+      customization?: {
+        headerImage?: {
+          source: "preset" | "custom";
+          value: string;
+        };
+        accentColor?: {
+          preset: string;
+          hex: string;
+        };
+      };
     }
   ) =>
     request(`/events/${eventId}`, {
