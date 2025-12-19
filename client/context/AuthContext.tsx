@@ -54,7 +54,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("📱 User agent:", navigator.userAgent);
       //console.log("🌐 API URL:", process.env.NEXT_PUBLIC_API_URL);
 
-      const response = await AuthAPI.login({ email, password });
+      // Normalize email on client side as well (trim and lowercase)
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const response = await AuthAPI.login({
+        email: normalizedEmail,
+        password,
+      });
       //console.log("✅ Login response received:", response);
 
       setUser(response.user);
@@ -81,10 +87,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("🌐 Network error - Check internet connection and CORS");
       }
 
-      // Return more specific error message
-      const errorMessage =
-        error instanceof Error ? error.message : "Login failed";
-      return { ok: false, message: `Login failed: ${errorMessage}` };
+      // Return more specific, user-friendly error message
+      let errorMessage = "Invalid email or password. Please try again.";
+
+      if (error instanceof Error) {
+        const errorMsg = error.message;
+        if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (errorMsg.includes("401")) {
+          errorMessage = "Invalid email or password. Please try again.";
+        } else if (errorMsg.includes("404")) {
+          errorMessage =
+            "Account not found. Please check your email or sign up.";
+        }
+      }
+
+      return { ok: false, message: errorMessage };
     }
   };
 
@@ -109,14 +128,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await AuthAPI.register({ name, email, password });
+      // Normalize email on client side as well (trim and lowercase)
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const response = await AuthAPI.register({
+        name,
+        email: normalizedEmail,
+        password,
+      });
       setUser(response.user);
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("refreshExists", "true");
       return { ok: true, message: response.message };
     } catch (error) {
       console.error("Registration failed", error);
-      return { ok: false, message: "Registration failed" };
+
+      // Extract error message from the API response
+      let errorMessage = "Registration failed. Please try again.";
+
+      if (error instanceof Error) {
+        const errorMsg = error.message;
+        // Check for specific error messages from the API
+        if (
+          errorMsg.includes("409") ||
+          errorMsg.includes("already registered")
+        ) {
+          errorMessage =
+            "This email address is already registered. Please sign in instead.";
+        } else if (
+          errorMsg.includes("validation") ||
+          errorMsg.includes("Invalid input")
+        ) {
+          errorMessage = "Please check all fields and try again.";
+        } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        }
+      }
+
+      return { ok: false, message: errorMessage };
     }
   };
 

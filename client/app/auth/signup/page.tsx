@@ -6,6 +6,7 @@ import {
   Button,
   LinkButton,
 } from "../../../components/auth/form-components";
+import { ErrorAlert } from "../../../components/auth/ErrorAlert";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -94,25 +95,27 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (!validateForm()) {
-      alert("Please fix the errors in the form before submitting.");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual registration logic here
+      // Normalize email before sending
+      const normalizedEmail = formData.email.trim().toLowerCase();
+
       const res = await register(
         formData.name,
-        formData.email,
+        normalizedEmail,
         formData.password
       );
-      console.log(res);
+
       if (res && res.ok) {
-        // Redirect or handle success
-        alert(`Registration successful: ${res.message}`);
-        //navigate to dashboard page
+        // Success - redirect to dashboard
         router.push("/dashboard");
+      } else if (res && !res.ok) {
+        // API returned an error
+        setErrors({ general: res.message });
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -145,9 +148,10 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* General error message */}
         {errors.general && (
-          <div className="p-3 rounded-md bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600">{errors.general}</p>
-          </div>
+          <ErrorAlert
+            message={errors.general}
+            onDismiss={() => setErrors((prev) => ({ ...prev, general: "" }))}
+          />
         )}
 
         {/* Name input */}
