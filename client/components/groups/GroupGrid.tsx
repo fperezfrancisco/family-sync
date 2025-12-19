@@ -36,28 +36,28 @@ export default function GroupGrid({
         {[...Array(6)].map((_, index) => (
           <div
             key={index}
-            className="bg-card border border-border rounded-lg p-6 animate-pulse"
+            className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-6 animate-pulse"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 bg-muted rounded-lg"></div>
+                <div className="w-9 h-9 bg-[var(--muted)] rounded-lg"></div>
                 <div>
-                  <div className="w-24 h-5 bg-muted rounded mb-2"></div>
-                  <div className="w-16 h-4 bg-muted rounded"></div>
+                  <div className="w-24 h-5 bg-[var(--muted)] rounded mb-2"></div>
+                  <div className="w-16 h-4 bg-[var(--muted)] rounded"></div>
                 </div>
               </div>
-              <div className="w-6 h-6 bg-muted rounded"></div>
+              <div className="w-6 h-6 bg-[var(--muted)] rounded"></div>
             </div>
-            <div className="w-full h-4 bg-muted rounded mb-4"></div>
+            <div className="w-full h-4 bg-[var(--muted)] rounded mb-4"></div>
             <div className="flex space-x-4 mb-4">
-              <div className="w-16 h-3 bg-muted rounded"></div>
-              <div className="w-16 h-3 bg-muted rounded"></div>
-              <div className="w-16 h-3 bg-muted rounded"></div>
+              <div className="w-16 h-3 bg-[var(--muted)] rounded"></div>
+              <div className="w-16 h-3 bg-[var(--muted)] rounded"></div>
+              <div className="w-16 h-3 bg-[var(--muted)] rounded"></div>
             </div>
             <div className="flex space-x-2">
-              <div className="flex-1 h-8 bg-muted rounded"></div>
-              <div className="flex-1 h-8 bg-muted rounded"></div>
-              <div className="w-8 h-8 bg-muted rounded"></div>
+              <div className="flex-1 h-8 bg-[var(--muted)] rounded"></div>
+              <div className="flex-1 h-8 bg-[var(--muted)] rounded"></div>
+              <div className="w-8 h-8 bg-[var(--muted)] rounded"></div>
             </div>
           </div>
         ))}
@@ -80,7 +80,7 @@ export default function GroupGrid({
         {onCreateGroup && (
           <button
             onClick={onCreateGroup}
-            className="px-6 py-3 rounded-md bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-sm text-white transition-colors font-inter"
+            className="px-6 py-3 rounded-md bg-[var(--primary)] hover:bg-[var(--primary)]/80 text-sm text-white transition-colors font-inter"
           >
             Create Your First Group
           </button>

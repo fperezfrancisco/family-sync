@@ -185,18 +185,18 @@ export default function EventsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between border-b border-border pb-6">
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground font-inter">
+          <h1 className="text-3xl font-bold text-[var(--foreground)] font-inter">
             Events
           </h1>
-          <p className="text-muted-foreground mt-2 font-inter">
+          <p className="text-[var(--muted-foreground)] mt-2 font-inter">
             Plan and manage events with your groups
           </p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center px-4 py-2 bg-(--primary) text-white rounded-md hover:bg-(--primary)/80 transition-colors font-inter"
+          className="flex items-center px-4 py-2 bg-[var(--muted)] text-[var(--foreground)] text-sm rounded-md hover:bg-[var(--primary)]/80 transition-colors font-inter"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Event

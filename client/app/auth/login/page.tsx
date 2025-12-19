@@ -6,6 +6,7 @@ import {
   Button,
   LinkButton,
 } from "../../../components/auth/form-components";
+import { ErrorAlert } from "../../../components/auth/ErrorAlert";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -77,15 +78,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await login(formData.email, formData.password);
+      // Normalize email before sending
+      const normalizedEmail = formData.email.trim().toLowerCase();
+
+      const res = await login(normalizedEmail, formData.password);
       console.log("Login result:", res);
 
       if (res && !res.ok) {
-        // Show detailed error message for mobile debugging
-        const detailedError = `Login failed: ${res.message}\nAPI: ${
-          process.env.NEXT_PUBLIC_API_URL
-        }\nUser Agent: ${navigator.userAgent.substring(0, 50)}...`;
-        alert(detailedError);
+        // Display error message from API
         setErrors({ general: res.message });
         return;
       }
@@ -96,18 +96,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Login page error:", error);
-
-      // Detailed mobile-friendly error display
-      const errorDetails = `
-Login Error Details:
-Message: ${error instanceof Error ? error.message : "Unknown error"}
-API URL: ${process.env.NEXT_PUBLIC_API_URL}
-Time: ${new Date().toISOString()}
-Mobile: ${/iPhone|iPad|Android/i.test(navigator.userAgent)}
-      `.trim();
-
-      alert(errorDetails);
-      setErrors({ general: "Login failed. Check console for details." });
+      setErrors({ general: "Login failed. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -136,9 +125,10 @@ Mobile: ${/iPhone|iPad|Android/i.test(navigator.userAgent)}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* General error message */}
         {errors.general && (
-          <div className="p-3 rounded-md bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600">{errors.general}</p>
-          </div>
+          <ErrorAlert
+            message={errors.general}
+            onDismiss={() => setErrors((prev) => ({ ...prev, general: "" }))}
+          />
         )}
 
         {/* Email input */}

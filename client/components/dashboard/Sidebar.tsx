@@ -232,7 +232,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <button
                   onClick={() => handleUserMenuClick("profile")}
                   className="w-full flex items-center px-3 py-2 text-sm
-                           hover:bg-accent transition-colors duration-150 font-inter"
+                           hover:bg-[var(--accent)] transition-colors duration-150 font-inter"
                 >
                   <User className="mr-2 h-4 w-4" />
                   Profile
@@ -242,7 +242,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <button
                   onClick={() => handleUserMenuClick("settings")}
                   className="w-full flex items-center px-3 py-2 text-sm 
-                           hover:bg-accent transition-colors duration-150 font-inter"
+                           hover:bg-[var(--accent)] transition-colors duration-150 font-inter"
                 >
                   <Settings className="mr-2 h-4 w-4" />
                   Settings

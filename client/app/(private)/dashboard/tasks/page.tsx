@@ -212,7 +212,7 @@ export default function TasksPage() {
               </button>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary)]/50 transition-colors"
+                className="inline-flex text-sm items-center gap-2 px-4 py-2 bg-[var(--muted)] text-white rounded-md hover:bg-[var(--primary)]/80 transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 New Task

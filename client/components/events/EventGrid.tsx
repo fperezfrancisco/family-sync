@@ -75,18 +75,18 @@ const LoadingSkeleton = () => (
  */
 const EmptyState = ({ onCreateEvent }: { onCreateEvent?: () => void }) => (
   <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-    <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
-    <h3 className="text-xl font-semibold text-foreground mb-2 font-inter">
+    <Calendar className="h-16 w-16 text-[var(--muted-foreground)] mb-4" />
+    <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2 font-inter">
       No Events Found
     </h3>
-    <p className="text-muted-foreground mb-6 font-inter max-w-md">
+    <p className="text-[var(--muted-foreground)] mb-6 font-inter max-w-md">
       There are no events matching your current filters. Try adjusting your
       search or create a new event.
     </p>
     {onCreateEvent && (
       <button
         onClick={onCreateEvent}
-        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors font-inter"
+        className="flex items-center px-4 py-2 bg-[var(--primary)] text-[var(--foreground)] rounded-md hover:bg-[var(--primary)]/90 transition-colors font-inter"
       >
         <Plus className="h-4 w-4 mr-2" />
         Create Event
