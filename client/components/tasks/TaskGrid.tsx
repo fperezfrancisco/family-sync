@@ -70,8 +70,8 @@ export default function TaskGrid({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center max-w-md">
-          <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            <Plus className="h-8 w-8 text-gray-400" />
+          <div className="bg-[var(--muted)] rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <Plus className="h-8 w-8 text-[var(--muted-foreground)]" />
           </div>
           <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
             No tasks found
@@ -83,7 +83,7 @@ export default function TaskGrid({
           {onCreateTask && (
             <button
               onClick={onCreateTask}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary)]/80 transition-colors"
             >
               <Plus className="h-4 w-4" />
               Create Task

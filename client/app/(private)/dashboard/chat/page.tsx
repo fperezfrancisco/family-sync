@@ -30,10 +30,12 @@ export default function ChatPage() {
   // Loading state while groups are being fetched
   if (groupsLoading) {
     return (
-      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-white">
+      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-[var(--background)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your groups...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+          <p className="text-[var(--muted-foreground)]">
+            Loading your groups...
+          </p>
         </div>
       </div>
     );
@@ -42,20 +44,20 @@ export default function ChatPage() {
   // Show empty state if no groups exist
   if (!groupsLoading && groups.length === 0) {
     return (
-      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-white">
+      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-[var(--background)]">
         <div className="text-center">
-          <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2 font-inter">
+          <MessageCircle className="h-16 w-16 text-[var(--muted-foreground)] mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 font-inter">
             No Groups Yet
           </h2>
-          <p className="text-muted-foreground mb-6 font-inter">
+          <p className="text-[var(--muted-foreground)] mb-6 font-inter">
             Join or create a group to start chatting with your family and
             friends
           </p>
           <button
             onClick={() => (window.location.href = "/dashboard/groups")}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-md 
-                       hover:bg-primary/90 transition-colors font-inter"
+            className="px-6 py-3 bg-[var(--primary)] text-[var(--foreground)] rounded-md 
+                       hover:bg-[var(--primary)]/90 transition-colors font-inter"
           >
             Go to Groups
           </button>
@@ -67,7 +69,7 @@ export default function ChatPage() {
   // Show connection error if socket failed to connect
   if (connectionError) {
     return (
-      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-white">
+      <div className="-m-6 lg:-m-8 h-[calc(100vh-64px)] lg:h-[calc(100vh-80px)] flex items-center justify-center bg-[var(--background)]">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageCircle className="h-8 w-8 text-red-600" />
@@ -75,13 +77,13 @@ export default function ChatPage() {
           <h2 className="text-xl font-semibold text-foreground mb-2 font-inter">
             Connection Error
           </h2>
-          <p className="text-muted-foreground mb-6 font-inter">
+          <p className="text-[var(--muted-foreground)] mb-6 font-inter">
             Unable to connect to chat servers: {connectionError}
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-md 
-                       hover:bg-primary/90 transition-colors font-inter"
+            className="px-6 py-3 bg-[var(--primary)] text-[var(--foreground)] rounded-md 
+                       hover:bg-[var(--primary)]/90 transition-colors font-inter"
           >
             Retry Connection
           </button>
