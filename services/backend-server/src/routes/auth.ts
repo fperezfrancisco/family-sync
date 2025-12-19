@@ -99,127 +99,181 @@ const UpdateProfileSchema = z
 
 // Register route
 router.post("/register", strictAuthLimiter, async (req, res) => {
-  // Validate request body
-  const { name, email, password } = RegisterSchema.parse(req.body);
-  // check db if user exists and handle db registration logic
-  const passwordHash = await bcrypt.hash(password, 12);
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-  const userObject = {
-    name,
-    email,
-    passwordHash,
-    dob: null,
-    gender: null,
-    phone: null,
-    groups: [],
-  };
-  const createdUser = await User.create(userObject);
-  const jti = crypto.randomUUID().toString();
+  try {
+    // Validate request body
+    const { name, email, password } = RegisterSchema.parse(req.body);
 
-  const access = signAccess({
-    sub: createdUser._id.toString(),
-    type: "access",
-  });
-  const refresh = signRefresh({
-    sub: createdUser._id.toString(),
-    type: "refresh",
-    jti,
-  });
-  // add refresh token to db
-  await RefreshSession.create({
-    userId: createdUser._id,
-    jti,
-    isRevoked: false,
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // example: 30 days from now
-  });
+    // Normalize email: trim and convert to lowercase for consistency
+    const normalizedEmail = email.trim().toLowerCase();
 
-  return res
-    .cookie("refreshToken", refresh, getRefreshCookieConfig())
-    .status(201)
-    .json({
-      message: "User registered",
-      user: {
-        id: createdUser._id,
-        name: createdUser.name,
-        email: createdUser.email,
-        dob: createdUser.dob,
-        gender: createdUser.gender,
-        phone: createdUser.phone,
-        groups: createdUser.groups,
-        pendingInvitations: createdUser.pendingInvitations,
-        avatar: createdUser.avatar || { fullSize: null, small: null },
-        banner: createdUser.banner || { fullSize: null, small: null },
-        avatarUrl: createdUser.avatarUrl,
-        bannerUrl: createdUser.bannerUrl,
-      },
-      accessToken: access,
+    // check db if user exists and handle db registration logic
+    const passwordHash = await bcrypt.hash(password, 12);
+    const userExists = await User.findOne({ email: normalizedEmail });
+    if (userExists) {
+      return res
+        .status(409)
+        .json({
+          message:
+            "This email address is already registered. Please sign in instead.",
+        });
+    }
+    const userObject = {
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      dob: null,
+      gender: null,
+      phone: null,
+      groups: [],
+    };
+    const createdUser = await User.create(userObject);
+    const jti = crypto.randomUUID().toString();
+
+    const access = signAccess({
+      sub: createdUser._id.toString(),
+      type: "access",
     });
+    const refresh = signRefresh({
+      sub: createdUser._id.toString(),
+      type: "refresh",
+      jti,
+    });
+    // add refresh token to db
+    await RefreshSession.create({
+      userId: createdUser._id,
+      jti,
+      isRevoked: false,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // example: 30 days from now
+    });
+
+    return res
+      .cookie("refreshToken", refresh, getRefreshCookieConfig())
+      .status(201)
+      .json({
+        message: "User registered successfully",
+        user: {
+          id: createdUser._id,
+          name: createdUser.name,
+          email: createdUser.email,
+          dob: createdUser.dob,
+          gender: createdUser.gender,
+          phone: createdUser.phone,
+          groups: createdUser.groups,
+          pendingInvitations: createdUser.pendingInvitations,
+          avatar: createdUser.avatar || { fullSize: null, small: null },
+          banner: createdUser.banner || { fullSize: null, small: null },
+          avatarUrl: createdUser.avatarUrl,
+          bannerUrl: createdUser.bannerUrl,
+        },
+        accessToken: access,
+      });
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    // Handle duplicate email error from MongoDB
+    if (error instanceof Error && error.message.includes("duplicate")) {
+      return res.status(409).json({
+        message:
+          "This email address is already registered. Please sign in instead.",
+      });
+    }
+
+    // Handle validation errors
+    if (error instanceof Error && error.message.includes("validation")) {
+      return res.status(400).json({
+        message: "Invalid input. Please check all fields.",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Registration failed. Please try again.",
+    });
+  }
 });
 
 // Login Route
 router.post("/login", strictAuthLimiter, async (req, res) => {
-  // Validate request body
-  const { email, password } = LoginSchema.parse(req.body);
-  // check db for user and handle login logic
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res
-      .status(404)
-      .json({ message: "User not found. Please register first." });
-  }
-  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isPasswordValid) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+  try {
+    // Validate request body
+    const { email, password } = LoginSchema.parse(req.body);
 
-  // token stuff
-  const jti = crypto.randomUUID().toString();
-  const access = signAccess({
-    sub: user._id.toString(),
-    type: "access",
-  });
-  const refresh = signRefresh({
-    sub: user._id.toString(),
-    type: "refresh",
-    jti,
-  });
-  // find latest refresh token and set isRevoked to true if exists
-  await RefreshSession.updateMany(
-    { userId: user._id, isRevoked: false },
-    { isRevoked: true }
-  );
-  // add refresh token to db
-  await RefreshSession.create({
-    userId: user._id,
-    jti,
-    isRevoked: false,
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // example: 30 days from now
-  });
+    // Normalize email: trim and convert to lowercase for consistency
+    const normalizedEmail = email.trim().toLowerCase();
 
-  return res
-    .cookie("refreshToken", refresh, getRefreshCookieConfig())
-    .status(200)
-    .json({
-      message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        dob: user.dob,
-        gender: user.gender,
-        phone: user.phone,
-        groups: user.groups,
-        pendingInvitations: user.pendingInvitations,
-        avatar: user.avatar || { fullSize: null, small: null },
-        banner: user.banner || { fullSize: null, small: null },
-        avatarUrl: user.avatarUrl,
-        bannerUrl: user.bannerUrl,
-      },
-      accessToken: access,
+    // check db for user and handle login logic
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "Invalid email or password. Please try again." });
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return res
+        .status(401)
+        .json({ message: "Invalid email or password. Please try again." });
+    }
+
+    // token stuff
+    // token stuff
+    const jti = crypto.randomUUID().toString();
+    const access = signAccess({
+      sub: user._id.toString(),
+      type: "access",
     });
+    const refresh = signRefresh({
+      sub: user._id.toString(),
+      type: "refresh",
+      jti,
+    });
+    // find latest refresh token and set isRevoked to true if exists
+    await RefreshSession.updateMany(
+      { userId: user._id, isRevoked: false },
+      { isRevoked: true }
+    );
+    // add refresh token to db
+    await RefreshSession.create({
+      userId: user._id,
+      jti,
+      isRevoked: false,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // example: 30 days from now
+    });
+
+    return res
+      .cookie("refreshToken", refresh, getRefreshCookieConfig())
+      .status(200)
+      .json({
+        message: "Login successful",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          dob: user.dob,
+          gender: user.gender,
+          phone: user.phone,
+          groups: user.groups,
+          pendingInvitations: user.pendingInvitations,
+          avatar: user.avatar || { fullSize: null, small: null },
+          banner: user.banner || { fullSize: null, small: null },
+          avatarUrl: user.avatarUrl,
+          bannerUrl: user.bannerUrl,
+        },
+        accessToken: access,
+      });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    // Handle validation errors
+    if (error instanceof Error && error.message.includes("validation")) {
+      return res.status(400).json({
+        message: "Invalid email or password format.",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Login failed. Please try again.",
+    });
+  }
 });
 
 // Log Out Route
